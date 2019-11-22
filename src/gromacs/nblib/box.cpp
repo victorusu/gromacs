@@ -39,4 +39,17 @@ Box::data_type Box::matrix()
     return box_;
 }
 
+void convertBoxToGMXFormat(Box &box, matrix matrix)
+{
+    matrix[XX][XX] = box.matrix()[XX][XX];
+    matrix[XX][YY] = box.matrix()[XX][YY];
+    matrix[XX][ZZ] = box.matrix()[XX][ZZ];
+    matrix[YY][XX] = box.matrix()[YY][XX];
+    matrix[YY][YY] = box.matrix()[YY][YY];
+    matrix[YY][ZZ] = box.matrix()[YY][ZZ];
+    matrix[ZZ][XX] = box.matrix()[ZZ][XX];
+    matrix[ZZ][YY] = box.matrix()[ZZ][YY];
+    matrix[ZZ][ZZ] = box.matrix()[ZZ][ZZ];
+}
+
 } // namespace nblib

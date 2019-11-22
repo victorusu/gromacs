@@ -8,6 +8,8 @@
 #include <array>
 #include "gromacs/math/vectypes.h"
 
+#include "gromacs/math/vec.h"
+
 namespace nblib
 {
 
@@ -24,6 +26,9 @@ public:
 private:
     data_type box_;
 };
+
+void convertBoxToGMXFormat(Box &box, matrix matrix);
+
 
 } // namespace nblib
 
