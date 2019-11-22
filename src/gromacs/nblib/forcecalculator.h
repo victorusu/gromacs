@@ -43,10 +43,41 @@
 #define GROMACS_FORCECALCULATOR_H
 
 #include "gromacs/timing/cyclecounter.h"
+#include "gromacs/compat/optional.h"
 
-#include "nbkernelsystem.h"
+#include "gromacs/compat/optional.h"
+#include "gromacs/ewald/ewald_utils.h"
+#include "gromacs/gmxlib/nrnb.h"
+#include "gromacs/mdlib/dispersioncorrection.h"
+#include "gromacs/mdlib/force_flags.h"
+#include "gromacs/mdlib/forcerec.h"
+#include "gromacs/mdlib/gmx_omp_nthreads.h"
+#include "gromacs/mdtypes/enerdata.h"
+#include "gromacs/mdtypes/interaction_const.h"
+#include "gromacs/mdtypes/mdatom.h"
+#include "gromacs/mdtypes/simulation_workload.h"
+#include "gromacs/nbnxm/atomdata.h"
+#include "gromacs/nbnxm/gridset.h"
+#include "gromacs/nbnxm/nbnxm.h"
+#include "gromacs/nbnxm/nbnxm_simd.h"
+#include "gromacs/nbnxm/pairlistset.h"
+#include "gromacs/nbnxm/pairlistsets.h"
+#include "gromacs/nbnxm/pairsearch.h"
+#include "gromacs/pbcutil/ishift.h"
+#include "gromacs/pbcutil/mshift.h"
+#include "gromacs/pbcutil/pbc.h"
+#include "gromacs/simd/simd.h"
+#include "gromacs/timing/cyclecounter.h"
+#include "gromacs/topology/topology.h"
+#include "gromacs/utility/enumerationhelpers.h"
+#include "gromacs/utility/fatalerror.h"
+#include "gromacs/utility/logger.h"
+
+// #include "nbkernelsystem.h"
+
 #include "nbkerneloptions.h"
 #include "nbkerneldef.h"
+#include "simulationstate.h"
 
 namespace nblib {
 
@@ -54,25 +85,39 @@ class ForceCalculator
 {
 public:
 
-    // TODO: Depend on simulationState
-    ForceCalculator(NBKernelSystem          &system,
-                    const NBKernelOptions   &options);
+    ForceCalculator(SimulationState       &simulationState,
+                    const NBKernelOptions &options);
 
     //! Sets up and runs the kernel calls
     //! TODO Refactor this function to return a handle to dispatchNonbondedKernel
     //!      that callers can manipulate directly.
-    void compute(const bool printTimings = false);
+    void compute(const int timestep, const bool printTimings = false);
+
+    // Just passing SimulationState and NBKernelOptions to demonstrate dependency
+    ForceCalculator& setupInstance(SimulationState& simulationState, const NBKernelOptions &nbKernelOptions);
+
 
 private:
 
-    void printTimingsOutput(const NBKernelOptions &options,
-                            const NBKernelSystem  &system,
-                            const gmx::index      &numPairs,
-                            gmx_cycles_t           cycles);
+    // void printTimingsOutput(const NBKernelOptions &options,
+    //                         const NBKernelSystem  &system,
+    //                         const gmx::index      &numPairs,
+    //                         gmx_cycles_t           cycles);
 
-    NBKernelSystem nbKernelSystem_;
+    SimulationState simulationState_;
     NBKernelOptions nbKernelOptions_;
+    std::unique_ptr<nonbonded_verlet_t> nonbondedVerlet_;
 
+    interaction_const_t setupInteractionConst(const NBKernelOptions &options);
+
+    void expandSimdOptionAndPushBack(const NBKernelOptions        &options,
+                            std::vector<NBKernelOptions> *optionsList);
+
+    gmx::compat::optional<std::string> checkKernelSetup(const NBKernelOptions &options);
+
+    Nbnxm::KernelSetup getKernelSetup(const NBKernelOptions &options);
+
+    real ewaldCoeff(const real ewald_rtol, const real pairlistCutoff);
 };
 
 } // namespace nblib
