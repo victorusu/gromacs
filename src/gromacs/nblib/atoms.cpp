@@ -34,7 +34,7 @@
  */
 /*! \internal \file
  * \brief
- * This implements basic nblib AtomType tests
+ * Implements nblib AtomType
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
@@ -43,52 +43,34 @@
  */
 #include "gmxpre.h"
 
-#include <cmath>
+#include "atoms.h"
 
-#include "gromacs/nblib/atomtype.h"
+namespace nblib {
 
-#include "testutils/refdata.h"
-#include "testutils/testasserts.h"
+Atom::Atom() noexcept :
+  name_(""),
+  mass_(0),
+  charge_(0),
+  c6_(0),
+  c12_(0)
+{}
 
-using gmx::test::defaultRealTolerance;
+Atom::Atom(std::string atomName, real mass, real charge, real c6, real c12)
+: name_(std::move(atomName)),
+  mass_(mass),
+  charge_(charge),
+  c6_(c6),
+  c12_(c12)
+{}
 
-namespace nblib
-{
+std::string Atom::name() const { return name_; }
 
-struct ArAtom
-{
-    AtomKindName name = AtomKindName("Ar");
-    real mass = 1.0;
-    real c6 = 1;
-    real c12 = 1;
-};
+real Atom::mass() const { return mass_; }
 
-TEST(NBlibTest, AtomNameCanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.name(), arAtom.name);
-}
+real Atom::charge() const { return charge_; }
 
-TEST(NBlibTest, AtomMassCanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.mass(), arAtom.mass);
-}
+real Atom::c6() const { return c6_; }
 
-TEST(NBlibTest, AtomC6CanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c6(), arAtom.c6);
-}
+real Atom::c12() const { return c12_; }
 
-TEST(NBlibTest, AtomC12CanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c12(), arAtom.c12);
-}
-
-}  // namespace nblib
+} // namespace nblib

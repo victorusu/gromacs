@@ -34,61 +34,57 @@
  */
 /*! \internal \file
  * \brief
- * This implements basic nblib AtomType tests
+ * Implements nblib AtomType
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
-#include "gmxpre.h"
+#ifndef GROMACS_ATOMS_H
+#define GROMACS_ATOMS_H
 
-#include <cmath>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 
-#include "gromacs/nblib/atomtype.h"
+#include "gromacs/math/vectypes.h"
 
-#include "testutils/refdata.h"
-#include "testutils/testasserts.h"
+#include "interactions.h"
 
-using gmx::test::defaultRealTolerance;
+class TopologyBuilder;
 
 namespace nblib
 {
 
-struct ArAtom
-{
-    AtomKindName name = AtomKindName("Ar");
-    real mass = 1.0;
-    real c6 = 1;
-    real c12 = 1;
+class Atom {
+public:
+    Atom() noexcept;
+
+    Atom(std::string atomName,
+             real mass,
+             real charge,
+             real c6,
+             real c12);
+
+    std::string name() const;
+
+    real mass() const;
+
+    real charge() const;
+
+    real c6() const;
+
+    real c12() const;
+
+private:
+    std::string name_;
+    real mass_;
+    real charge_;
+    real c6_;
+    real c12_;
 };
 
-TEST(NBlibTest, AtomNameCanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.name(), arAtom.name);
-}
-
-TEST(NBlibTest, AtomMassCanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.mass(), arAtom.mass);
-}
-
-TEST(NBlibTest, AtomC6CanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c6(), arAtom.c6);
-}
-
-TEST(NBlibTest, AtomC12CanBeConstructed)
-{
-    ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c12(), arAtom.c12);
-}
-
-}  // namespace nblib
+} //namespace nblib
+#endif //GROMACS_MOLECULES_H
