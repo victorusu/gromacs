@@ -64,7 +64,7 @@ using ResidueName = std::string;
 
 class Molecule {
 public:
-    explicit Molecule(MoleculeName moleculeName);
+    Molecule(MoleculeName moleculeName);
 
     Molecule& addAtom(const AtomName &atomName, const ResidueName &residueName, Atom const &atomType);
 

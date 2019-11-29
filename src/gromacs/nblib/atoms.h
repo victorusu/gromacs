@@ -61,11 +61,11 @@ public:
 
     Atom() noexcept;
 
-    explicit Atom(AtomKindName atomName,
-                  AtomMass mass,
-                  AtomCharge charge,
-                  C6Param c6,
-                  C12Param c12);
+    Atom(AtomKindName atomName,
+         AtomMass mass,
+         AtomCharge charge,
+         C6Param c6,
+         C12Param c12);
 
     AtomKindName name() const;
 
