@@ -59,9 +59,9 @@ Molecule generateWaterMolecule()
 
     //! 1. Define Atom Type
     //Atom Ow(AtomKindName("Ow"), 16, -0.6, 1., 1.);
-    Atom Ow(AtomKindName("Ow"), 16, -0.6, 1., 1.);
-    Atom Hw(AtomKindName("Hw"), 1, +0.3, 1., 1.);
-    Atom Ar(AtomKindName("Ar"), 40, 0., 1., 1.);
+    Atom Ow(AtomKindName("Ow"), AtomicMass(16), -0.6, 1., 1.);
+    Atom Hw(AtomKindName("Hw"), AtomicMass(1), +0.3, 1., 1.);
+    Atom Ar(AtomKindName("Ar"), AtomicMass(40), 0., 1., 1.);
 
     //! 2. Define Molecule
 

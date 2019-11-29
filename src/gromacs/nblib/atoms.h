@@ -58,12 +58,18 @@ struct AtomKindName
     explicit AtomKindName(std::string str) : name_(str) {}
 };
 
+struct AtomicMass
+{
+    real mass_;
+    explicit AtomicMass(real mass) : mass_(mass) {}
+};
+
 class Atom {
 public:
     Atom() noexcept;
 
     Atom(AtomKindName atomName,
-             real mass,
+         AtomicMass mass,
              real charge,
              real c6,
              real c12);

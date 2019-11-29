@@ -55,9 +55,9 @@ Atom::Atom() noexcept :
   c12_(0)
 {}
 
-Atom::Atom(AtomKindName atomName, real mass, real charge, real c6, real c12)
+Atom::Atom(AtomKindName atomName, AtomicMass mass, real charge, real c6, real c12)
 : name_(atomName.name_),
-  mass_(mass),
+  mass_(mass.mass_),
   charge_(charge),
   c6_(c6),
   c12_(c12)
