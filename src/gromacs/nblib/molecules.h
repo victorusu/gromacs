@@ -58,14 +58,17 @@ class TopologyBuilder;
 
 namespace nblib
 {
+using MoleculeName = std::string;
+using AtomName = std::string;
+using ResidueName = std::string;
 
 class Molecule {
 public:
-    Molecule(std::string moleculeName);
+    explicit Molecule(MoleculeName moleculeName);
 
-    Molecule& addAtom(const std::string &atomName, const std::string &residueName, Atom const &atomType);
+    Molecule& addAtom(const AtomName &atomName, const ResidueName &residueName, Atom const &atomType);
 
-    Molecule& addAtom(const std::string &atomName, Atom const &atomType);
+    Molecule& addAtom(const AtomName &atomName, Atom const &atomType);
 
     void addHarmonicBond(HarmonicType harmonicBond);
 
@@ -74,7 +77,7 @@ public:
 
     void addExclusion(std::tuple<std::string, std::string> atom, std::tuple<std::string, std::string> atomToExclude);
 
-    void addExclusion(std::string atomName, std::string atomNameToExclude);
+    void addExclusion(AtomName atomName, AtomName atomNameToExclude);
 
     int numAtomsInMolecule() const;
 
@@ -92,9 +95,9 @@ private:
 
     std::vector<HarmonicType> harmonicInteractions_;
 
-    int atomNameAndResidueToIndex(std::tuple<std::string, std::string> atomResNameTuple);
+    int atomNameAndResidueToIndex(std::tuple<AtomName , ResidueName> atomResNameTuple);
 
-    void addAtomSelfExclusion(std::string atomName, std::string resName);
+    void addAtomSelfExclusion(AtomName atomName, ResidueName resName);
 
 };
 

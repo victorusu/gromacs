@@ -48,14 +48,14 @@
 namespace nblib {
 
 Atom::Atom() noexcept :
-  name_(""),
-  mass_(0),
-  charge_(0),
-  c6_(0),
-  c12_(0)
+  name_(AtomKindName("")),
+  mass_(AtomMass(0)),
+  charge_(AtomCharge(0)),
+  c6_(C6Param(0)),
+  c12_(C12Param(0))
 {}
 
-Atom::Atom(std::string atomName, real mass, real charge, real c6, real c12)
+Atom::Atom(AtomKindName atomName, AtomMass mass, AtomCharge charge, C6Param c6, C12Param c12)
 : name_(std::move(atomName)),
   mass_(mass),
   charge_(charge),
@@ -63,14 +63,14 @@ Atom::Atom(std::string atomName, real mass, real charge, real c6, real c12)
   c12_(c12)
 {}
 
-std::string Atom::name() const { return name_; }
+AtomKindName Atom::name() const { return name_; }
 
-real Atom::mass() const { return mass_; }
+AtomMass Atom::mass() const { return mass_; }
 
-real Atom::charge() const { return charge_; }
+AtomCharge Atom::charge() const { return charge_; }
 
-real Atom::c6() const { return c6_; }
+C6Param Atom::c6() const { return c6_; }
 
-real Atom::c12() const { return c12_; }
+C12Param Atom::c12() const { return c12_; }
 
 } // namespace nblib

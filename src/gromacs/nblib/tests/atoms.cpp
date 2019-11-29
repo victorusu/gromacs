@@ -57,11 +57,11 @@ namespace nblib
 
 struct ArAtom
 {
-    std::string name = "Ar";
-    real mass = 1.0;
-    real charge = 0;
-    real c6 = 1;
-    real c12 = 1;
+    AtomName name = "Ar";
+    AtomMass mass = 1.0;
+    AtomCharge charge = 0;
+    C6Param c6 = 1;
+    C12Param c12 = 1;
 };
 
 TEST(NBlibTest, AtomNameCanBeConstructed)

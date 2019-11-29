@@ -45,45 +45,44 @@
 #define GROMACS_ATOMS_H
 
 #include <string>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
 
 #include "gromacs/math/vectypes.h"
 
-#include "interactions.h"
-
-class TopologyBuilder;
-
 namespace nblib
 {
+using AtomKindName = std::string;
+using AtomMass = real;
+using AtomCharge = real;
+using C6Param = real;
+using C12Param = real;
 
 class Atom {
 public:
+
     Atom() noexcept;
 
-    Atom(std::string atomName,
-             real mass,
-             real charge,
-             real c6,
-             real c12);
+    explicit Atom(AtomKindName atomName,
+                  AtomMass mass,
+                  AtomCharge charge,
+                  C6Param c6,
+                  C12Param c12);
 
-    std::string name() const;
+    AtomKindName name() const;
 
-    real mass() const;
+    AtomMass mass() const;
 
-    real charge() const;
+    AtomCharge charge() const;
 
-    real c6() const;
+    C6Param c6() const;
 
-    real c12() const;
+    C12Param c12() const;
 
 private:
-    std::string name_;
-    real mass_;
-    real charge_;
-    real c6_;
-    real c12_;
+    AtomKindName name_;
+    AtomMass mass_;
+    AtomCharge charge_;
+    C6Param c6_;
+    C12Param c12_;
 };
 
 } //namespace nblib
