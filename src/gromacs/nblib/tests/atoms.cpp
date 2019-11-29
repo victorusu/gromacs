@@ -58,7 +58,8 @@ namespace nblib
 struct ArAtom
 {
     AtomKindName name = AtomKindName("Ar");
-    real mass = 1.0;
+    AtomicMass mass = AtomicMass(1.0);
+    real charge = 0;
     real c6 = 1;
     real c12 = 1;
 };
@@ -73,8 +74,8 @@ TEST(NBlibTest, AtomNameCanBeConstructed)
 TEST(NBlibTest, AtomMassCanBeConstructed)
 {
     ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.mass(), arAtom.mass);
+    Atom argonAtom(arAtom.name, arAtom.mass, arAtom.charge, arAtom.c6, arAtom.c12);
+    EXPECT_EQ(argonAtom.mass(), arAtom.mass.mass_);
 }
 
 TEST(NBlibTest, AtomC6CanBeConstructed)
