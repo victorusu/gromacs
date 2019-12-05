@@ -149,7 +149,7 @@ t_blocka TopologyBuilder::createExclusionsList() const
 }
 
 template <class Extractor>
-std::vector<real> TopologyBuilder::extractQuantity(Extractor extractor)
+std::vector<real> TopologyBuilder::extractAtomTypeQuantity(Extractor extractor)
 {
     auto &moleculesList = molecules_;
 
@@ -168,8 +168,8 @@ std::vector<real> TopologyBuilder::extractQuantity(Extractor extractor)
             {
                 std::string atomTypeName = std::get<1>(atomTuple);
 
-                AtomType &atomType = molecule.atomTypes_[atomTypeName];
-                ret.push_back(extractor(atomType));
+                const auto &atcTup = molecule.atomTypes_[atomTypeName];
+                ret.push_back(extractor(atcTup));
             }
         }
     }
@@ -180,8 +180,8 @@ std::vector<real> TopologyBuilder::extractQuantity(Extractor extractor)
 Topology TopologyBuilder::buildTopology()
 {
     topology_.excls = createExclusionsList();
-    topology_.masses = extractQuantity([](const AtomType &atomType){ return atomType.mass(); });
-    topology_.charges = extractQuantity([](const AtomType &atomType){ return atomType.charge(); });
+    topology_.masses = extractAtomTypeQuantity([](const auto &atcTup){ return std::get<0>(atcTup).mass(); });
+    topology_.charges = extractAtomTypeQuantity([](const auto &atcTup){ return std::get<1>(atcTup); });
 
     return topology_;
 }
