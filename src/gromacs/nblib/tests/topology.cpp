@@ -42,6 +42,7 @@
  * \author Sebastian Keller <keller@cscs.ch>
  */
 
+#include "gromacs/nblib/atomtype.h"
 #include "gromacs/nblib/topology.h"
 
 #include "testutils/testasserts.h"
@@ -50,54 +51,61 @@ namespace nblib {
 namespace test {
 namespace {
 
-TEST(NBlibTest, fillExclusions)
+class TwoWaterMolecules
 {
-    //! Manually Create Molecules (Water & Argon)
+public:
+    Topology buildTopology()
+    {
+        //! Manually Create Molecule (Water)
 
-    //! 1. Define Atom Types
-    Atom Ow("Ow", 16, -0.6, 1., 1.);
-    Atom Hw("Hw", 1, +0.3, 1., 1.);
-    Atom Ar("Ar", 40, 0., 1., 1.);
+        //! Define Atom Type
+        AtomType Ow("Ow", 16, 1., 1.);
+        AtomType Hw("Hw", 1, 1., 1.);
 
-    //! 2. Define Molecules
+        //! Define Molecule
+        Molecule water("water");
 
-    //! 2.1 Water
-    Molecule water("water");
+        //! Add the atoms
+        water.addAtom("Oxygen", Charge(-0.6), Ow);
+        water.addAtom("H1", Charge(+0.3), Hw);
+        water.addAtom("H2", Charge(+0.3), Hw);
 
-    water.addAtom("Oxygen", Ow);
-    water.addAtom("H1", Hw);
-    water.addAtom("H2", Hw);
+        //! Add the exclusions
+        water.addExclusion("Oxygen", "H1");
+        water.addExclusion("Oxygen", "H2");
+        water.addExclusion("H1", "H2");
 
-    water.addHarmonicBond(HarmonicType{1, 2, "H1", "Oxygen"});
-    water.addHarmonicBond(HarmonicType{1, 2, "H2", "Oxygen"});
+        // Todo: Add bonds functionality so this can be used/tested
+        //water.addHarmonicBond(HarmonicType{1, 2, "H1", "Oxygen"});
+        //water.addHarmonicBond(HarmonicType{1, 2, "H2", "Oxygen"});
 
-    water.addExclusion("Oxygen", "H1");
-    water.addExclusion("Oxygen", "H2");
-    water.addExclusion("H1", "H2");
+        //! Build the topology
+        TopologyBuilder topologyBuilder;
 
-    //! 2.2 Argon
-    Molecule argon("argon");
+        //! Add some molecules to the topology
+        topologyBuilder.addMolecule(water, 2);
+        Topology topology = topologyBuilder.buildTopology();
+        return topology;
+    }
+};
 
-    argon.addAtom("Ar", Ar);
-
-    //! Setup Topology
-
-    TopologyBuilder topologyBuilder;
-    topologyBuilder.addMolecule(water, 1);
-    topologyBuilder.addMolecule(argon, 1);
-
-    auto topology = topologyBuilder.buildTopology();
-
-    auto exclusions = topology.getGMXexclusions();
-
-    //TODO: create a t_blocka object manually and compare
-    //      offsets are accounted for in topology
-
-
-
+TEST(NBlibTest, TopologyHasCharges)
+{
+    TwoWaterMolecules waters;
+    Topology watersTopology = waters.buildTopology();
+    std::vector<real> testCharges = watersTopology.getCharges();
+    std::vector<real> refCharges = { -0.6, 0.3, 0.3};
+    EXPECT_EQ(refCharges, testCharges);
 }
 
-
+TEST(NBlibTest, TopologyHasMasses)
+{
+    TwoWaterMolecules waters;
+    Topology watersTopology = waters.buildTopology();
+    std::vector<real> testMasses = watersTopology.getMasses();
+    std::vector<real> refMasses = { 16., 1., 1.};
+    EXPECT_EQ(refMasses, testMasses);
+}
 
 }  // namespace
 }  // namespace test
