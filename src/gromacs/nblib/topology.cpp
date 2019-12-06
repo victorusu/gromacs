@@ -57,20 +57,19 @@ namespace nblib {
 
 namespace detail {
 
-std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tuple<int, int>> &tupleList);
-std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
-
-
 //! Converts tuples of atom indices to exclude to the gmx::ExclusionBlock format
+//! Note: tupleList is expected to be sorted by first tuple element
 std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tuple<int, int>> &tupleList)
 {
     std::vector<gmx::ExclusionBlock> ret;
+
+    auto firstLowerThan = [](auto const& tup1, auto const& tup2) { return std::get<0>(tup1) < std::get<0>(tup2); };
 
     //! initialize pair of iterators delimiting the range of exclusions for
     //! the first atom in the list
     GMX_ASSERT(!tupleList.empty(), "tupleList must not be empty\n");
     auto range = std::equal_range(std::begin(tupleList), std::end(tupleList),
-                                  tupleList[0]);
+                                  tupleList[0], firstLowerThan);
     auto it1 = range.first;
     auto it2 = range.second;
 
@@ -88,7 +87,7 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 
         //! update the upper bound of the range for the next atom
         if (it1 != end(tupleList))
-            it2 = std::upper_bound(it1, std::end(tupleList), *it1);
+            it2 = std::upper_bound(it1, std::end(tupleList), *it1, firstLowerThan);
     }
 
     return ret;

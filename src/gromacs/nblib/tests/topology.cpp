@@ -41,8 +41,10 @@
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
+#include <gromacs/topology/exclusionblocks.h>
 #include "gmxpre.h"
 
+#include "gromacs/nblib/atomtype.h"
 #include "gromacs/nblib/topology.h"
 
 #include "testutils/testasserts.h"
@@ -56,18 +58,18 @@ TEST(NBlibTest, fillExclusions)
     //! Manually Create Molecules (Water & Argon)
 
     //! 1. Define Atom Types
-    Atom Ow("Ow", 16, -0.6, 1., 1.);
-    Atom Hw("Hw", 1, +0.3, 1., 1.);
-    Atom Ar("Ar", 40, 0., 1., 1.);
+    AtomType Ow("Ow", 16, 1., 1.);
+    AtomType Hw("Hw", 1, 1., 1.);
+    AtomType Ar("Ar", 40, 1., 1.);
 
     //! 2. Define Molecules
 
     //! 2.1 Water
     Molecule water("water");
 
-    water.addAtom("Oxygen", Ow);
-    water.addAtom("H1", Hw);
-    water.addAtom("H2", Hw);
+    water.addAtom("Oxygen", -0.6, Ow);
+    water.addAtom("H1", 0.3, Hw);
+    water.addAtom("H2", 0.3, Hw);
 
     water.addHarmonicBond(HarmonicType{1, 2, "H1", "Oxygen"});
     water.addHarmonicBond(HarmonicType{1, 2, "H2", "Oxygen"});
@@ -98,7 +100,35 @@ TEST(NBlibTest, fillExclusions)
 
 }
 
+TEST(NBlibTest, toGmxExclusionBlockWorks)
+{
+    std::vector<std::tuple<int, int>> testInput{{0,0}, {0,1}, {0,2},
+                                                {1,0}, {1,1}, {1,2},
+                                                {2,0}, {2,1}, {2,2}};
 
+    std::vector<gmx::ExclusionBlock> reference;
+
+    gmx::ExclusionBlock localBlock;
+    localBlock.atomNumber.push_back(0);
+    localBlock.atomNumber.push_back(1);
+    localBlock.atomNumber.push_back(2);
+
+    reference.push_back(localBlock);
+    reference.push_back(localBlock);
+    reference.push_back(localBlock);
+
+    std::vector<gmx::ExclusionBlock> probe = detail::toGmxExclusionBlock(testInput);
+
+    ASSERT_EQ(reference.size(), probe.size());
+    for (size_t i = 0; i < reference.size(); ++i)
+    {
+        ASSERT_EQ(reference[i].atomNumber.size(), probe[i].atomNumber.size());
+        for (size_t j = 0; j < reference[i].atomNumber.size(); ++j)
+        {
+            EXPECT_EQ(reference[i].atomNumber[j], probe[i].atomNumber[j]);
+        }
+    }
+}
 
 }  // namespace
 }  // namespace test

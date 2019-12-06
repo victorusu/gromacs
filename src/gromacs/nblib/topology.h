@@ -53,7 +53,16 @@
 
 struct t_blocka;
 
+namespace gmx {
+class ExclusionBlock;
+}
+
 namespace nblib {
+
+namespace detail {
+std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tuple<int, int>> &tupleList);
+std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
+}
 
 class Topology {
 public:
