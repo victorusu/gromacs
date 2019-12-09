@@ -45,15 +45,9 @@
 #define GROMACS_ATOMS_H
 
 #include <string>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include "gromacs/math/vectypes.h"
-
-#include "interactions.h"
-
-class TopologyBuilder;
 
 namespace nblib
 {
