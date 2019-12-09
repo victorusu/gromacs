@@ -56,28 +56,29 @@ namespace {
 
 TEST(NBlibTest, CanConstructMoleculeWithoutChargeOrResidueName)
 {
-    AtomType Ar("Ar", 40, 1., 1.);
+    //AtomType Ar("Ar", 40, 1., 1.);
+    AtomType Ar(AtomTypeName("Ar"), AtomicMass(40), C6Param(1.0), C12Param(1.0));
     Molecule argon("Ar");
     EXPECT_NO_THROW(argon.addAtom(AtomName("Ar"), Ar));
 }
 
 TEST(NBlibTest, CanConstructMoleculeWithChargeWithoutResidueName)
 {
-    AtomType Ar("Ar", 40, 1., 1.);
+    AtomType Ar(AtomTypeName("Ar"), AtomicMass(40), C6Param(1.0), C12Param(1.0));
     Molecule argon("Ar");
     EXPECT_NO_THROW(argon.addAtom(AtomName("Ar"), Charge(0), Ar));
 }
 
 TEST(NBlibTest, CanConstructMoleculeWithoutChargeWithResidueName)
 {
-    AtomType Ar("Ar", 40, 1., 1.);
+    AtomType Ar(AtomTypeName("Ar"), AtomicMass(40), C6Param(1.0), C12Param(1.0));
     Molecule argon("Ar");
     EXPECT_NO_THROW(argon.addAtom(AtomName("Ar"), ResidueName("ar2"), Ar));
 }
 
 TEST(NBlibTest, CanConstructMoleculeWithChargeWithResidueName)
 {
-    AtomType Ar("Ar", 40, 1., 1.);
+    AtomType Ar(AtomTypeName("Ar"), AtomicMass(40), C6Param(1.0), C12Param(1.0));
     Molecule argon("Ar");
     EXPECT_NO_THROW(argon.addAtom(AtomName("Ar"),  ResidueName("ar2"), Charge(0), Ar));
 }
@@ -87,8 +88,8 @@ TEST(NBlibTest, CanGetNumAtomsInMolecule)
     //! Manually Create Molecule (Water)
 
     //! 1. Define Atom Type
-    AtomType Ow("Ow", 16, 1., 1.);
-    AtomType Hw("Hw", 1, 1., 1.);
+    AtomType Ow(AtomTypeName("Ow"), AtomicMass(16), C6Param(1.0), C12Param(1.0));
+    AtomType Hw(AtomTypeName("Hw"), AtomicMass(1), C6Param(1.0), C12Param(1.0));
 
     //! 2. Define Molecule
     Molecule water("water");
@@ -107,8 +108,8 @@ TEST(NBlibTest, CanConstructExclusionListFromNames)
     //! Manually Create Molecule (Water)
 
     //! 1. Define Atom Type
-    AtomType Ow("Ow", 16, 1., 1.);
-    AtomType Hw("Hw", 1, 1., 1.);
+    AtomType Ow(AtomTypeName("Ow"), AtomicMass(16), C6Param(1.0), C12Param(1.0));
+    AtomType Hw(AtomTypeName("Hw"), AtomicMass(1), C6Param(1.0), C12Param(1.0));
 
     //! 2. Define Molecule
     Molecule water("water");
@@ -138,8 +139,8 @@ TEST(NBlibTest, CanConstructExclusionListFromNamesAndIndicesMixed)
     //! Manually Create Molecule (Water)
 
     //! 1. Define Atom Type
-    AtomType Ow("Ow", 16, 1., 1.);
-    AtomType Hw("Hw", 1, 1., 1.);
+    AtomType Ow(AtomTypeName("Ow"), AtomicMass(16), C6Param(1.0), C12Param(1.0));
+    AtomType Hw(AtomTypeName("Hw"), AtomicMass(1), C6Param(1.0), C12Param(1.0));
 
     //! 2. Define Molecule
     Molecule water("water");

@@ -65,8 +65,8 @@ public:
         //! Manually Create Molecule (Water)
 
         //! Define Atom Type
-        AtomType Ow("Ow", 16, 1., 1.);
-        AtomType Hw("Hw", 1, 1., 1.);
+        AtomType Ow(AtomTypeName("Ow"), AtomicMass(16), C6Param(1.0), C12Param(1.0));
+        AtomType Hw(AtomTypeName("Hw"), AtomicMass(1), C6Param(1.0), C12Param(1.0));
 
         //! Define Molecule
         Molecule water("water");

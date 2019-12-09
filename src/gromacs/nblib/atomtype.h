@@ -58,14 +58,38 @@ class TopologyBuilder;
 namespace nblib
 {
 
+struct AtomTypeName
+{
+    std::string name_;
+    explicit AtomTypeName(std::string str) : name_(str) {}
+};
+
+struct AtomicMass
+{
+    real mass_;
+    explicit AtomicMass(real mass) : mass_(mass) {}
+};
+
+struct C6Param
+{
+    real c6_;
+    explicit C6Param(real c6) : c6_(c6) {}
+};
+
+struct C12Param
+{
+    real c12_;
+    explicit C12Param(real c12) : c12_(c12) {}
+};
+
 class AtomType {
 public:
     AtomType() noexcept;
 
-    AtomType(std::string atomName,
-             real mass,
-             real c6,
-             real c12);
+    AtomType(AtomTypeName atomName,
+             AtomicMass mass,
+             C6Param c6,
+             C12Param c12);
 
     std::string name() const;
 

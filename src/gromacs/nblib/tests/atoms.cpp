@@ -57,39 +57,46 @@ namespace nblib
 
 struct ArAtom
 {
-    AtomKindName name = AtomKindName("Ar");
-    AtomicMass mass = AtomicMass(1.0);
-    real charge = 0;
-    real c6 = 1;
-    real c12 = 1;
+    AtomTypeName name = AtomTypeName("Ar");
+    AtomicMass mass = AtomicMass(40.0);
+    C6Param c6 = C6Param(1.0);
+    C12Param c12 = C12Param(1.0);
 };
+
+AtomType buildArgonAtom(const ArAtom &arAtom);
 
 TEST(NBlibTest, AtomNameCanBeConstructed)
 {
     ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.name(), arAtom.name);
+    AtomType argonAtom = buildArgonAtom(arAtom);
+    EXPECT_EQ(argonAtom.name(), arAtom.name.name_);
 }
 
 TEST(NBlibTest, AtomMassCanBeConstructed)
 {
     ArAtom arAtom;
-    Atom argonAtom(arAtom.name, arAtom.mass, arAtom.charge, arAtom.c6, arAtom.c12);
+    AtomType argonAtom = buildArgonAtom(arAtom);
     EXPECT_EQ(argonAtom.mass(), arAtom.mass.mass_);
 }
 
 TEST(NBlibTest, AtomC6CanBeConstructed)
 {
     ArAtom arAtom;
-    AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c6(), arAtom.c6);
+    AtomType argonAtom = buildArgonAtom(arAtom);
+    EXPECT_EQ(argonAtom.c6(), arAtom.c6.c6_);
 }
 
 TEST(NBlibTest, AtomC12CanBeConstructed)
 {
     ArAtom arAtom;
+    AtomType argonAtom = buildArgonAtom(arAtom);
+    EXPECT_EQ(argonAtom.c12(), arAtom.c12.c12_);
+}
+
+AtomType buildArgonAtom(const ArAtom &arAtom)
+{
     AtomType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
-    EXPECT_EQ(argonAtom.c12(), arAtom.c12);
+    return argonAtom;
 }
 
 }  // namespace nblib

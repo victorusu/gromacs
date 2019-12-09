@@ -13,11 +13,11 @@ AtomType::AtomType() noexcept :
   c12_(0)
 {}
 
-AtomType::AtomType(std::string atomName, real mass, real c6, real c12)
-: name_(std::move(atomName)),
-  mass_(mass),
-  c6_(c6),
-  c12_(c12)
+AtomType::AtomType(AtomTypeName atomName, AtomicMass mass, C6Param c6, C12Param c12)
+: name_(std::move(atomName.name_)),
+  mass_(mass.mass_),
+  c6_(c6.c6_),
+  c12_(c12.c12_)
 {}
 
 std::string AtomType::name() const { return name_; }
