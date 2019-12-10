@@ -94,7 +94,11 @@ public:
     //! Returns a vector of atomic masses
     const std::vector<real>& getMasses() const;
 
-    const std::vector<real>& getNonbondedParameters() const;
+    //! Returns full list of nonbondedParameters
+    const std::vector<std::tuple<real, real>>& getNonbondedParameters() const;
+
+    //! Returns list of unique, sorted nonbondedParameters
+    const std::vector<std::tuple<real, real>>& getUniqueNonbondedParameters() const;
 
     const std::vector<int>& getAtomInfoAllVdw() const;
 
@@ -108,7 +112,9 @@ private:
     friend class TopologyBuilder;
 
     //! Storage for parameters for short range interactions.
-    std::vector<real> nonbondedParameters_;
+    std::vector<std::tuple<real, real>> nonbondedParameters_;
+    //! Storage for parameters for short range interactions but without duplicates and sorted.
+    std::vector<std::tuple<real, real>> uniqueNonbondedParameters_;
     //! Storage for atom type parameters.
     std::vector<std::string> atomTypes_;
     //! Storage for atom type parameters but without duplicates and sorted.

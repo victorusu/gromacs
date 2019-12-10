@@ -65,8 +65,8 @@ public:
         //! Manually Create Molecule (Water)
 
         //! Define Atom Type
-        AtomType Ow("Ow", 16, 1., 1.);
-        AtomType Hw("Hw", 1, 1., 1.);
+        AtomType Ow("Ow", 16, 6., 12.);
+        AtomType Hw("Hw", 1, 0.6, 0.12);
 
         //! Define Molecule
         Molecule water("water");
@@ -139,6 +139,25 @@ TEST(NBlibTest, TopologyHasCorrectNumberOfAtomTypes)
     Topology          watersTopology = waters.buildTopology();
     const int         test           = watersTopology.numAtomTypes();
     const int         ref            = 2; // "Hw", "Ow"
+    EXPECT_EQ(ref, test);
+}
+
+TEST(NBlibTest, TopologyHasNonbondedParameters)
+{
+    TwoWaterMolecules                         waters;
+    Topology                                  watersTopology = waters.buildTopology();
+    const std::vector<std::tuple<real, real>> test = watersTopology.getNonbondedParameters();
+    const std::vector<std::tuple<real, real>> ref  = { { 6, 12 }, { 0.6, 0.12 }, { 0.6, 0.12 },
+                                                       { 6, 12 }, { 0.6, 0.12 }, { 0.6, 0.12 } };
+    EXPECT_EQ(ref, test);
+}
+
+TEST(NBlibTest, TopologyHasUniqueNonbondedParameters)
+{
+    TwoWaterMolecules                         waters;
+    Topology                                  watersTopology = waters.buildTopology();
+    const std::vector<std::tuple<real, real>> test = watersTopology.getUniqueNonbondedParameters();
+    const std::vector<std::tuple<real, real>> ref  = { { 0.6, 0.12 }, { 6, 12 } };
     EXPECT_EQ(ref, test);
 }
 

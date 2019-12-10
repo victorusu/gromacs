@@ -186,6 +186,32 @@ std::vector<T> TopologyBuilder::extractAtomTypeQuantity(Extractor extractor)
     return ret;
 }
 
+//! Get a sorted vector of unique elements
+template<typename T>
+static std::vector<T> getUnique(std::vector<T> input)
+{
+    //! Create a temporary list to sort the AtomType names and remove duplicates
+    std::list<T> atomTypesList(std::begin(input), std::end(input));
+    atomTypesList.sort();
+    atomTypesList.unique();
+    std::vector<T> output = {std::begin(atomTypesList), std::end(atomTypesList)};
+    return output;
+}
+
+//! Allow creation of vector<tuple<T, T>> from two vector<T>
+template<typename T>
+auto operator+(std::vector<T>&& lhs, std::vector<T>&& rhs)
+{
+
+    std::vector<std::tuple<T, T>> ret(lhs.size());
+
+    std::transform(std::make_move_iterator(lhs.cbegin()), std::make_move_iterator(lhs.cend()),
+                   std::make_move_iterator(rhs.cbegin()), ret.begin(), [](auto&& lhs_val, auto&& rhs_val) {
+        return std::make_tuple(std::move(lhs_val), std::move(rhs_val));
+    });
+    return ret;
+}
+
 Topology TopologyBuilder::buildTopology()
 {
     topology_.excls_  = createExclusionsList();
@@ -196,14 +222,14 @@ Topology TopologyBuilder::buildTopology()
         return data.charge_;
     });
 
+    std::vector<real> c6 = extractAtomTypeQuantity<real>([](const auto& data, auto& map) { return map[data.atomTypeName_].c6(); });
+    std::vector<real> c12 = extractAtomTypeQuantity<real>([](const auto& data, auto& map) { return map[data.atomTypeName_].c12(); });
+    topology_.nonbondedParameters_ = std::move(c6) + std::move(c12);
+    topology_.uniqueNonbondedParameters_ = getUnique(topology_.nonbondedParameters_);
+
     topology_.atomTypes_ = extractAtomTypeQuantity<std::string>(
             [](const auto& data, auto& map) { return map[data.atomTypeName_].name(); });
-    //! Create a temporary list to sort the AtomType names and remove duplicates
-    std::list<std::string> atomTypesList(std::begin(topology_.atomTypes_), std::end(topology_.atomTypes_));
-    atomTypesList.sort();
-    atomTypesList.unique();
-    topology_.uniqueAtomTypes_.insert(std::end(topology_.uniqueAtomTypes_),
-                                      std::begin(atomTypesList), std::end(atomTypesList));
+    topology_.uniqueAtomTypes_ = getUnique(topology_.atomTypes_);
 
     return topology_;
 }
@@ -246,9 +272,14 @@ int Topology::numAtomTypes() const
     return uniqueAtomTypes_.size();
 }
 
-const std::vector<real>& Topology::getNonbondedParameters() const
+const std::vector<std::tuple<real, real>>& Topology::getNonbondedParameters() const
 {
     return nonbondedParameters_;
+}
+
+const std::vector<std::tuple<real, real>>& Topology::getUniqueNonbondedParameters() const
+{
+    return uniqueNonbondedParameters_;
 }
 
 const std::vector<int>& Topology::getAtomInfoAllVdw() const
