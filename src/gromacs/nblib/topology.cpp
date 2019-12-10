@@ -48,6 +48,7 @@
 #include "util.h"
 
 #include <numeric>
+#include <list>
 
 #include "gromacs/topology/block.h"
 #include "gromacs/topology/exclusionblocks.h"
@@ -159,13 +160,13 @@ t_blocka TopologyBuilder::createExclusionsList() const
     return tBlockGlobal;
 }
 
-template<class Extractor>
-std::vector<real> TopologyBuilder::extractAtomTypeQuantity(Extractor extractor)
+template<typename T, class Extractor>
+std::vector<T> TopologyBuilder::extractAtomTypeQuantity(Extractor extractor)
 {
     auto& moleculesList = molecules_;
 
     //! returned object
-    std::vector<real> ret;
+    std::vector<T> ret;
     ret.reserve(numAtoms_);
 
     for (auto& molNumberTuple : moleculesList)
@@ -188,12 +189,21 @@ std::vector<real> TopologyBuilder::extractAtomTypeQuantity(Extractor extractor)
 Topology TopologyBuilder::buildTopology()
 {
     topology_.excls_  = createExclusionsList();
-    topology_.masses_ = extractAtomTypeQuantity(
+    topology_.masses_ = extractAtomTypeQuantity<real>(
             [](const auto& data, auto& map) { return map[data.atomTypeName_].mass(); });
-    topology_.charges_ = extractAtomTypeQuantity([](const auto& data, auto& map) {
+    topology_.charges_ = extractAtomTypeQuantity<real>([](const auto& data, auto& map) {
         ignore_unused(map);
         return data.charge_;
     });
+
+    topology_.atomTypes_ = extractAtomTypeQuantity<std::string>(
+            [](const auto& data, auto& map) { return map[data.atomTypeName_].name(); });
+    //! Create a temporary list to sort the AtomType names and remove duplicates
+    std::list<std::string> atomTypesList(std::begin(topology_.atomTypes_), std::end(topology_.atomTypes_));
+    atomTypesList.sort();
+    atomTypesList.unique();
+    topology_.uniqueAtomTypes_.insert(std::end(topology_.uniqueAtomTypes_),
+                                      std::begin(atomTypesList), std::end(atomTypesList));
 
     return topology_;
 }
@@ -221,9 +231,19 @@ const std::vector<real>& Topology::getCharges() const
     return charges_;
 }
 
-const std::vector<int>& Topology::getAtoms() const
+const std::vector<std::string>& Topology::getAtomTypes() const
 {
     return atomTypes_;
+}
+
+const std::vector<std::string>& Topology::getUniqueAtomTypes() const
+{
+    return uniqueAtomTypes_;
+}
+
+int Topology::numAtomTypes() const
+{
+    return uniqueAtomTypes_.size();
 }
 
 const std::vector<real>& Topology::getNonbondedParameters() const

@@ -99,19 +99,46 @@ public:
 
 TEST(NBlibTest, TopologyHasCharges)
 {
-    TwoWaterMolecules waters;
-    Topology          watersTopology = waters.buildTopology();
-    std::vector<real> test           = watersTopology.getCharges();
-    std::vector<real> ref            = { -0.6, 0.3, 0.3, -0.6, 0.3, 0.3 };
+    TwoWaterMolecules       waters;
+    Topology                watersTopology = waters.buildTopology();
+    const std::vector<real> test           = watersTopology.getCharges();
+    const std::vector<real> ref            = { -0.6, 0.3, 0.3, -0.6, 0.3, 0.3 };
     EXPECT_EQ(ref, test);
 }
 
 TEST(NBlibTest, TopologyHasMasses)
 {
+    TwoWaterMolecules       waters;
+    Topology                watersTopology = waters.buildTopology();
+    const std::vector<real> test           = watersTopology.getMasses();
+    const std::vector<real> ref            = { 16., 1., 1., 16., 1., 1. };
+    EXPECT_EQ(ref, test);
+}
+
+TEST(NBlibTest, TopologyHasAtomTypes)
+{
+    TwoWaterMolecules              waters;
+    Topology                       watersTopology = waters.buildTopology();
+    const std::vector<std::string> test           = watersTopology.getAtomTypes();
+    const std::vector<std::string> ref            = { "Ow", "Hw", "Hw", "Ow", "Hw", "Hw" };
+    EXPECT_EQ(ref, test);
+}
+
+TEST(NBlibTest, TopologyHasUniqueAtomTypes)
+{
+    TwoWaterMolecules              waters;
+    Topology                       watersTopology = waters.buildTopology();
+    const std::vector<std::string> test           = watersTopology.getUniqueAtomTypes();
+    const std::vector<std::string> ref            = { "Hw", "Ow" };
+    EXPECT_EQ(ref, test);
+}
+
+TEST(NBlibTest, TopologyHasCorrectNumberOfAtomTypes)
+{
     TwoWaterMolecules waters;
     Topology          watersTopology = waters.buildTopology();
-    std::vector<real> test           = watersTopology.getMasses();
-    std::vector<real> ref            = { 16., 1., 1., 16., 1., 1. };
+    const int         test           = watersTopology.numAtomTypes();
+    const int         ref            = 2; // "Hw", "Ow"
     EXPECT_EQ(ref, test);
 }
 
