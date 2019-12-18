@@ -45,14 +45,16 @@
 #ifndef GROMACS_SETUP_H
 #define GROMACS_SETUP_H
 
-#include "gromacs/math/vectypes.h"
-#include "gromacs/mdtypes/forcerec.h"
-#include "gromacs/mdtypes/interaction_const.h"
+#include <memory>
 
 #include "nbkerneldef.h"
 #include "nbkernelsystem.h"
 
-namespace nblib {
+struct interaction_const_t;
+struct nonbonded_verlet_t;
+
+namespace nblib
+{
 
 /*! \internal \brief
  * The options for the nonbonded kernel caller

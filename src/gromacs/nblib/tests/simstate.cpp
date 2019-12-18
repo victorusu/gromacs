@@ -48,7 +48,6 @@
 #include "gromacs/nblib/atomtype.h"
 #include "gromacs/nblib/box.h"
 #include "gromacs/nblib/molecules.h"
-#include "gromacs/nblib/nbkerneloptions.h"
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nblib/topology.h"
 
@@ -74,10 +73,10 @@ public:
     {
         constexpr int NumArgonAtoms = 3;
 
-        AtomType argonAtom("AR", 39.94800, 0.0062647225, 9.847044e-06);
+        AtomType argonAtom(AtomName("AR"), Mass(39.94800), C6(0.0062647225), C12(9.847044e-06));
 
         Molecule argonMolecule("AR");
-        argonMolecule.addAtom("AR", argonAtom);
+        argonMolecule.addAtom(AtomName("AR"), argonAtom);
 
         topologyBuilder.addMolecule(argonMolecule, NumArgonAtoms);
 
