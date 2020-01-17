@@ -97,9 +97,9 @@ int Molecule::numAtomsInMolecule() const
     return atoms_.size();
 }
 
-void Molecule::addHarmonicBond(HarmonicType harmonicBond)
+void addBond(HarmonicBondType&&, std::string atomName1, std::string atomName2)
 {
-    harmonicInteractions_.push_back(harmonicBond);
+
 }
 
 void Molecule::addExclusion(const int atomIndex, const int atomIndexToExclude)
