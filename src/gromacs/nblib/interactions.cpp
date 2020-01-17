@@ -41,34 +41,16 @@
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
-#ifndef GROMACS_INTERACTIONS_H
-#define GROMACS_INTERACTIONS_H
 
-#include "gromacs/math/vectypes.h"
+#include "interactions.h"
 
 namespace nblib
 {
 
-//! Type of interaction
-struct HarmonicBondType
+void InteractionContainer::addInteraction(HarmonicBondType harmonicBondType)
 {
-    real equiDist;
-    real forceConstant;
-    std::string bondName;
-
-    HarmonicBondType(real ed, real fc, std::string name)
-    : equiDist(ed), forceConstant(fc), bondName(name) {}
-};
-
-class InteractionContainer
-{
-public:
-    template <class Interaction>
-    void addInteraction(Interaction interaction);
-
-private:
-    std::vector<HarmonicBondType> harmonicBonds_;
-};
+    harmonicBonds_.push_back(harmonicBondType);
+}
 
 } //namespace nblib
 #endif //GROMACS_INTERACTIONS_H
