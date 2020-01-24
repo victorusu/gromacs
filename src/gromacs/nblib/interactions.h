@@ -79,21 +79,37 @@ struct Interaction
     : interactionType(interactionPointer), atomIndex1(atomIndex1), atomIndex2(atomIndex2){}
 };
 
-class InteractionContainer
+struct InteractionContainer
 {
 public:
     //! Specialization based on supported interaction types
     template <class InteractionType>
-    void addInteraction(InteractionType	interactionType,
-                        size_t atomIndex1,
-                        size_t atomIndex2);
+    void addInteraction(const InteractionType&	interactionType,
+                        const size_t atomIndex1,
+                        const size_t atomIndex2) {}
 
-private:
+    template <>
+    void addInteraction<HarmonicBondType>(const HarmonicBondType&	interactionType,
+                                          size_t              atomIndex1,
+                                          size_t              atomIndex2);
+
     std::vector<Interaction> interactions_;
 
     std::vector<HarmonicBondType> harmonicBondTypes_;
 
 };
+
+template <>
+void InteractionContainer::addInteraction<HarmonicBondType>(const HarmonicBondType&	interactionType,
+                                                            const size_t            atomIndex1,
+                                                            const size_t            atomIndex2)
+{
+    harmonicBondTypes_.push_back(interactionType);
+    auto interactionPointer = &harmonicBondTypes_.back();
+
+    Interaction newHarmonicInteraction(interactionPointer, atomIndex1, atomIndex2);
+    interactions_.push_back(newHarmonicInteraction);
+}
 
 } //namespace nblib
 #endif //GROMACS_INTERACTIONS_H

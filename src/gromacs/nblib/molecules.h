@@ -96,9 +96,6 @@ public:
     template<typename T>
     Molecule& addAtom(const T& atomName, AtomType const& atomType) = delete;
 
-    template <class Bond>
-    void addBond(Bond&&, std::string atomName1, std::string atomName2);
-
     // TODO: add exclusions based on the unique ID given to the atom of the molecule
     void addExclusion(const int atomIndex, const int atomIndexToExclude);
 
@@ -115,6 +112,23 @@ public:
     //! convert exclusions given by name to indices and unify with exclusions given by indices
     //! returns a sorted vector containing no duplicates of atoms to exclude by indices
     std::vector<std::tuple<int, int>> getExclusions() const;
+
+    //! Get index of the atom with the given unique string identifier
+    size_t getAtomIndex(AtomName atomName);
+
+    //! Add interactions between atoms
+    template <class InteractionType>
+    void addInteraction(InteractionType  interactionType,
+                        AtomName         atomName1,
+                        AtomName         atomName2) {}
+
+    template <>
+    void addInteraction<HarmonicBondType>(HarmonicBondType interactionType,
+                                          AtomName atomName1,
+                                          AtomName atomName2);
+
+    //! Returns number of interactions
+    int numInteractionsInMolecule() const;
 
     friend class TopologyBuilder;
 
@@ -143,8 +157,19 @@ private:
     //! so we delay the conversion until TopologyBuilder requests it
     std::vector<std::tuple<std::string, std::string, std::string, std::string>> exclusionsByName_;
 
-    std::vector<HarmonicType> harmonicInteractions_;
+    InteractionContainer interactionContainer_;
 };
+
+template <>
+void Molecule::addInteraction<HarmonicBondType>(HarmonicBondType interactionType,
+                                                AtomName atomName1,
+                                                AtomName atomName2)
+{
+    size_t atomIndex1 = getAtomIndex(std::move(atomName1));
+    size_t atomIndex2 = getAtomIndex(std::move(atomName2));
+
+    interactionContainer_.addInteraction(interactionType, atomIndex1, atomIndex2);
+}
 
 } //namespace nblib
 #endif //GROMACS_MOLECULES_H

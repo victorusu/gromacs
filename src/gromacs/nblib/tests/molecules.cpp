@@ -198,6 +198,32 @@ TEST(NBlibTest, CanConstructExclusionListFromNamesAndIndicesMixed)
 
 }
 
+TEST(NBlibTest, CanAddHarmonicBond)
+{
+    //! Manually Create Molecule (Water)
+
+    //! 1. Define Atom Type
+    OwAtom   owAtom;
+    AtomType Ow(owAtom.name, owAtom.mass, owAtom.c6, owAtom.c12);
+    HwAtom   hwAtom;
+    AtomType Hw(hwAtom.name, hwAtom.mass, hwAtom.c6, hwAtom.c12);
+
+    //! 2. Define Molecule
+    Molecule water("water");
+
+    water.addAtom(AtomName("Oxygen"), Charge(-0.6), Ow);
+    water.addAtom(AtomName("H1"), Charge(+0.3), Hw);
+    water.addAtom(AtomName("H2"), Charge(+0.3), Hw);
+
+    HarmonicBondType OHbond(EquiDist(0.4), ForceConstant(1.2), BondName("OHbond"));
+
+    water.addInteraction(OHbond, "Oxygen", "H1");
+    water.addInteraction(OHbond, "Oxygen", "H2");
+
+    EXPECT_EQ(water.numInteractionsInMolecule(), 2);
+
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace nblib

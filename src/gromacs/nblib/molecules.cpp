@@ -97,9 +97,20 @@ int Molecule::numAtomsInMolecule() const
     return atoms_.size();
 }
 
-void addBond(HarmonicBondType&&, std::string atomName1, std::string atomName2)
-{
+int Molecule::numInteractionsInMolecule() const {
+    return interactionContainer_.interactions_.size();
+}
 
+size_t Molecule::getAtomIndex(AtomName atomName)
+{
+    for (size_t i = 0; i <= atoms_.size(); i++)
+    {
+        if (atoms_[i].atomName_ == atomName)
+        {
+            return i;
+        }
+    }
+    GMX_RELEASE_ASSERT(true, "Atom name not found. Please check again.");
 }
 
 void Molecule::addExclusion(const int atomIndex, const int atomIndexToExclude)
