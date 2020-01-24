@@ -52,5 +52,16 @@ void InteractionContainer::addInteraction(HarmonicBondType harmonicBondType)
     harmonicBonds_.push_back(harmonicBondType);
 }
 
+void InteractionContainer::addInteraction(HarmonicBondType	harmonicBondType,
+                                          size_t            atomIndex1,
+                                          size_t            atomIndex2)
+{
+    harmonicBondTypes_.push_back(harmonicBondType);
+    auto interactionPointer = &harmonicBondTypes_.back();
+
+    InteractionContainer newHarmonicInteraction(interactionPointer, atomIndex1, atomIndex2);
+    interactions_.push_back(newHarmonicInteraction);
+}
+
 } //namespace nblib
 #endif //GROMACS_INTERACTIONS_H
