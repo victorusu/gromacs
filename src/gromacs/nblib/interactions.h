@@ -49,25 +49,50 @@
 namespace nblib
 {
 
+using BondName = std::string;
+using EquiDist = real;
+using ForceConstant = real;
+
 //! Type of interaction
 struct HarmonicBondType
 {
     real equiDist;
     real forceConstant;
-    std::string bondName;
+    BondName bondName;
 
-    HarmonicBondType(real ed, real fc, std::string name)
-    : equiDist(ed), forceConstant(fc), bondName(name) {}
+    HarmonicBondType(EquiDist ed, ForceConstant fc, BondName name)
+    : equiDist(ed), forceConstant(fc), bondName(std::move(name)) {}
+
+    //! Force explicit use of correct types
+    template<typename T, typename U, typename V>
+    HarmonicBondType(T ed, U fc, V name) = delete;
+};
+
+//! Type of interaction for storage
+struct Interaction
+{
+    void					 *interactionType;
+    size_t					  atomIndex1;
+    size_t					  atomIndex2;
+
+    Interaction (void* interactionPointer, size_t atomIndex1, size_t atomIndex2)
+    : interactionType(interactionPointer), atomIndex1(atomIndex1), atomIndex2(atomIndex2){}
 };
 
 class InteractionContainer
 {
 public:
-    template <class Interaction>
-    void addInteraction(Interaction interaction);
+    //! Specialization based on supported interaction types
+    template <class InteractionType>
+    void addInteraction(InteractionType	interactionType,
+                        size_t atomIndex1,
+                        size_t atomIndex2);
 
 private:
-    std::vector<HarmonicBondType> harmonicBonds_;
+    std::vector<Interaction> interactions_;
+
+    std::vector<HarmonicBondType> harmonicBondTypes_;
+
 };
 
 } //namespace nblib
