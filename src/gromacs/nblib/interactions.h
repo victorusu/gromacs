@@ -46,6 +46,9 @@
 
 #include "gromacs/math/vectypes.h"
 
+#include <string>
+#include <vector>
+
 namespace nblib
 {
 

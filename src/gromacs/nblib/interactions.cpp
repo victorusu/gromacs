@@ -48,4 +48,3 @@ namespace nblib
 {
 
 } //namespace nblib
-#endif //GROMACS_INTERACTIONS_H
