@@ -126,7 +126,13 @@ public:
     template <>
     void addInteraction<HarmonicBondType>(HarmonicBondType interactionType,
                                           AtomName atomName1,
-                                          AtomName atomName2);
+                                          AtomName atomName2)
+    {
+        size_t atomIndex1 = getAtomIndex(std::move(atomName1));
+        size_t atomIndex2 = getAtomIndex(std::move(atomName2));
+
+        interactionContainer_.addInteraction(interactionType, atomIndex1, atomIndex2);
+    }
 
     //! Returns number of interactions
     int numInteractionsInMolecule() const;
@@ -161,16 +167,6 @@ private:
     InteractionContainer interactionContainer_;
 };
 
-template <>
-void Molecule::addInteraction<HarmonicBondType>(HarmonicBondType interactionType,
-                                                AtomName atomName1,
-                                                AtomName atomName2)
-{
-    size_t atomIndex1 = getAtomIndex(std::move(atomName1));
-    size_t atomIndex2 = getAtomIndex(std::move(atomName2));
-
-    interactionContainer_.addInteraction(interactionType, atomIndex1, atomIndex2);
-}
 
 } //namespace nblib
 #endif //GROMACS_MOLECULES_H

@@ -86,30 +86,25 @@ public:
     template <class InteractionType>
     void addInteraction(const InteractionType&	interactionType,
                         const size_t atomIndex1,
-                        const size_t atomIndex2) {}
+                        const size_t atomIndex2);
 
     template <>
     void addInteraction<HarmonicBondType>(const HarmonicBondType&	interactionType,
                                           size_t              atomIndex1,
-                                          size_t              atomIndex2);
+                                          size_t              atomIndex2)
+    {
+        harmonicBondTypes_.push_back(interactionType);
+        auto interactionPointer = &harmonicBondTypes_.back();
+
+        Interaction newHarmonicInteraction(interactionPointer, atomIndex1, atomIndex2);
+        interactions_.push_back(newHarmonicInteraction);
+    }
 
     std::vector<Interaction> interactions_;
 
     std::vector<HarmonicBondType> harmonicBondTypes_;
 
 };
-
-template <>
-void InteractionContainer::addInteraction<HarmonicBondType>(const HarmonicBondType&	interactionType,
-                                                            const size_t            atomIndex1,
-                                                            const size_t            atomIndex2)
-{
-    harmonicBondTypes_.push_back(interactionType);
-    auto interactionPointer = &harmonicBondTypes_.back();
-
-    Interaction newHarmonicInteraction(interactionPointer, atomIndex1, atomIndex2);
-    interactions_.push_back(newHarmonicInteraction);
-}
 
 } //namespace nblib
 #endif //GROMACS_INTERACTIONS_H
