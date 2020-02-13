@@ -55,6 +55,7 @@
 namespace nblib
 {
 struct NbvSetupUtil;
+class GmxForceCalculator;
 
 class ForceCalculator
 {
@@ -66,8 +67,6 @@ public:
     //! returns the forces as a vector
     gmx::PaddedHostVector<gmx::RVec> compute();
 
-    const matrix& box() const;
-
 private:
 
     // void printTimingsOutput(const NBKernelOptions &options,
@@ -77,16 +76,11 @@ private:
 
     //! Struct to handle translation from NBLIB inputs to setup GMX data structures
     std::unique_ptr <NbvSetupUtil>       nbvSetupUtil_;
-    //! Non-Bonded Verlet object for force calculation
-    std::unique_ptr <nonbonded_verlet_t> nbv_;
-    //! Storage for parameters for short range interactions.
-    std::vector<real> nonbondedParameters_;
+    //! GROMACS force calculator to compute forces
+    std::unique_ptr<GmxForceCalculator>  gmxForceCalculator_;
+
     //    //! Atom masses
     //    std::vector<real> masses_;
-    //! Atom info where all atoms are marked to have Van der Waals interactions
-    std::vector<int> atomInfoAllVdw_;
-    //! Legacy matrix for box
-    matrix box_;
 };
 
 } // namespace nblib
