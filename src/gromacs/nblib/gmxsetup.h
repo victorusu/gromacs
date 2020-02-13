@@ -46,21 +46,12 @@
 #ifndef GROMACS_GMXSETUP_H
 #define GROMACS_GMXSETUP_H
 
-#include "gromacs/mdtypes/interaction_const.h"
-#include "gromacs/gpu_utils/hostallocator.h"
-#include "gromacs/mdlib/forcerec.h"
-#include "gromacs/mdtypes/enerdata.h"
-#include "gromacs/mdtypes/simulation_workload.h"
-#include "gromacs/nbnxm/nbnxm.h"
-
-#include "nbkerneloptions.h"
-
 namespace nblib
 {
 
 class ForceCalculator;
 class SimulationState;
-struct NbvSetupUtil;
+class NBKernelOptions;
 
 enum class CombinationRule : int
 {
@@ -68,53 +59,25 @@ enum class CombinationRule : int
     Count     = 1
 };
 
-struct GmxForceCalculator
-{
-    //! Parameters for various interactions in the system
+struct NbvSetupUtil {
+    /*
+     *  StepWorkload
+        PairListSet
+        KernelSetup
+        PairlistParams
+        GridSet
+        nbnxm_atomdata_t
+     */
+    NbvSetupUtil(const SimulationState& system, const NBKernelOptions& options);
+
     interaction_const_t interactionConst_;
-
-    //! Energies of different interaction types
-    gmx_enerdata_t enerd_;
-
-    //! Non-Bonded Verlet object for force calculation
-    std::unique_ptr <nonbonded_verlet_t> nbv_;
-
-    //! The massive class from which nbfp, shift_vec and ntypes would be used
-    t_forcerec forcerec_;
-
-    //! Tasks to perform in an MD Step
-    gmx::StepWorkload stepWork_;
-
-    explicit GmxForceCalculator(SimulationState system, const NBKernelOptions& options);
-
-    //! Contains array for computed forces
-    gmx::PaddedHostVector<gmx::RVec> verletForces_;
-
-    //! Compute forces and return
-    gmx::PaddedHostVector<gmx::RVec> compute();
-
-    //! Legacy matrix for box
-    matrix box_;
-};
-
-struct NbvSetupUtil
-{
-    NbvSetupUtil(SimulationState  system, const NBKernelOptions& options);
 
     void unpackTopologyToGmx();
 
     std::unique_ptr<nonbonded_verlet_t> setupNbnxmInstance();
 
-    std::unique_ptr<GmxForceCalculator> setupGmxForceCalculator();
-
     SimulationState system_;
     NBKernelOptions options_;
-
-    //! Storage for parameters for short range interactions.
-    std::vector<real> nonbondedParameters_;
-
-    //! Atom info where all atoms are marked to have Van der Waals interactions
-    std::vector<int> atomInfoAllVdw_;
 
 };
 

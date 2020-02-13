@@ -56,7 +56,7 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
 {
     nbvSetupUtil_ = std::make_unique <NbvSetupUtil> (system, options);
 
-    gmxForceCalculator_ = nbvSetupUtil_->setupGmxForceCalculator();
+    nbv_ = nbvSetupUtil_->setupNbnxmInstance();
 
 //    //! size: numAtoms
 //    masses_ = expandQuantity(system.topology(), &AtomType::mass);
@@ -68,6 +68,11 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
 gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute()
 {
     return gmxForceCalculator_->compute();
+}
+
+const matrix& ForceCalculator::box() const
+{
+    return box_;
 }
 
 //! Print timings outputs
