@@ -1,7 +1,7 @@
 /*
  * This file is part of the GROMACS molecular simulation package.
  *
- * Copyright (c) 2020, by the GROMACS development team, led by
+ * Copyright (c) 2019, by the GROMACS development team, led by
  * Mark Abraham, David van der Spoel, Berk Hess, and Erik Lindahl,
  * and including many others, as listed in the AUTHORS file in the
  * top-level source directory and at http://www.gromacs.org.
@@ -34,61 +34,52 @@
  */
 /*! \internal \file
  * \brief
- * Implements nblib ForceCalculator
+ * Implements the translation layer between the user scope and
+ * GROMACS data structures for force calculations
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
-#ifndef GROMACS_FORCECALCULATOR_H
-#define GROMACS_FORCECALCULATOR_H
 
-#include "gromacs/gpu_utils/hostallocator.h"
-#include "gromacs/nblib/simulationstate.h"
-#include "gromacs/timing/cyclecounter.h"
-
-#include "nbkerneldef.h"
-#include "nbkerneloptions.h"
-
+#ifndef GROMACS_GMXSETUP_H
+#define GROMACS_GMXSETUP_H
 
 namespace nblib
 {
-struct NbvSetupUtil;
 
-class ForceCalculator
+class ForceCalculator;
+class SimulationState;
+class NBKernelOptions;
+
+enum class CombinationRule : int
 {
-public:
-    // TODO: Depend on simulationState
-    ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
-
-    //! Sets up and runs the kernel calls
-    //! returns the forces as a vector
-    gmx::PaddedHostVector<gmx::RVec> compute(const bool printTimings = false);
-
-    const matrix& box() const;
-
-private:
-
-    // void printTimingsOutput(const NBKernelOptions &options,
-    //                        const SimulationState &system,
-    //                        const gmx::index      &numPairs,
-    //                        gmx_cycles_t           cycles);
-
-    //! Struct to handle translation from NBLIB inputs to setup GMX data structures
-    std::unique_ptr <NbvSetupUtil>       nbvSetupUtil_;
-    //! Non-Bonded Verlet object for force calculation
-    std::unique_ptr <nonbonded_verlet_t> nbv_;
-    //! Storage for parameters for short range interactions.
-    std::vector<real> nonbondedParameters_;
-    //    //! Atom masses
-    //    std::vector<real> masses_;
-    //! Atom info where all atoms are marked to have Van der Waals interactions
-    std::vector<int> atomInfoAllVdw_;
-    //! Legacy matrix for box
-    matrix box_;
+    Geometric = 0,
+    Count     = 1
 };
 
-} // namespace nblib
+struct NbvSetupUtil {
+    /*
+     *  StepWorkload
+        PairListSet
+        KernelSetup
+        PairlistParams
+        GridSet
+        nbnxm_atomdata_t
+     */
+    NbvSetupUtil(const SimulationState& system, const NBKernelOptions& options);
 
-#endif // GROMACS_FORCECALCULATOR_H
+    interaction_const_t interactionConst_;
+
+    void unpackTopologyToGmx();
+
+    std::unique_ptr<nonbonded_verlet_t> setupNbnxmInstance();
+
+    SimulationState system_;
+    NBKernelOptions options_;
+
+};
+
+}      // namespace nblib
+#endif //GROMACS_GMXSETUP_H
