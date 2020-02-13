@@ -47,6 +47,33 @@
 #include "simulationstate.h"
 #include "gmxsetup.h"
 
+#include "gromacs/compat/optional.h"
+#include "gromacs/ewald/ewald_utils.h"
+#include "gromacs/gmxlib/nrnb.h"
+#include "gromacs/math/matrix.h"
+#include "gromacs/math/vec.h"
+#include "gromacs/mdlib/forcerec.h"
+#include "gromacs/mdlib/gmx_omp_nthreads.h"
+#include "gromacs/mdtypes/enerdata.h"
+#include "gromacs/mdtypes/forcerec.h"
+#include "gromacs/mdtypes/mdatom.h"
+#include "gromacs/mdtypes/simulation_workload.h"
+#include "gromacs/nblib/atomtype.h"
+#include "gromacs/nbnxm/atomdata.h"
+#include "gromacs/nbnxm/nbnxm.h"
+#include "gromacs/nbnxm/nbnxm_simd.h"
+#include "gromacs/nbnxm/pairlistset.h"
+#include "gromacs/nbnxm/pairlistsets.h"
+#include "gromacs/nbnxm/pairsearch.h"
+#include "gromacs/pbcutil/ishift.h"
+#include "gromacs/pbcutil/pbc.h"
+#include "gromacs/simd/simd.h"
+#include "gromacs/utility/fatalerror.h"
+#include "gromacs/utility/logger.h"
+#include "gromacs/utility/smalloc.h"
+
+namespace nblib
+{
 
 namespace detail
 {
@@ -167,9 +194,12 @@ void NbvSetupUtil::NbvSetupUtil(const SimulationState& system, const NBKernelOpt
     //! Todo: find a more general way to initialize hardware
     gmx_omp_nthreads_set(emntPairsearch, options.numThreads);
     gmx_omp_nthreads_set(emntNonbonded, options.numThreads);
+
+    unpackTopologyToGmx();
 }
 
 void NbvSetupUtil::unpackTopologyToGmx()
+
 {
     const Topology&              topology  = system_.topology();
     const std::vector<AtomType>& atomTypes = topology.getAtomTypes();
@@ -263,3 +293,25 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
 
     return nbv;
 }
+
+std::unique_ptr<GmxForceCalculator> NbvSetupUtil::setupGmxForceCalculator()
+{
+    auto gmxForceCalculator_p = std::make_unique<GmxForceCalculator>(options_);
+
+    gmxForceCalculator_p->box_ = system_.box();
+
+    return gmxForceCalculator_p;
+}
+
+GmxForceCalculator::GmxForceCalculator(SimulationState system, const NBKernelOptions &options) : enerd_(1, 0), box_(system.box())
+{
+    interactionConst_ = setupInteractionConst(options);
+
+    stepWork_.computeForces = true;
+    if (options.computeVirialAndEnergy)
+    {
+        stepWork_.computeVirial = true;
+        stepWork_.computeEnergy = true;
+    }
+}
+} //namespace nblib

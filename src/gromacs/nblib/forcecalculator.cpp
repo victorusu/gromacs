@@ -45,31 +45,6 @@
 
 #include "forcecalculator.h"
 
-#include "gromacs/compat/optional.h"
-#include "gromacs/ewald/ewald_utils.h"
-#include "gromacs/gmxlib/nrnb.h"
-#include "gromacs/math/matrix.h"
-#include "gromacs/math/vec.h"
-#include "gromacs/mdlib/forcerec.h"
-#include "gromacs/mdlib/gmx_omp_nthreads.h"
-#include "gromacs/mdtypes/enerdata.h"
-#include "gromacs/mdtypes/forcerec.h"
-#include "gromacs/mdtypes/mdatom.h"
-#include "gromacs/mdtypes/simulation_workload.h"
-#include "gromacs/nblib/atomtype.h"
-#include "gromacs/nbnxm/atomdata.h"
-#include "gromacs/nbnxm/nbnxm.h"
-#include "gromacs/nbnxm/nbnxm_simd.h"
-#include "gromacs/nbnxm/pairlistset.h"
-#include "gromacs/nbnxm/pairlistsets.h"
-#include "gromacs/nbnxm/pairsearch.h"
-#include "gromacs/pbcutil/ishift.h"
-#include "gromacs/pbcutil/pbc.h"
-#include "gromacs/simd/simd.h"
-#include "gromacs/utility/fatalerror.h"
-#include "gromacs/utility/logger.h"
-#include "gromacs/utility/smalloc.h"
-
 #include "integrator.h"
 #include "gmxsetup.h"
 
@@ -81,7 +56,7 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
 {
     nbvSetupUtil_ = std::make_unique <NbvSetupUtil> (system, options);
 
-    nbv_ = nbvSetupUtil_->setupNbnxmInstance();
+    gmxForceCalculator_ = nbvSetupUtil_->setupGmxForceCalculator();
 
 //    //! size: numAtoms
 //    masses_ = expandQuantity(system.topology(), &AtomType::mass);
@@ -93,17 +68,17 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
 gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute(const bool printTimings)
 {
     // We set the interaction cut-off to the pairlist cut-off
-    interaction_const_t ic   = setupInteractionConst(options_);
+//    interaction_const_t ic   = setupInteractionConst(options_);
     t_nrnb              nrnb = { 0 };
-    gmx_enerdata_t      enerd(1, 0);
+//    gmx_enerdata_t      enerd(1, 0);
 
-    gmx::StepWorkload stepWork;
-    stepWork.computeForces = true;
-    if (options_.computeVirialAndEnergy)
-    {
-        stepWork.computeVirial = true;
-        stepWork.computeEnergy = true;
-    }
+//    gmx::StepWorkload stepWork;
+//    stepWork.computeForces = true;
+//    if (options_.computeVirialAndEnergy)
+//    {
+//        stepWork.computeVirial = true;
+//        stepWork.computeEnergy = true;
+//    }
 
     std::unique_ptr<nonbonded_verlet_t> nbv = setupNbnxmInstance();
     // const PairlistSet& pairlistSet = nbv->pairlistSets().pairlistSet(gmx::InteractionLocality::Local);
@@ -128,11 +103,6 @@ gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute(const bool printTiming
 
     nbv->atomdata_add_nbat_f_to_f(gmx::AtomLocality::All, verletForces);
     return verletForces;
-}
-
-const matrix& ForceCalculator::box() const
-{
-    return box_;
 }
 
 //! Print timings outputs
