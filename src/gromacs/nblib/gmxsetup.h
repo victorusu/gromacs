@@ -68,7 +68,7 @@ enum class CombinationRule : int
     Count     = 1
 };
 
-class GmxForceCalculator
+struct GmxForceCalculator
 {
     //! Parameters for various interactions in the system
     interaction_const_t interactionConst_;
@@ -85,7 +85,6 @@ class GmxForceCalculator
     //! Tasks to perform in an MD Step
     gmx::StepWorkload stepWork_;
 
-public:
     explicit GmxForceCalculator(SimulationState system, const NBKernelOptions& options);
 
     //! Contains array for computed forces
@@ -96,8 +95,6 @@ public:
 
     //! Legacy matrix for box
     matrix box_;
-
-    friend NbvSetupUtil;
 };
 
 struct NbvSetupUtil
