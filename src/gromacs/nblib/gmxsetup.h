@@ -48,19 +48,19 @@
 
 #include "gromacs/mdtypes/interaction_const.h"
 #include "gromacs/gpu_utils/hostallocator.h"
+#include "gromacs/mdlib/forcerec.h"
+#include "gromacs/mdtypes/enerdata.h"
+#include "gromacs/mdtypes/simulation_workload.h"
+#include "gromacs/nbnxm/nbnxm.h"
 
-struct t_forcerec;
-struct gmx_enerdata_t;
-struct nonbonded_verlet_t;
-
-class gmx::StepWorkload;
+#include "nbkerneloptions.h"
 
 namespace nblib
 {
 
 class ForceCalculator;
 class SimulationState;
-struct NBKernelOptions;
+struct NbvSetupUtil;
 
 enum class CombinationRule : int
 {
@@ -94,13 +94,15 @@ public:
     //! Compute forces and return
     gmx::PaddedHostVector<gmx::RVec> compute();
 
-//! Legacy matrix for box
-matrix box_;
+    //! Legacy matrix for box
+    matrix box_;
+
+    friend NbvSetupUtil;
 };
 
 struct NbvSetupUtil
 {
-    NbvSetupUtil(const SimulationState& system, const NBKernelOptions& options);
+    NbvSetupUtil(SimulationState  system, const NBKernelOptions& options);
 
     void unpackTopologyToGmx();
 
