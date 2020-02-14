@@ -34,55 +34,29 @@
  */
 /*! \internal \file
  * \brief
- * Implements nblib ForceCalculator
+ * This implements nbnxn setup tests
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
-#ifndef GROMACS_FORCECALCULATOR_H
-#define GROMACS_FORCECALCULATOR_H
 
-#include "gromacs/gpu_utils/hostallocator.h"
-#include "gromacs/nblib/simulationstate.h"
-#include "gromacs/timing/cyclecounter.h"
+#include "gmxpre.h"
 
-#include "nbkerneldef.h"
-#include "nbkerneloptions.h"
+#include "gromacs/nblib/gmxsetup.h"
 
+#include "testutils/testasserts.h"
 
-namespace nblib
+namespace nblib {
+
+namespace test {
+/*
+TEST(NBlibTest, NbfpSetCorrectly)
 {
-struct NbvSetupUtil;
-struct GmxForceCalculator;
 
-class ForceCalculator
-{
-public:
-    // TODO: Depend on simulationState
-    ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
-
-    //! Sets up and runs the kernel calls
-    //! returns the forces as a vector
-    gmx::PaddedHostVector<gmx::RVec> compute();
-
-private:
-
-    // void printTimingsOutput(const NBKernelOptions &options,
-    //                        const SimulationState &system,
-    //                        const gmx::index      &numPairs,
-    //                        gmx_cycles_t           cycles);
-
-    //! Struct to handle translation from NBLIB inputs to setup GMX data structures
-    std::unique_ptr <NbvSetupUtil>       nbvSetupUtil_;
-    //! GROMACS force calculator to compute forces
-    std::unique_ptr<GmxForceCalculator>  gmxForceCalculator_;
-
-    //    //! Atom masses
-    //    std::vector<real> masses_;
-};
+}
+*/
+} // namespace test
 
 } // namespace nblib
-
-#endif // GROMACS_FORCECALCULATOR_H
