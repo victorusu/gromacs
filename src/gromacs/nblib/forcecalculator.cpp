@@ -67,41 +67,7 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
 //!      that callers can manipulate directly.
 gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute()
 {
-    // We set the interaction cut-off to the pairlist cut-off
-//    interaction_const_t ic   = setupInteractionConst(options_);
-    t_nrnb              nrnb = { 0 };
-//    gmx_enerdata_t      enerd(1, 0);
-
-//    gmx::StepWorkload stepWork;
-//    stepWork.computeForces = true;
-//    if (options_.computeVirialAndEnergy)
-//    {
-//        stepWork.computeVirial = true;
-//        stepWork.computeEnergy = true;
-//    }
-
-    std::unique_ptr<nonbonded_verlet_t> nbv = setupNbnxmInstance();
-    // const PairlistSet& pairlistSet = nbv->pairlistSets().pairlistSet(gmx::InteractionLocality::Local);
-    // const gmx::index numPairs = pairlistSet.natpair_ljq_ + pairlistSet.natpair_lj_ + pairlistSet.natpair_q_;
-    // gmx_cycles_t cycles = gmx_cycles_read();
-
-    t_forcerec forceRec;
-    forceRec.ntype = system_.topology().getAtomTypes().size();
-    forceRec.nbfp  = nonbondedParameters_;
-    snew(forceRec.shift_vec, SHIFTS);
-    calc_shifts(box_, forceRec.shift_vec);
-
-    put_atoms_in_box(PbcType::Xyz, box_, system_.coordinates());
-
-    // Run the kernel without force clearing
-    nbv->dispatchNonbondedKernel(gmx::InteractionLocality::Local, ic, stepWork, enbvClearFYes,
-                                 forceRec, &enerd, &nrnb);
-
-    // Todo manage this at a higher level
-    gmx::PaddedHostVector<gmx::RVec> verletForces(system_.topology().numAtoms(), gmx::RVec(0, 0, 0));
-
-    nbv->atomdata_add_nbat_f_to_f(gmx::AtomLocality::All, verletForces);
-    return verletForces;
+    return gmxForceCalculator_->compute();
 }
 
 //! Print timings outputs

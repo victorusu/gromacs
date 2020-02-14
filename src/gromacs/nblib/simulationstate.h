@@ -47,8 +47,8 @@
 
 #include <vector>
 
-#include "gromacs/nblib/box.h"
-#include "gromacs/nblib/topology.h"
+#include "box.h"
+#include "topology.h"
 
 struct RVec;
 

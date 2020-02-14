@@ -43,7 +43,6 @@
  * \author Sebastian Keller <keller@cscs.ch>
  */
 
-#include "nbkerneloptions.h"
 #include "simulationstate.h"
 #include "gmxsetup.h"
 
@@ -52,15 +51,11 @@
 #include "gromacs/gmxlib/nrnb.h"
 #include "gromacs/math/matrix.h"
 #include "gromacs/math/vec.h"
-#include "gromacs/mdlib/forcerec.h"
 #include "gromacs/mdlib/gmx_omp_nthreads.h"
-#include "gromacs/mdtypes/enerdata.h"
 #include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/mdtypes/mdatom.h"
-#include "gromacs/mdtypes/simulation_workload.h"
 #include "gromacs/nblib/atomtype.h"
 #include "gromacs/nbnxm/atomdata.h"
-#include "gromacs/nbnxm/nbnxm.h"
 #include "gromacs/nbnxm/nbnxm_simd.h"
 #include "gromacs/nbnxm/pairlistset.h"
 #include "gromacs/nbnxm/pairlistsets.h"
@@ -189,7 +184,7 @@ static interaction_const_t setupInteractionConst(const NBKernelOptions& options)
     return ic;
 }
 
-void NbvSetupUtil::NbvSetupUtil(const SimulationState& system, const NBKernelOptions& options): system_(system), options_(options)
+NbvSetupUtil::NbvSetupUtil(SimulationState  system, const NBKernelOptions& options): system_(std::move(system)), options_(options)
 {
     //! Todo: find a more general way to initialize hardware
     gmx_omp_nthreads_set(emntPairsearch, options.numThreads);
@@ -205,8 +200,6 @@ void NbvSetupUtil::unpackTopologyToGmx()
     const std::vector<AtomType>& atomTypes = topology.getAtomTypes();
 
     size_t numAtoms = topology.numAtoms();
-
-    gmx::fillLegacyMatrix(system_.box().matrix(), box_);
 
     //! Todo: Refactor nbnxm to take this (nonbondedParameters_) directly
     //!
@@ -271,6 +264,8 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
     nbnxn_atomdata_init(gmx::MDLogger(), nbv->nbat.get(), kernelSetup.kernelType, combinationRule,
                         system_.topology().getAtomTypes().size(), nonbondedParameters_, 1, numThreads);
 
+    matrix box_;
+    gmx::fillLegacyMatrix(system_.box().matrix(), box_);
 
     GMX_RELEASE_ASSERT(!TRICLINIC(box_), "Only rectangular unit-cells are supported here");
     const rvec lowerCorner = { 0, 0, 0 };
@@ -296,16 +291,34 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
 
 std::unique_ptr<GmxForceCalculator> NbvSetupUtil::setupGmxForceCalculator()
 {
-    auto gmxForceCalculator_p = std::make_unique<GmxForceCalculator>(options_);
+    auto gmxForceCalculator_p = std::make_unique<GmxForceCalculator>(system_, options_);
 
-    gmxForceCalculator_p->box_ = system_.box();
+    gmxForceCalculator_p->nbv_ = setupNbnxmInstance();
+
+    // const PairlistSet& pairlistSet = nbv->pairlistSets().pairlistSet(gmx::InteractionLocality::Local);
+    // const gmx::index numPairs = pairlistSet.natpair_ljq_ + pairlistSet.natpair_lj_ + pairlistSet.natpair_q_;
+    // gmx_cycles_t cycles = gmx_cycles_read();
+
+    matrix box_;
+    gmx::fillLegacyMatrix(system_.box().matrix(), box_);
+
+    gmxForceCalculator_p->forcerec_.nbfp  = nonbondedParameters_;
+    snew(gmxForceCalculator_p->forcerec_.shift_vec, SHIFTS);
+    calc_shifts(box_, gmxForceCalculator_p->forcerec_.shift_vec);
+
+    put_atoms_in_box(PbcType::Xyz, box_, system_.coordinates());
+
+    nbnxn_atomdata_t*                nbat = gmxForceCalculator_p->nbv_->nbat.get();
+    gmxForceCalculator_p->verletForces_.resizeWithPadding(nbat->numAtoms());
 
     return gmxForceCalculator_p;
 }
 
-GmxForceCalculator::GmxForceCalculator(SimulationState system, const NBKernelOptions &options) : enerd_(1, 0), box_(system.box())
+GmxForceCalculator::GmxForceCalculator(SimulationState system, const NBKernelOptions &options) : enerd_(1, 0), verletForces_({})
 {
     interactionConst_ = setupInteractionConst(options);
+
+    gmx::fillLegacyMatrix(system.box().matrix(), box_);
 
     stepWork_.computeForces = true;
     if (options.computeVirialAndEnergy)
@@ -313,5 +326,19 @@ GmxForceCalculator::GmxForceCalculator(SimulationState system, const NBKernelOpt
         stepWork_.computeVirial = true;
         stepWork_.computeEnergy = true;
     }
+
+    forcerec_.ntype = system.topology().getAtomTypes().size();
+}
+
+gmx::PaddedHostVector<gmx::RVec> GmxForceCalculator::compute()
+{
+    t_nrnb              nrnb = { 0 };
+
+    nbv_->dispatchNonbondedKernel(gmx::InteractionLocality::Local, interactionConst_, stepWork_, enbvClearFNo,
+                                 forcerec_, &enerd_, &nrnb);
+
+    nbv_->atomdata_add_nbat_f_to_f(gmx::AtomLocality::All, verletForces_);
+
+    return verletForces_;
 }
 } //namespace nblib
