@@ -53,6 +53,7 @@
 #include "gromacs/nblib/molecules.h"
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nblib/topology.h"
+#include "gromacs/nblib/gmxsetup.h"
 
 namespace nblib
 {
