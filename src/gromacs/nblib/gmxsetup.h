@@ -85,7 +85,7 @@ struct GmxForceCalculator
     //! Tasks to perform in an MD Step
     gmx::StepWorkload stepWork_;
 
-    explicit GmxForceCalculator(SimulationState system, const NBKernelOptions& options);
+    explicit GmxForceCalculator(const std::shared_ptr<SimulationState> system, const std::shared_ptr<NBKernelOptions> options);
 
     //! Contains array for computed forces
     gmx::PaddedHostVector<gmx::RVec> verletForces_;
@@ -107,8 +107,8 @@ struct NbvSetupUtil
 
     std::unique_ptr<GmxForceCalculator> setupGmxForceCalculator();
 
-    SimulationState system_;
-    NBKernelOptions options_;
+    std::shared_ptr<SimulationState> system_;
+    std::shared_ptr<NBKernelOptions> options_;
 
     //! Storage for parameters for short range interactions.
     std::vector<real> nonbondedParameters_;
