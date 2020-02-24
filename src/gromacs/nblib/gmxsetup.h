@@ -50,6 +50,7 @@
 #include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/mdlib/forcerec.h"
 #include "gromacs/mdtypes/enerdata.h"
+#include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/mdtypes/simulation_workload.h"
 #include "gromacs/nbnxm/nbnxm.h"
 
