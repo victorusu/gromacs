@@ -221,6 +221,7 @@ void NbvSetupUtil::setParticlesOnGrid(std::unique_ptr<nonbonded_verlet_t>& nbv)
     nbnxn_put_on_grid(nbv.get(), box_, 0, lowerCorner, upperCorner, nullptr,
                       { 0, int(system_->coordinates().size()) }, particleDensity,
                       particleInfoAllVdw_, system_->coordinates(), 0, nullptr);
+
 }
 
 //! Sets up and returns a Nbnxm object for the given options and system
