@@ -67,8 +67,9 @@ enum class CombinationRule : int
     Count     = 1
 };
 
-struct NbvSetupUtil
+class NbvSetupUtil
 {
+public:
     NbvSetupUtil(SimulationState system, const NBKernelOptions& options);
 
     //! Sets up and returns a GmxForceCalculator
@@ -88,7 +89,7 @@ private:
     std::unique_ptr<nonbonded_verlet_t> setupNbnxmInstance();
 
 public:
-    //! Pointer to the SimulationState that contains topology, coordinates, velocities, particle/molecule data
+    //! Pointer to the SimulationState
     std::shared_ptr<SimulationState> system_;
 
     //! Pointer to the NBKernelOptions
