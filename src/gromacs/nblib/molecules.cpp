@@ -107,19 +107,14 @@ int Molecule::numParticlesInMolecule() const
     return particles_.size();
 }
 
-void Molecule::addHarmonicBond(HarmonicType harmonicBond)
-{
-    harmonicInteractions_.push_back(std::move(harmonicBond));
-}
-
 void Molecule::addExclusion(const int particleIndex, const int particleIndexToExclude)
 {
     // We do not need to add exclusion in case the particle indexes are the same
     // because self exclusion are added by addParticle
     if (particleIndex != particleIndexToExclude)
     {
-        exclusions_.emplace_back(std::make_tuple(particleIndex, particleIndexToExclude));
-        exclusions_.emplace_back(std::make_tuple(particleIndexToExclude, particleIndex));
+        exclusions_.emplace_back(particleIndex, particleIndexToExclude);
+        exclusions_.emplace_back(particleIndexToExclude, particleIndex);
     }
 }
 
@@ -137,6 +132,62 @@ void Molecule::addExclusion(const std::string& particleName, const std::string& 
     addExclusion(std::make_tuple(particleName, name_), std::make_tuple(particleNameToExclude, name_));
 }
 
+void Molecule::addInteraction(ParticleName particleNameI, ParticleName particleNameJ, HarmonicBondType bondType)
+{
+    halfAttractiveBonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (harmonicBonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        harmonicBonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
+void Molecule::addInteraction(ParticleName particleNameI, ParticleName particleNameJ, G96BondType bondType)
+{
+    g96Bonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (g96Bonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        g96Bonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
+void Molecule::addInteraction(ParticleName particleNameI, ParticleName particleNameJ, CubicBondType bondType)
+{
+    cubicBonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (cubicBonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        cubicBonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
+void Molecule::addInteraction(ParticleName particleNameI, ParticleName particleNameJ, FENEBondType bondType)
+{
+    feneBonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (feneBonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        feneBonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
+void Molecule::addInteraction(ParticleName particleNameI, ParticleName particleNameJ, MorseBondType bondType)
+{
+    morseBonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (morseBonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        morseBonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
+void Molecule::addInteraction(ParticleName                  particleNameI,
+                              ParticleName                  particleNameJ,
+                              HalfAttractiveQuarticBondType bondType)
+{
+    halfAttractiveBonds_.bonds_.emplace_back(particleNameI, particleNameJ, bondType.bondName());
+    if (halfAttractiveBonds_.bondTypes_.count(bondType.bondName()) == 0)
+    {
+        halfAttractiveBonds_.bondTypes_[bondType.bondName()] = std::move(bondType);
+    }
+}
+
 const ParticleType& Molecule::at(const std::string& particleTypeName) const
 {
     return particleTypes_.at(particleTypeName);
@@ -150,7 +201,7 @@ std::vector<std::tuple<int, int>> Molecule::getExclusions() const
 
     for (int i = 0; i < numParticlesInMolecule(); ++i)
     {
-        indexKey.emplace_back(std::make_tuple(particles_[i].particleName_, particles_[i].residueName_, i));
+        indexKey.emplace_back(particles_[i].particleName_, particles_[i].residueName_, i);
     }
 
     std::sort(std::begin(indexKey), std::end(indexKey));
@@ -206,8 +257,8 @@ std::vector<std::tuple<int, int>> Molecule::getExclusions() const
 
         int secondIndex = std::get<2>(*it2);
 
-        ret.emplace_back(std::make_tuple(firstIndex, secondIndex));
-        ret.emplace_back(std::make_tuple(secondIndex, firstIndex));
+        ret.emplace_back(firstIndex, secondIndex);
+        ret.emplace_back(secondIndex, firstIndex);
     }
 
     std::sort(std::begin(ret), std::end(ret));

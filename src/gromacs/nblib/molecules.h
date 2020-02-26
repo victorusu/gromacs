@@ -56,7 +56,7 @@
 #include "gromacs/math/vectypes.h"
 #include "gromacs/nblib/particletype.h"
 
-#include "interactions.h"
+#include "bondtypes.h"
 
 namespace nblib
 {
@@ -103,8 +103,6 @@ public:
     template<typename T>
     Molecule& addParticle(const T& particleName, ParticleType const& particleType) = delete;
 
-    void addHarmonicBond(HarmonicType harmonicBond);
-
     // TODO: add exclusions based on the unique ID given to the particle of the molecule
     void addExclusion(int particleIndex, int particleIndexToExclude);
 
@@ -114,6 +112,20 @@ public:
 
     // Specify an exclusion with particle names that have been added to molecule
     void addExclusion(const std::string& particleName, const std::string& particleNameToExclude);
+
+    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, HarmonicBondType bondType);
+
+    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, G96BondType bondType);
+
+    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, CubicBondType bondType);
+
+    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, FENEBondType bondType);
+
+    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, MorseBondType bondType);
+
+    void addInteraction(ParticleName                  particleNameI,
+                        ParticleName                  particleNameJ,
+                        HalfAttractiveQuarticBondType bondType);
 
     // The number of molecules
     int numParticlesInMolecule() const;
@@ -139,6 +151,13 @@ private:
         real        charge_;
     };
 
+    template<class Bond>
+    struct BondData
+    {
+        std::unordered_map<BondName, Bond>                            bondTypes_;
+        std::vector<std::tuple<ParticleName, ParticleName, BondName>> bonds_;
+    };
+
     //! one entry per particle in molecule
     std::vector<ParticleData> particles_;
 
@@ -152,7 +171,12 @@ private:
     //! so we delay the conversion until TopologyBuilder requests it
     std::vector<std::tuple<std::string, std::string, std::string, std::string>> exclusionsByName_;
 
-    std::vector<HarmonicType> harmonicInteractions_;
+    BondData<HarmonicBondType>              harmonicBonds_;
+    BondData<G96BondType>                   g96Bonds_;
+    BondData<CubicBondType>                 cubicBonds_;
+    BondData<FENEBondType>                  feneBonds_;
+    BondData<MorseBondType>                 morseBonds_;
+    BondData<HalfAttractiveQuarticBondType> halfAttractiveBonds_;
 };
 
 } // namespace nblib
