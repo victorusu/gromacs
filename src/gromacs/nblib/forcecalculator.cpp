@@ -50,9 +50,10 @@
 namespace nblib
 {
 
-ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOptions& options)
+ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOptions& options,
+                                 NonBondedInteractionMap& nonbondedInteractionMap)
 {
-    nbvSetupUtil_ = std::make_unique<NbvSetupUtil>(system, options);
+    nbvSetupUtil_ = std::make_unique<NbvSetupUtil>(system, options, nonbondedInteractionMap);
 
     gmxForceCalculator_ = nbvSetupUtil_->setupGmxForceCalculator();
 

@@ -54,6 +54,7 @@
 #include "gromacs/topology/exclusionblocks.h"
 #include "gromacs/utility/exceptions.h"
 #include "gromacs/utility/smalloc.h"
+#include "gromacs/utility/stringutil.h"
 
 namespace nblib
 {
@@ -201,6 +202,24 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
+    topology_.combinationRule_ = combinationRule_;
+    topology_.nonBondedInteractionMap_ = particleTypesInteractions_->generateTable(combinationRule_);
+
+    // Check whether there is any missing term in the particleTypesInteractions compared to the
+    // list of particletypes
+    for (const auto& particleType1 : particleTypes_)
+    {
+        for (const auto& particleType2 : particleTypes_)
+        {
+            auto interactionKey = std::make_tuple(particleType1.first, particleType2.first);
+            if (topology_.nonBondedInteractionMap_.count(interactionKey) == 0) {
+                std::string message = gmx::formatString("Missing nonbonded interaction parameters for pair %s %s",
+                                                        particleType1.first.c_str(), particleType2.first.c_str());
+                GMX_THROW(gmx::InvalidInputError(message));
+            }
+        }
+    }
+
     return topology_;
 }
 
@@ -233,6 +252,13 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
     particleTypes_.insert(molecule.particleTypes_.begin(), molecule.particleTypes_.end());
 
     return *this;
+}
+
+void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions,
+                                                   CombinationRule combinationRule)
+{
+    particleTypesInteractions_ = std::make_shared<ParticleTypesInteractions>(particleTypesInteractions);
+    combinationRule_ = combinationRule;
 }
 
 const int& Topology::numParticles() const

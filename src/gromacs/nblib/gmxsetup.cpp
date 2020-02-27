@@ -159,17 +159,24 @@ void NbvSetupUtil::unpackTopologyToGmx()
 
     for (const ParticleType& particleType1 : particleTypes)
     {
-        real c6_1  = particleType1.c6() * c6factor;
-        real c12_1 = particleType1.c12() * c12factor;
+        // real c6_1  = particleType1.c6() * c6factor;
+        // real c12_1 = particleType1.c12() * c12factor;
         for (const ParticleType& particleType2 : particleTypes)
         {
-            real c6_2  = particleType2.c6() * c6factor;
-            real c12_2 = particleType2.c12() * c12factor;
+            // real c6_2  = particleType2.c6() * c6factor;
+            // real c12_2 = particleType2.c12() * c12factor;
 
-            real c6_combo = detail::combineNonbondedParameters(c6_1, c6_2, CombinationRule::Geometric);
-            real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, CombinationRule::Geometric);
-            nonbondedParameters_.push_back(c6_combo);
-            nonbondedParameters_.push_back(c12_combo);
+            // real c6_combo = detail::combineNonbondedParameters(c6_1, c6_2, CombinationRule::Geometric);
+            // real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, CombinationRule::Geometric);
+
+            auto interactionKey = std::make_tuple(particleType1.name(), particleType2.name());
+            if (nonbondedInteractionMap_->count(interactionKey) == 0) {
+                //TODO: raise exception
+            }
+
+            auto paramsTuple = nonbondedInteractionMap_->at(interactionKey);
+            nonbondedParameters_.push_back(std::get<0>(paramsTuple) * c6factor);
+            nonbondedParameters_.push_back(std::get<1>(paramsTuple) * c12factor);
         }
     }
 
