@@ -50,6 +50,7 @@
 
 #include "nbkerneldef.h"
 #include "nbkerneloptions.h"
+#include "interactions.h"
 
 
 namespace nblib
@@ -61,7 +62,8 @@ class ForceCalculator
 {
 public:
     // TODO: Depend on simulationState
-    ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
+    ForceCalculator(const SimulationState& system, const NBKernelOptions& options,
+                    NonBondedInteractionMap& nonbondedInteractionMap);
 
     //! Sets up and runs the kernel calls
     //! returns the forces as a vector
