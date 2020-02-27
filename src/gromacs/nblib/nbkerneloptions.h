@@ -68,8 +68,6 @@ struct NBKernelOptions
     int numThreads = 1;
     //! The SIMD type for the kernel
     BenchMarkKernels nbnxmSimd = BenchMarkKernels::SimdAuto;
-    //! The LJ combination rule
-    CombinationRule ljCombinationRule = CombinationRule::Geometric;
     //! Use i-cluster half-LJ optimization for clusters with <= half LJ
     bool useHalfLJOptimization = false;
     //! The pairlist and interaction cut-off

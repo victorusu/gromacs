@@ -99,6 +99,12 @@ public:
     //! Returns exclusions in proper, performant, GROMACS layout
     const gmx::ListOfLists<int>& getGmxExclusions() const { return exclusions_; }
 
+    //! Returns a vector of particles partial charges
+    const NonBondedInteractionMap& getNonBondedInteractionMap() const;
+
+    //! Returns the combination rule used to generate the NonBondedInteractionMap
+    CombinationRule getCombinationRule() const;
+
 private:
     Topology() = default;
 
@@ -150,7 +156,7 @@ public:
     TopologyBuilder& addMolecule(const Molecule& moleculeType, int nMolecules);
 
     void addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions,
-                                      CombinationRule combinationRule);
+                                      const CombinationRule combinationRule);
 
 private:
     //! Internally stored topology

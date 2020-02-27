@@ -46,6 +46,7 @@
 #include "gromacs/nblib/forcecalculator.h"
 
 #include "gromacs/nblib/interactions.h"
+#include "gromacs/nblib/nbkerneldef.h"
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nblib/topology.h"

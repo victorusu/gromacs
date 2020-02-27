@@ -255,7 +255,7 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
 }
 
 void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions,
-                                                   CombinationRule combinationRule)
+                                                   const CombinationRule combinationRule)
 {
     particleTypesInteractions_ = std::make_shared<ParticleTypesInteractions>(particleTypesInteractions);
     combinationRule_ = combinationRule;
@@ -279,6 +279,16 @@ const std::vector<ParticleType>& Topology::getParticleTypes() const
 const std::vector<int>& Topology::getParticleTypeIdOfAllParticles() const
 {
     return particleTypeIdOfAllParticles_;
+}
+
+const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
+{
+    return nonBondedInteractionMap_;
+}
+
+CombinationRule Topology::getCombinationRule() const
+{
+    return combinationRule_;
 }
 
 } // namespace nblib

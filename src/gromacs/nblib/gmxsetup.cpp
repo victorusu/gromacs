@@ -145,6 +145,7 @@ void NbvSetupUtil::unpackTopologyToGmx()
 {
     const Topology&                  topology      = system_->topology();
     const std::vector<ParticleType>& particleTypes = topology.getParticleTypes();
+    const NonBondedInteractionMap&   nonBondedInteractionMap = topology.getNonBondedInteractionMap();
 
     size_t numParticles = topology.numParticles();
 
@@ -159,22 +160,12 @@ void NbvSetupUtil::unpackTopologyToGmx()
 
     for (const ParticleType& particleType1 : particleTypes)
     {
-        // real c6_1  = particleType1.c6() * c6factor;
-        // real c12_1 = particleType1.c12() * c12factor;
         for (const ParticleType& particleType2 : particleTypes)
         {
-            // real c6_2  = particleType2.c6() * c6factor;
-            // real c12_2 = particleType2.c12() * c12factor;
-
-            // real c6_combo = detail::combineNonbondedParameters(c6_1, c6_2, CombinationRule::Geometric);
-            // real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, CombinationRule::Geometric);
-
+            // No need to check if the keys exist
+            // This should have been checked in the topologyBuilder
             auto interactionKey = std::make_tuple(particleType1.name(), particleType2.name());
-            if (nonbondedInteractionMap_->count(interactionKey) == 0) {
-                //TODO: raise exception
-            }
-
-            auto paramsTuple = nonbondedInteractionMap_->at(interactionKey);
+            auto paramsTuple = nonBondedInteractionMap.at(interactionKey);
             nonbondedParameters_.push_back(std::get<0>(paramsTuple) * c6factor);
             nonbondedParameters_.push_back(std::get<1>(paramsTuple) * c12factor);
         }
@@ -183,6 +174,7 @@ void NbvSetupUtil::unpackTopologyToGmx()
     particleInfoAllVdw_.resize(numParticles);
     for (size_t particleI = 0; particleI < numParticles; particleI++)
     {
+        //! TODO: Do a proper check of the interactions that the particles participate
         SET_CGINFO_HAS_VDW(particleInfoAllVdw_[particleI]);
         SET_CGINFO_HAS_Q(particleInfoAllVdw_[particleI]);
     }
@@ -195,7 +187,8 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
                                              : gmx::PinningPolicy::CannotBePinned);
     const int  numThreads = options_->numThreads;
     // Note: the options and Nbnxm combination rule enums values should match
-    const int combinationRule = static_cast<int>(options_->ljCombinationRule);
+    // const int combinationRule = static_cast<int>(options_->ljCombinationRule);
+    const int combinationRule = static_cast<int>(system_->topology().getCombinationRule());
 
     auto messageWhenInvalid = checkKernelSetup(*options_);
     if (messageWhenInvalid)

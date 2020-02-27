@@ -62,8 +62,7 @@ class ForceCalculator
 {
 public:
     // TODO: Depend on simulationState
-    ForceCalculator(const SimulationState& system, const NBKernelOptions& options,
-                    NonBondedInteractionMap& nonbondedInteractionMap);
+    ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
 
     //! Sets up and runs the kernel calls
     //! returns the forces as a vector
