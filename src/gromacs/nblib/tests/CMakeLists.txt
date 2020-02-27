@@ -57,6 +57,7 @@ gmx_add_gtest_executable(
     box.cpp
     util.cpp
     topology.cpp
+    interactions.cpp
     # pseudo-library for code for mdrun
     #$<TARGET_OBJECTS:nblib_objlib>
     )
