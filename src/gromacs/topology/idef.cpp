@@ -449,3 +449,32 @@ void copy_ilist(const t_ilist* src, t_ilist* dst)
         dst->iatoms[i] = src->iatoms[i];
     }
 }
+
+static InteractionLists ilistToInteractionLists(const t_ilist* src)
+{
+    InteractionLists il;
+
+    for (int interaction = 0; interaction <= F_NRE; interaction++)
+    {
+        for (int iatom = 0; iatom < src->nr; ++iatom)
+        {
+            il[interaction].iatoms[iatom] = src->iatoms[iatom];
+        }
+    }
+    return il;
+}
+
+InteractionDefinition::InteractionDefinition(const t_idef* idef)
+{
+    ntypes = idef->ntypes;
+    numNonperturbedInteractions.resize(F_NRE);
+    ilsort    = idef->ilsort;
+    iparams   = idef->iparams;
+    cmap_grid = idef->cmap_grid;
+    il        = ilistToInteractionLists(idef->il);
+    for (int i = 0; i <= F_NRE; i++)
+    {
+        numNonperturbedInteractions[i] = idef->numNonperturbedInteractions[i];
+    }
+    iparams_posres = idef->iparams_posres;
+}

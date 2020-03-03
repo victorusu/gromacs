@@ -350,6 +350,18 @@ typedef struct t_idef
     int ilsort;
 } t_idef;
 
+struct InteractionDefinition
+{
+    InteractionDefinition(const t_idef* idef);
+    int              ntypes;
+    InteractionLists il;
+    std::vector<int> numNonperturbedInteractions;
+    int              ilsort;
+    t_iparams*       iparams;
+    t_iparams*       iparams_posres;
+    gmx_cmap_t*      cmap_grid;
+};
+
 /*
  * The struct t_idef defines all the interactions for the complete
  * simulation. The structure is setup in such a way that the multinode

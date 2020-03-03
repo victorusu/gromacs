@@ -55,6 +55,7 @@
 
 struct gmx_enerdata_t;
 struct gmx_wallcycle;
+struct InteractionDefinition;
 struct t_forcerec;
 struct t_idef;
 struct t_lambda;
@@ -67,25 +68,25 @@ class ForceWithVirial;
 }
 
 /*! \brief Helper function that wraps calls to posres */
-void posres_wrapper(t_nrnb*               nrnb,
-                    const t_idef*         idef,
-                    const struct t_pbc*   pbc,
-                    const rvec*           x,
-                    gmx_enerdata_t*       enerd,
-                    const real*           lambda,
-                    const t_forcerec*     fr,
-                    gmx::ForceWithVirial* forceWithVirial);
+void posres_wrapper(t_nrnb*                      nrnb,
+                    const InteractionDefinition& interactionDefinition,
+                    const struct t_pbc*          pbc,
+                    const rvec*                  x,
+                    gmx_enerdata_t*              enerd,
+                    const real*                  lambda,
+                    const t_forcerec*            fr,
+                    gmx::ForceWithVirial*        forceWithVirial);
 
 /*! \brief Helper function that wraps calls to posres for free-energy
     pertubation */
-void posres_wrapper_lambda(struct gmx_wallcycle* wcycle,
-                           const t_lambda*       fepvals,
-                           const t_idef*         idef,
-                           const struct t_pbc*   pbc,
-                           const rvec            x[],
-                           gmx_enerdata_t*       enerd,
-                           const real*           lambda,
-                           const t_forcerec*     fr);
+void posres_wrapper_lambda(struct gmx_wallcycle*        wcycle,
+                           const t_lambda*              fepvals,
+                           const InteractionDefinition& interactionDefinition,
+                           const struct t_pbc*          pbc,
+                           const rvec                   x[],
+                           gmx_enerdata_t*              enerd,
+                           const real*                  lambda,
+                           const t_forcerec*            fr);
 
 /*! \brief Helper function that wraps calls to fbposres for
     free-energy perturbation */

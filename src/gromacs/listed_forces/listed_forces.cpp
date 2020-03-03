@@ -299,32 +299,32 @@ BondedKernelFlavor selectBondedKernelFlavor(const gmx::StepWorkload& stepWork,
 
 /*! \brief Calculate one element of the list of bonded interactions
     for this thread */
-real calc_one_bond(int                      thread,
-                   int                      ftype,
-                   const t_idef*            idef,
-                   ArrayRef<const int>      iatoms,
-                   const int                numNonperturbedInteractions,
-                   const WorkDivision&      workDivision,
-                   const rvec               x[],
-                   rvec4                    f[],
-                   rvec                     fshift[],
-                   const t_forcerec*        fr,
-                   const t_pbc*             pbc,
-                   const t_graph*           g,
-                   gmx_grppairener_t*       grpp,
-                   t_nrnb*                  nrnb,
-                   const real*              lambda,
-                   real*                    dvdl,
-                   const t_mdatoms*         md,
-                   t_fcdata*                fcd,
-                   const gmx::StepWorkload& stepWork,
-                   int*                     global_atom_index)
+real calc_one_bond(int                          thread,
+                   int                          ftype,
+                   const InteractionDefinition& interactionDefinition,
+                   ArrayRef<const int>          iatoms,
+                   const int                    numNonperturbedInteractions,
+                   const WorkDivision&          workDivision,
+                   const rvec                   x[],
+                   rvec4                        f[],
+                   rvec                         fshift[],
+                   const t_forcerec*            fr,
+                   const t_pbc*                 pbc,
+                   const t_graph*               g,
+                   gmx_grppairener_t*           grpp,
+                   t_nrnb*                      nrnb,
+                   const real*                  lambda,
+                   real*                        dvdl,
+                   const t_mdatoms*             md,
+                   t_fcdata*                    fcd,
+                   const gmx::StepWorkload&     stepWork,
+                   int*                         global_atom_index)
 {
-    GMX_ASSERT(idef->ilsort == ilsortNO_FE || idef->ilsort == ilsortFE_SORTED,
+    GMX_ASSERT(interactionDefinition.ilsort == ilsortNO_FE || interactionDefinition.ilsort == ilsortFE_SORTED,
                "The topology should be marked either as no FE or sorted on FE");
 
-    const bool havePerturbedInteractions =
-            (idef->ilsort == ilsortFE_SORTED && numNonperturbedInteractions < iatoms.ssize());
+    const bool         havePerturbedInteractions = (interactionDefinition.ilsort == ilsortFE_SORTED
+                                            && numNonperturbedInteractions < iatoms.ssize());
     BondedKernelFlavor flavor =
             selectBondedKernelFlavor(stepWork, fr->use_simd_kernels, havePerturbedInteractions);
     int efptFTYPE;
@@ -355,14 +355,15 @@ real calc_one_bond(int                      thread,
                nice to account to its own subtimer, but first
                wallcycle needs to be extended to support calling from
                multiple threads. */
-            v = cmap_dihs(nbn, iatoms.data() + nb0, idef->iparams, idef->cmap_grid, x, f, fshift,
-                          pbc, g, lambda[efptFTYPE], &(dvdl[efptFTYPE]), md, fcd, global_atom_index);
+            v = cmap_dihs(nbn, iatoms.data() + nb0, interactionDefinition.iparams,
+                          interactionDefinition.cmap_grid, x, f, fshift, pbc, g, lambda[efptFTYPE],
+                          &(dvdl[efptFTYPE]), md, fcd, global_atom_index);
         }
         else
         {
-            v = calculateSimpleBond(ftype, nbn, iatoms.data() + nb0, idef->iparams, x, f, fshift,
-                                    pbc, g, lambda[efptFTYPE], &(dvdl[efptFTYPE]), md, fcd,
-                                    global_atom_index, flavor);
+            v = calculateSimpleBond(ftype, nbn, iatoms.data() + nb0, interactionDefinition.iparams,
+                                    x, f, fshift, pbc, g, lambda[efptFTYPE], &(dvdl[efptFTYPE]), md,
+                                    fcd, global_atom_index, flavor);
         }
     }
     else
@@ -370,8 +371,8 @@ real calc_one_bond(int                      thread,
         /* TODO The execution time for pairs might be nice to account
            to its own subtimer, but first wallcycle needs to be
            extended to support calling from multiple threads. */
-        do_pairs(ftype, nbn, iatoms.data() + nb0, idef->iparams, x, f, fshift, pbc, g, lambda, dvdl,
-                 md, fr, havePerturbedInteractions, stepWork, grpp, global_atom_index);
+        do_pairs(ftype, nbn, iatoms.data() + nb0, interactionDefinition.iparams, x, f, fshift, pbc, g,
+                 lambda, dvdl, md, fr, havePerturbedInteractions, stepWork, grpp, global_atom_index);
     }
 
     if (thread == 0)
@@ -386,20 +387,20 @@ real calc_one_bond(int                      thread,
 
 /*! \brief Compute the bonded part of the listed forces, parallelized over threads
  */
-static void calcBondedForces(const t_idef*            idef,
-                             const rvec               x[],
-                             const t_forcerec*        fr,
-                             const t_pbc*             pbc_null,
-                             const t_graph*           g,
-                             rvec*                    fshiftMasterBuffer,
-                             gmx_enerdata_t*          enerd,
-                             t_nrnb*                  nrnb,
-                             const real*              lambda,
-                             real*                    dvdl,
-                             const t_mdatoms*         md,
-                             t_fcdata*                fcd,
-                             const gmx::StepWorkload& stepWork,
-                             int*                     global_atom_index)
+static void calcBondedForces(const InteractionDefinition& interactionDefinition,
+                             const rvec                   x[],
+                             const t_forcerec*            fr,
+                             const t_pbc*                 pbc_null,
+                             const t_graph*               g,
+                             rvec*                        fshiftMasterBuffer,
+                             gmx_enerdata_t*              enerd,
+                             t_nrnb*                      nrnb,
+                             const real*                  lambda,
+                             real*                        dvdl,
+                             const t_mdatoms*             md,
+                             t_fcdata*                    fcd,
+                             const gmx::StepWorkload&     stepWork,
+                             int*                         global_atom_index)
 {
     bonded_threading_t* bt = fr->bondedThreading;
 
@@ -440,14 +441,13 @@ static void calcBondedForces(const t_idef*            idef,
             /* Loop over all bonded force types to calculate the bonded forces */
             for (ftype = 0; (ftype < F_NRE); ftype++)
             {
-                const t_ilist& ilist = idef->il[ftype];
-                if (ilist.nr > 0 && ftype_is_bonded_potential(ftype))
+                const InteractionList& ilist = interactionDefinition.il[ftype];
+                if (ilist.size() > 0 && ftype_is_bonded_potential(ftype))
                 {
-                    ArrayRef<const int> iatoms = gmx::constArrayRefFromArray(ilist.iatoms, ilist.nr);
-                    v                          = calc_one_bond(
-                            thread, ftype, idef, iatoms, idef->numNonperturbedInteractions[ftype],
-                            fr->bondedThreading->workDivision, x, ft, fshift, fr, pbc_null, g, grpp,
-                            nrnb, lambda, dvdlt, md, fcd, stepWork, global_atom_index);
+                    v = calc_one_bond(thread, ftype, interactionDefinition, ilist.iatoms,
+                                      interactionDefinition.numNonperturbedInteractions[ftype],
+                                      fr->bondedThreading->workDivision, x, ft, fshift, fr, pbc_null, g,
+                                      grpp, nrnb, lambda, dvdlt, md, fcd, stepWork, global_atom_index);
                     epot[ftype] += v;
                 }
             }
@@ -491,9 +491,9 @@ void calc_listed(const t_commrec*         cr,
                  int*                     global_atom_index,
                  const gmx::StepWorkload& stepWork)
 {
-    const t_pbc*        pbc_null;
-    bonded_threading_t* bt = fr->bondedThreading;
-
+    const t_pbc*                 pbc_null;
+    bonded_threading_t*          bt = fr->bondedThreading;
+    const InteractionDefinition& interactionDefinition(idef);
     if (fr->bMolPBC)
     {
         pbc_null = pbc;
@@ -512,12 +512,13 @@ void calc_listed(const t_commrec*         cr,
            restraints, anyway. */
         wallcycle_sub_start(wcycle, ewcsRESTRAINTS);
 
-        if (idef->il[F_POSRES].nr > 0)
+        if (interactionDefinition.il[F_POSRES].size() > 0)
         {
-            posres_wrapper(nrnb, idef, pbc_full, x, enerd, lambda, fr, &forceOutputs->forceWithVirial());
+            posres_wrapper(nrnb, interactionDefinition, pbc_full, x, enerd, lambda, fr,
+                           &forceOutputs->forceWithVirial());
         }
 
-        if (idef->il[F_FBPOSRES].nr > 0)
+        if (interactionDefinition.il[F_FBPOSRES].size() > 0)
         {
             fbposres_wrapper(nrnb, idef, pbc_full, x, enerd, fr, &forceOutputs->forceWithVirial());
         }
@@ -533,13 +534,14 @@ void calc_listed(const t_commrec*         cr,
              */
             GMX_RELEASE_ASSERT(fr->pbcType == PbcType::No || g != nullptr,
                                "With orientation restraints molecules should be whole");
-            enerd->term[F_ORIRESDEV] = calc_orires_dev(ms, idef->il[F_ORIRES].nr, idef->il[F_ORIRES].iatoms,
-                                                       idef->iparams, md, x, pbc_null, fcd, hist);
+            enerd->term[F_ORIRESDEV] = calc_orires_dev(
+                    ms, interactionDefinition.il[F_ORIRES].size(), idef->il[F_ORIRES].iatoms,
+                    interactionDefinition.iparams, md, x, pbc_null, fcd, hist);
         }
         if (fcd->disres.nres > 0)
         {
-            calc_disres_R_6(cr, ms, idef->il[F_DISRES].nr, idef->il[F_DISRES].iatoms, x, pbc_null,
-                            fcd, hist);
+            calc_disres_R_6(cr, ms, idef->il[F_DISRES].size(), idef->il[F_DISRES].iatoms, x,
+                            pbc_null, fcd, hist);
         }
 
         wallcycle_sub_stop(wcycle, ewcsRESTRAINTS);
@@ -553,7 +555,7 @@ void calc_listed(const t_commrec*         cr,
         /* The dummy array is to have a place to store the dhdl at other values
            of lambda, which will be thrown away in the end */
         real dvdl[efptNR] = { 0 };
-        calcBondedForces(idef, x, fr, pbc_null, g,
+        calcBondedForces(interactionDefinition, x, fr, pbc_null, g,
                          as_rvec_array(forceWithShiftForces.shiftForces().data()), enerd, nrnb,
                          lambda, dvdl, md, fcd, stepWork, global_atom_index);
         wallcycle_sub_stop(wcycle, ewcsLISTED);

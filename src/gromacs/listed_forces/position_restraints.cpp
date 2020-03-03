@@ -319,18 +319,18 @@ real fbposres(int                   nbonds,
  * Note that position restraints require a different pbc treatment
  * from other bondeds */
 template<bool computeForce>
-real posres(int                   nbonds,
-            const t_iatom         forceatoms[],
-            const t_iparams       forceparams[],
-            const rvec            x[],
-            gmx::ForceWithVirial* forceWithVirial,
-            const struct t_pbc*   pbc,
-            real                  lambda,
-            real*                 dvdlambda,
-            int                   refcoord_scaling,
-            PbcType               pbcType,
-            const rvec            comA,
-            const rvec            comB)
+real posres(int                     nbonds,
+            const std::vector<int>& forceatoms,
+            const t_iparams         forceparams[],
+            const rvec              x[],
+            gmx::ForceWithVirial*   forceWithVirial,
+            const struct t_pbc*     pbc,
+            real                    lambda,
+            real*                   dvdlambda,
+            int                     refcoord_scaling,
+            PbcType                 pbcType,
+            const rvec              comA,
+            const rvec              comB)
 {
     int              i, ai, m, d, type, npbcdim = 0;
     const t_iparams* pr;
@@ -401,41 +401,42 @@ real posres(int                   nbonds,
 
 } // namespace
 
-void posres_wrapper(t_nrnb*               nrnb,
-                    const t_idef*         idef,
-                    const struct t_pbc*   pbc,
-                    const rvec*           x,
-                    gmx_enerdata_t*       enerd,
-                    const real*           lambda,
-                    const t_forcerec*     fr,
-                    gmx::ForceWithVirial* forceWithVirial)
+void posres_wrapper(t_nrnb*                      nrnb,
+                    const InteractionDefinition& interactionDefinition,
+                    const struct t_pbc*          pbc,
+                    const rvec*                  x,
+                    gmx_enerdata_t*              enerd,
+                    const real*                  lambda,
+                    const t_forcerec*            fr,
+                    gmx::ForceWithVirial*        forceWithVirial)
 {
     real v, dvdl;
 
     dvdl = 0;
-    v    = posres<true>(idef->il[F_POSRES].nr, idef->il[F_POSRES].iatoms, idef->iparams_posres, x,
-                     forceWithVirial, fr->pbcType == PbcType::No ? nullptr : pbc, lambda[efptRESTRAINT],
-                     &dvdl, fr->rc_scaling, fr->pbcType, fr->posres_com, fr->posres_comB);
+    v = posres<true>(interactionDefinition.il[F_POSRES].size(), interactionDefinition.il[F_POSRES].iatoms,
+                     interactionDefinition.iparams_posres, x, forceWithVirial,
+                     fr->pbcType == PbcType::No ? nullptr : pbc, lambda[efptRESTRAINT], &dvdl,
+                     fr->rc_scaling, fr->pbcType, fr->posres_com, fr->posres_comB);
     enerd->term[F_POSRES] += v;
     /* If just the force constant changes, the FEP term is linear,
      * but if k changes, it is not.
      */
     enerd->dvdl_nonlin[efptRESTRAINT] += dvdl;
-    inc_nrnb(nrnb, eNR_POSRES, gmx::exactDiv(idef->il[F_POSRES].nr, 2));
+    inc_nrnb(nrnb, eNR_POSRES, gmx::exactDiv(interactionDefinition.il[F_POSRES].size(), 2));
 }
 
-void posres_wrapper_lambda(struct gmx_wallcycle* wcycle,
-                           const t_lambda*       fepvals,
-                           const t_idef*         idef,
-                           const struct t_pbc*   pbc,
-                           const rvec            x[],
-                           gmx_enerdata_t*       enerd,
-                           const real*           lambda,
-                           const t_forcerec*     fr)
+void posres_wrapper_lambda(struct gmx_wallcycle*        wcycle,
+                           const t_lambda*              fepvals,
+                           const InteractionDefinition& interactionDefinition,
+                           const struct t_pbc*          pbc,
+                           const rvec                   x[],
+                           gmx_enerdata_t*              enerd,
+                           const real*                  lambda,
+                           const t_forcerec*            fr)
 {
     real v;
 
-    if (0 == idef->il[F_POSRES].nr)
+    if (0 == interactionDefinition.il[F_POSRES].size())
     {
         return;
     }
@@ -446,8 +447,9 @@ void posres_wrapper_lambda(struct gmx_wallcycle* wcycle,
         real dvdl_dum = 0, lambda_dum;
 
         lambda_dum = (i == 0 ? lambda[efptRESTRAINT] : fepvals->all_lambda[efptRESTRAINT][i - 1]);
-        v = posres<false>(idef->il[F_POSRES].nr, idef->il[F_POSRES].iatoms, idef->iparams_posres, x,
-                          nullptr, fr->pbcType == PbcType::No ? nullptr : pbc, lambda_dum,
+        v          = posres<false>(interactionDefinition.il[F_POSRES].size(),
+                          interactionDefinition.il[F_POSRES].iatoms, interactionDefinition.iparams_posres,
+                          x, nullptr, fr->pbcType == PbcType::No ? nullptr : pbc, lambda_dum,
                           &dvdl_dum, fr->rc_scaling, fr->pbcType, fr->posres_com, fr->posres_comB);
         enerd->enerpart_lambda[i] += v;
     }
