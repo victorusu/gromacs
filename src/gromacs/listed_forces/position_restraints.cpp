@@ -458,19 +458,20 @@ void posres_wrapper_lambda(struct gmx_wallcycle*        wcycle,
 
 /*! \brief Helper function that wraps calls to fbposres for
     free-energy perturbation */
-void fbposres_wrapper(t_nrnb*               nrnb,
-                      const t_idef*         idef,
-                      const struct t_pbc*   pbc,
-                      const rvec*           x,
-                      gmx_enerdata_t*       enerd,
-                      const t_forcerec*     fr,
-                      gmx::ForceWithVirial* forceWithVirial)
+void fbposres_wrapper(t_nrnb*                      nrnb,
+                      const InteractionDefinition& interactionDefinition,
+                      const struct t_pbc*          pbc,
+                      const rvec*                  x,
+                      gmx_enerdata_t*              enerd,
+                      const t_forcerec*            fr,
+                      gmx::ForceWithVirial*        forceWithVirial)
 {
     real v;
 
-    v = fbposres(idef->il[F_FBPOSRES].nr, idef->il[F_FBPOSRES].iatoms, idef->iparams_fbposres, x,
-                 forceWithVirial, fr->pbcType == PbcType::No ? nullptr : pbc, fr->rc_scaling,
-                 fr->pbcType, fr->posres_com);
+    v = fbposres(interactionDefinition.il[F_FBPOSRES].size(),
+                 interactionDefinition.il[F_FBPOSRES].iatoms.data(),
+                 interactionDefinition.iparams_fbposres, x, forceWithVirial,
+                 fr->pbcType == PbcType::No ? nullptr : pbc, fr->rc_scaling, fr->pbcType, fr->posres_com);
     enerd->term[F_FBPOSRES] += v;
-    inc_nrnb(nrnb, eNR_FBPOSRES, gmx::exactDiv(idef->il[F_FBPOSRES].nr, 2));
+    inc_nrnb(nrnb, eNR_FBPOSRES, gmx::exactDiv(interactionDefinition.il[F_FBPOSRES].size(), 2));
 }

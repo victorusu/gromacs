@@ -352,13 +352,14 @@ typedef struct t_idef
 
 struct InteractionDefinition
 {
-    InteractionDefinition(const t_idef* idef);
+    explicit InteractionDefinition(t_idef idef);
     int              ntypes;
     InteractionLists il;
     std::vector<int> numNonperturbedInteractions;
     int              ilsort;
     t_iparams*       iparams;
     t_iparams*       iparams_posres;
+    t_iparams*       iparams_fbposres;
     gmx_cmap_t*      cmap_grid;
 };
 

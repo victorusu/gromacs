@@ -456,6 +456,7 @@ static InteractionLists ilistToInteractionLists(const t_ilist* src)
 
     for (int interaction = 0; interaction <= F_NRE; interaction++)
     {
+        il[interaction].iatoms.resize(src->nr);
         for (int iatom = 0; iatom < src->nr; ++iatom)
         {
             il[interaction].iatoms[iatom] = src->iatoms[iatom];
@@ -464,17 +465,18 @@ static InteractionLists ilistToInteractionLists(const t_ilist* src)
     return il;
 }
 
-InteractionDefinition::InteractionDefinition(const t_idef* idef)
+InteractionDefinition::InteractionDefinition(const t_idef idef)
 {
-    ntypes = idef->ntypes;
+    ntypes = idef.ntypes;
     numNonperturbedInteractions.resize(F_NRE);
-    ilsort    = idef->ilsort;
-    iparams   = idef->iparams;
-    cmap_grid = idef->cmap_grid;
-    il        = ilistToInteractionLists(idef->il);
+    ilsort    = idef.ilsort;
+    iparams   = idef.iparams;
+    cmap_grid = idef.cmap_grid;
+    il        = ilistToInteractionLists(idef.il);
     for (int i = 0; i <= F_NRE; i++)
     {
-        numNonperturbedInteractions[i] = idef->numNonperturbedInteractions[i];
+        numNonperturbedInteractions[i] = idef.numNonperturbedInteractions[i];
     }
-    iparams_posres = idef->iparams_posres;
+    iparams_posres   = idef.iparams_posres;
+    iparams_fbposres = idef.iparams_fbposres;
 }
