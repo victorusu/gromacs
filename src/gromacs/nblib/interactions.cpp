@@ -69,6 +69,8 @@ real combineNonbondedParameters(real v, real w, CombinationRule combinationRule)
 
 } // namespace detail
 
+ParticleTypesInteractions::ParticleTypesInteractions(CombinationRule cr) : combinationRule_(cr) {}
+
 void ParticleTypesInteractions::add(ParticleType particleType, C6 c6, C12 c12)
 {
     if (singleParticleInteractionsMap_.count(particleType.name()) == 0)
@@ -79,9 +81,12 @@ void ParticleTypesInteractions::add(ParticleType particleType, C6 c6, C12 c12)
     else
     {
         std::tuple<C6, C12> pair = singleParticleInteractionsMap_.at(particleType.name());
-        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12) {
-            std::string message = gmx::formatString("Attempting to add nonbonded interaction parameters for particle "
-                                                    "type %s twice", particleType.name().c_str());
+        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12)
+        {
+            std::string message = gmx::formatString(
+                    "Attempting to add nonbonded interaction parameters for particle "
+                    "type %s twice",
+                    particleType.name().c_str());
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
@@ -93,11 +98,12 @@ void ParticleTypesInteractions::add(ParticleType particleType1, ParticleType par
     auto possibleInteractionKey = std::make_tuple(particleType2.name(), particleType1.name());
     if (twoParticlesInteractionsMap_.count(interactionKey) == 0)
     {
-        std::string message = gmx::formatString("Attempting to add nonbonded interaction parameters between the "
-                                                "particle types %s %s when the reverse was already defined",
-                                                particleType1.name().c_str(), particleType2.name().c_str());
+        std::string message = gmx::formatString(
+                "Attempting to add nonbonded interaction parameters between the "
+                "particle types %s %s when the reverse was already defined",
+                particleType1.name().c_str(), particleType2.name().c_str());
         GMX_RELEASE_ASSERT(twoParticlesInteractionsMap_.count(possibleInteractionKey) == 0,
-                        message.c_str());
+                           message.c_str());
 
         twoParticlesInteractionsMap_[interactionKey]         = std::make_tuple(c6, c12);
         twoParticlesInteractionsMap_[possibleInteractionKey] = std::make_tuple(c6, c12);
@@ -108,16 +114,18 @@ void ParticleTypesInteractions::add(ParticleType particleType1, ParticleType par
     else
     {
         std::tuple<C6, C12> pair = twoParticlesInteractionsMap_.at(interactionKey);
-        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12) {
-            std::string message =
-                    gmx::formatString("Attempting to add nonbonded interaction parameters between the particle types "
-                                      "%s %s twice", particleType1.name().c_str(), particleType2.name().c_str());
+        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12)
+        {
+            std::string message = gmx::formatString(
+                    "Attempting to add nonbonded interaction parameters between the particle types "
+                    "%s %s twice",
+                    particleType1.name().c_str(), particleType2.name().c_str());
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
 }
 
-NonBondedInteractionMap ParticleTypesInteractions::generateTable(CombinationRule combinationRule)
+NonBondedInteractionMap ParticleTypesInteractions::generateTable()
 {
     NonBondedInteractionMap nonbondedParameters_;
 
@@ -132,8 +140,8 @@ NonBondedInteractionMap ParticleTypesInteractions::generateTable(CombinationRule
             real c6_2  = std::get<0>(particleType2.second);
             real c12_2 = std::get<1>(particleType2.second);
 
-            real c6_combo  = detail::combineNonbondedParameters(c6_1, c6_2, combinationRule);
-            real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, combinationRule);
+            real c6_combo  = detail::combineNonbondedParameters(c6_1, c6_2, combinationRule_);
+            real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, combinationRule_);
 
             auto interactionKey = std::make_tuple(particleType1.first, particleType2.first);
             nonbondedParameters_[interactionKey] = std::make_tuple(c6_combo, c12_combo);

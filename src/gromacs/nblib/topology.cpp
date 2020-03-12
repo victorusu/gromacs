@@ -202,8 +202,7 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
-    topology_.combinationRule_ = combinationRule_;
-    topology_.nonBondedInteractionMap_ = particleTypesInteractions_->generateTable(combinationRule_);
+    topology_.nonBondedInteractionMap_ = particleTypesInteractions_->generateTable();
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes
@@ -212,9 +211,11 @@ Topology TopologyBuilder::buildTopology()
         for (const auto& particleType2 : particleTypes_)
         {
             auto interactionKey = std::make_tuple(particleType1.first, particleType2.first);
-            if (topology_.nonBondedInteractionMap_.count(interactionKey) == 0) {
-                std::string message = gmx::formatString("Missing nonbonded interaction parameters for pair %s %s",
-                                                        particleType1.first.c_str(), particleType2.first.c_str());
+            if (topology_.nonBondedInteractionMap_.count(interactionKey) == 0)
+            {
+                std::string message =
+                        gmx::formatString("Missing nonbonded interaction parameters for pair %s %s",
+                                          particleType1.first.c_str(), particleType2.first.c_str());
                 GMX_THROW(gmx::InvalidInputError(message));
             }
         }
@@ -254,11 +255,9 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
     return *this;
 }
 
-void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions,
-                                                   const CombinationRule combinationRule)
+void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions)
 {
     particleTypesInteractions_ = std::make_shared<ParticleTypesInteractions>(particleTypesInteractions);
-    combinationRule_ = combinationRule;
 }
 
 const int& Topology::numParticles() const

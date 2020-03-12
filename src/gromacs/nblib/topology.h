@@ -124,7 +124,6 @@ private:
     NonBondedInteractionMap nonBondedInteractionMap_;
     //! Combination Rule used to generate the nonbonded interactions
     CombinationRule combinationRule_;
-
 };
 
 /*! \brief Topology Builder
@@ -155,8 +154,7 @@ public:
     // Adds a molecules of a certain type into the topology
     TopologyBuilder& addMolecule(const Molecule& moleculeType, int nMolecules);
 
-    void addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions,
-                                      const CombinationRule combinationRule);
+    void addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions);
 
 private:
     //! Internally stored topology
@@ -180,9 +178,6 @@ private:
 
     //! ParticleType nonbonded parameters
     std::shared_ptr<ParticleTypesInteractions> particleTypesInteractions_;
-
-    //! Combination Rule to be used to generate the nonbonded interactions
-    CombinationRule combinationRule_;
 };
 
 //! utility function to extract Particle quantities and expand them to the full

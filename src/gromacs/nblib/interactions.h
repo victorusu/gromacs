@@ -70,15 +70,17 @@ real combineNonbondedParameters(real v, real w, CombinationRule combinationRule)
 class ParticleTypesInteractions
 {
 public:
-    ParticleTypesInteractions() = default;
+    explicit ParticleTypesInteractions(CombinationRule = CombinationRule::Geometric);
 
     void add(ParticleType particleType, C6 c6, C12 c12);
 
     void add(ParticleType particleType1, ParticleType particleType2, C6 c6, C12 c12);
 
-    NonBondedInteractionMap generateTable(CombinationRule combinationRule);
+    NonBondedInteractionMap generateTable();
 
 private:
+    CombinationRule combinationRule_;
+
     std::unordered_map<ParticleTypeName, std::tuple<C6, C12>> singleParticleInteractionsMap_;
     std::map<std::tuple<ParticleTypeName, ParticleTypeName>, std::tuple<C6, C12>> twoParticlesInteractionsMap_;
 

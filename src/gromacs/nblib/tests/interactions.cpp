@@ -82,7 +82,7 @@ TEST(NBlibTest, NonBondedForceParamsCorrect)
     interactions.add(atom3, c6_3, c12_3);
     interactions.add(atom2, atom3, c6comb, c12comb);
 
-    auto nbfp = interactions.generateTable(CombinationRule::Geometric);
+    auto nbfp = interactions.generateTable();
 
     //! self interaction for c6
     EXPECT_REAL_EQ_TOL(c6_1, std::get<0>(nbfp[std::make_tuple(atom1.name(), atom1.name())]),
@@ -125,7 +125,7 @@ TEST(NBlibTest, NonBondedForceParamsCorrect)
     ParticleType atom4(ParticleName("a4"), Mass(1));
     interactions.add(atom3, atom4, 1, 2);
     //! need to have self-interaction for all particles
-    EXPECT_THROW_GMX(interactions.generateTable(CombinationRule::Geometric), gmx::InvalidInputError);
+    EXPECT_THROW_GMX(interactions.generateTable(), gmx::InvalidInputError);
 }
 
 } // namespace
