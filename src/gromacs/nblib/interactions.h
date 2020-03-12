@@ -72,9 +72,9 @@ class ParticleTypesInteractions
 public:
     explicit ParticleTypesInteractions(CombinationRule = CombinationRule::Geometric);
 
-    void add(ParticleTypeName particleTypeName, C6 c6, C12 c12);
+    void add(const ParticleTypeName& particleTypeName, C6 c6, C12 c12);
 
-    void add(ParticleTypeName particleTypeName1, ParticleTypeName particleTypeName2, C6 c6, C12 c12);
+    void add(const ParticleTypeName& particleTypeName1, const ParticleTypeName& particleTypeName2, C6 c6, C12 c12);
 
     NonBondedInteractionMap generateTable();
 
@@ -85,9 +85,6 @@ private:
 
     std::unordered_map<ParticleTypeName, std::tuple<C6, C12>> singleParticleInteractionsMap_;
     std::map<std::tuple<ParticleTypeName, ParticleTypeName>, std::tuple<C6, C12>> twoParticlesInteractionsMap_;
-
-    // Helper data structure to collect the unique ParticleTypes
-    std::set<ParticleTypeName> particleTypesSet_;
 };
 
 } // namespace nblib

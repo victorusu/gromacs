@@ -71,17 +71,15 @@ real combineNonbondedParameters(real v, real w, CombinationRule combinationRule)
 
 ParticleTypesInteractions::ParticleTypesInteractions(CombinationRule cr) : combinationRule_(cr) {}
 
-void ParticleTypesInteractions::add(ParticleTypeName particleTypeName, C6 c6, C12 c12)
+void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName, C6 c6, C12 c12)
 {
-    if (singleParticleInteractionsMap_.count(particleTypeName) == 0)
+    auto insertLocation = singleParticleInteractionsMap_.insert(
+            std::make_pair(particleTypeName, std::make_tuple(c6, c12)));
+
+    if (!insertLocation.second) // if particleTypeName already existed
     {
-        singleParticleInteractionsMap_[particleTypeName] = std::make_tuple(c6, c12);
-        particleTypesSet_.insert(particleTypeName);
-    }
-    else
-    {
-        std::tuple<C6, C12> pair = singleParticleInteractionsMap_.at(particleTypeName);
-        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12)
+        if (std::get<0>(insertLocation.first->second) != c6
+            || std::get<1>(insertLocation.first->second) != c12)
         {
             std::string message = gmx::formatString(
                     "Attempting to add nonbonded interaction parameters for particle "
@@ -92,29 +90,22 @@ void ParticleTypesInteractions::add(ParticleTypeName particleTypeName, C6 c6, C1
     }
 }
 
-void ParticleTypesInteractions::add(ParticleTypeName particleTypeName1, ParticleTypeName particleTypeName2, C6 c6, C12 c12)
+void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName1,
+                                    const ParticleTypeName& particleTypeName2,
+                                    C6                      c6,
+                                    C12                     c12)
 {
     auto interactionKey         = std::make_tuple(particleTypeName1, particleTypeName2);
     auto possibleInteractionKey = std::make_tuple(particleTypeName2, particleTypeName1);
-    if (twoParticlesInteractionsMap_.count(interactionKey) == 0)
-    {
-        std::string message = gmx::formatString(
-                "Attempting to add nonbonded interaction parameters between the "
-                "particle types %s %s when the reverse was already defined",
-                particleTypeName1.c_str(), particleTypeName2.c_str());
-        GMX_RELEASE_ASSERT(twoParticlesInteractionsMap_.count(possibleInteractionKey) == 0,
-                           message.c_str());
 
-        twoParticlesInteractionsMap_[interactionKey]         = std::make_tuple(c6, c12);
-        twoParticlesInteractionsMap_[possibleInteractionKey] = std::make_tuple(c6, c12);
+    auto insertLocation = twoParticlesInteractionsMap_.insert(
+            std::make_pair(interactionKey, std::make_tuple(c6, c12)));
+    twoParticlesInteractionsMap_.insert(std::make_pair(possibleInteractionKey, std::make_tuple(c6, c12)));
 
-        particleTypesSet_.insert(particleTypeName1);
-        particleTypesSet_.insert(particleTypeName2);
-    }
-    else
+    if (!insertLocation.second) // if particleTypeName already existed
     {
-        std::tuple<C6, C12> pair = twoParticlesInteractionsMap_.at(interactionKey);
-        if (std::get<0>(pair) != c6 || std::get<1>(pair) != c12)
+        if (std::get<0>(insertLocation.first->second) != c6
+            || std::get<1>(insertLocation.first->second) != c12)
         {
             std::string message = gmx::formatString(
                     "Attempting to add nonbonded interaction parameters between the particle types "
@@ -148,7 +139,7 @@ NonBondedInteractionMap ParticleTypesInteractions::generateTable()
         }
     }
 
-    // updating the interaction matrix based on the user fine tunned parameters
+    // updating the interaction matrix based on the user fine tuned parameters
     for (const auto& particleTypeTuple : twoParticlesInteractionsMap_)
     {
         real c6_combo  = std::get<0>(particleTypeTuple.second);
@@ -157,10 +148,16 @@ NonBondedInteractionMap ParticleTypesInteractions::generateTable()
         nonbondedParameters_[particleTypeTuple.first] = std::make_tuple(c6_combo, c12_combo);
     }
 
+    std::set<ParticleTypeName> particleTypes;
+    for (auto const& typeKey : nonbondedParameters_)
+    { // we don't need to get<1> because the list is guaranteed to be symmetric
+        particleTypes.insert(std::get<0>(typeKey.first));
+    }
+
     // check whether there is any missing interaction
-    for (const ParticleTypeName& particleTypeName1 : particleTypesSet_)
+    for (const ParticleTypeName& particleTypeName1 : particleTypes)
     {
-        for (const ParticleTypeName& particleTypeName2 : particleTypesSet_)
+        for (const ParticleTypeName& particleTypeName2 : particleTypes)
         {
             auto interactionKey = std::make_tuple(particleTypeName1, particleTypeName2);
             if (nonbondedParameters_.count(interactionKey) == 0)
