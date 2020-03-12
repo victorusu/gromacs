@@ -72,8 +72,12 @@ TEST(NBlibTest, IntegratorWorks)
     Molecule     molecule("SomeMolecule");
     molecule.addParticle(ParticleName("SomeAtom"), particleType);
 
+    ParticleTypesInteractions interactions;
+    interactions.add(particleType.name(), 0, 0);
+
     TopologyBuilder topologyBuilder;
     topologyBuilder.addMolecule(molecule, numAtoms);
+    topologyBuilder.addParticleTypesInteractions(interactions);
     Topology topology = topologyBuilder.buildTopology();
 
     std::vector<gmx::RVec> x(numAtoms);

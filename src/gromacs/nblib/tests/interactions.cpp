@@ -77,10 +77,10 @@ TEST(NBlibTest, NonBondedForceParamsCorrect)
     real c6comb  = 40;
     real c12comb = 41;
 
-    interactions.add(atom1, c6_1, c12_1);
-    interactions.add(atom2, c6_2, c12_2);
-    interactions.add(atom3, c6_3, c12_3);
-    interactions.add(atom2, atom3, c6comb, c12comb);
+    interactions.add(atom1.name(), c6_1, c12_1);
+    interactions.add(atom2.name(), c6_2, c12_2);
+    interactions.add(atom3.name(), c6_3, c12_3);
+    interactions.add(atom2.name(), atom3.name(), c6comb, c12comb);
 
     auto nbfp = interactions.generateTable();
 
@@ -123,7 +123,7 @@ TEST(NBlibTest, NonBondedForceParamsCorrect)
                        gmx::test::defaultRealTolerance());
 
     ParticleType atom4(ParticleName("a4"), Mass(1));
-    interactions.add(atom3, atom4, 1, 2);
+    interactions.add(atom3.name(), atom4.name(), 1, 2);
     //! need to have self-interaction for all particles
     EXPECT_THROW_GMX(interactions.generateTable(), gmx::InvalidInputError);
 }

@@ -202,6 +202,9 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
+    if (particleTypesInteractions_ == nullptr) {
+        GMX_THROW(gmx::InvalidInputError("ParticleTypesInteractions not specified"));
+    }
     topology_.combinationRule_         = particleTypesInteractions_->getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_->generateTable();
 

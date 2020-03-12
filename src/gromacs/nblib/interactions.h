@@ -72,9 +72,9 @@ class ParticleTypesInteractions
 public:
     explicit ParticleTypesInteractions(CombinationRule = CombinationRule::Geometric);
 
-    void add(ParticleType particleType, C6 c6, C12 c12);
+    void add(ParticleTypeName particleTypeName, C6 c6, C12 c12);
 
-    void add(ParticleType particleType1, ParticleType particleType2, C6 c6, C12 c12);
+    void add(ParticleTypeName particleTypeName1, ParticleTypeName particleTypeName2, C6 c6, C12 c12);
 
     NonBondedInteractionMap generateTable();
 
