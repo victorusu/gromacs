@@ -33,7 +33,8 @@
  * the research papers on the package. Check out http://www.gromacs.org.
  */
 /*! \internal \file
- * \brief
+ * \brief Translation layer to GROMACS data structures for force calculations.
+ *
  * Implements the translation layer between the user scope and
  * GROMACS data structures for force calculations. Sets up the
  * non-bonded verlet.
@@ -53,11 +54,12 @@
 #include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/mdtypes/interaction_const.h"
 #include "gromacs/mdtypes/simulation_workload.h"
+#include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nbnxm/nbnxm.h"
 
 #include "gmxcalculator.h"
-#include "nbkerneloptions.h"
 #include "interactions.h"
+#include "nbkerneloptions.h"
 
 namespace nblib
 {
@@ -72,7 +74,7 @@ struct NbvSetupUtil
 
     std::unique_ptr<GmxForceCalculator> setupGmxForceCalculator();
 
-    std::shared_ptr<SimulationState> system_;
+    SimulationState                  system_;
     std::shared_ptr<NBKernelOptions> options_;
 
     //! Storage for parameters for short range interactions.

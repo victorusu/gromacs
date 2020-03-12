@@ -91,7 +91,7 @@ private:
     void addExclusionsFromNames();
 };
 
-//! \brief Make a methanol molecule with parameters from gromos43A1
+//! \internal \brief Make a methanol molecule with parameters from gromos43A1
 class MethanolMoleculeBuilder
 {
 public:
@@ -172,6 +172,7 @@ public:
 private:
     std::vector<gmx::RVec> coordinates_;
     std::vector<gmx::RVec> velocities_;
+    std::vector<gmx::RVec> forces_;
 
     Box      box_;
     Topology topology_;
@@ -191,6 +192,7 @@ public:
 private:
     std::vector<gmx::RVec> coordinates_;
     std::vector<gmx::RVec> velocities_;
+    std::vector<gmx::RVec> forces_;
 
     Box      box_;
     Topology topology_;

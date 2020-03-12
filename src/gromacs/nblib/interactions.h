@@ -32,7 +32,7 @@
  * To help us fund GROMACS development, we humbly ask that you cite
  * the research papers on the package. Check out http://www.gromacs.org.
  */
-/*! \file
+/*! \internal \file
  * \brief
  * Implements nblib particle-types interactions
  *
@@ -49,8 +49,8 @@
 #include <set>
 
 #include "gromacs/math/vectypes.h"
+#include "gromacs/nblib/particletype.h"
 
-#include "particletype.h"
 #include "nbkerneldef.h"
 
 namespace nblib
@@ -77,6 +77,8 @@ public:
     void add(ParticleType particleType1, ParticleType particleType2, C6 c6, C12 c12);
 
     NonBondedInteractionMap generateTable();
+
+    CombinationRule getCombinationRule() const;
 
 private:
     CombinationRule combinationRule_;

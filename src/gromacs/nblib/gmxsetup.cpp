@@ -33,6 +33,7 @@
  * the research papers on the package. Check out http://www.gromacs.org.
  */
 /*! \internal \file
+ * \brief Translation layer to GROMACS data structures for force calculations.
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
@@ -128,9 +129,9 @@ static Nbnxm::KernelSetup getKernelSetup(const NBKernelOptions& options)
     return kernelSetup;
 }
 
-NbvSetupUtil::NbvSetupUtil(SimulationState system, const NBKernelOptions& options)
+NbvSetupUtil::NbvSetupUtil(SimulationState system, const NBKernelOptions& options) :
+    system_(std::move(system))
 {
-    system_  = std::make_shared<SimulationState>(system);
     options_ = std::make_shared<NBKernelOptions>(options);
 
     //! Todo: find a more general way to initialize hardware
@@ -143,9 +144,9 @@ NbvSetupUtil::NbvSetupUtil(SimulationState system, const NBKernelOptions& option
 void NbvSetupUtil::unpackTopologyToGmx()
 
 {
-    const Topology&                  topology      = system_->topology();
-    const std::vector<ParticleType>& particleTypes = topology.getParticleTypes();
-    const NonBondedInteractionMap&   nonBondedInteractionMap = topology.getNonBondedInteractionMap();
+    const Topology&                  topology              = system_.topology();
+    const std::vector<ParticleType>& particleTypes         = topology.getParticleTypes();
+    const NonBondedInteractionMap& nonBondedInteractionMap = topology.getNonBondedInteractionMap();
 
     size_t numParticles = topology.numParticles();
 
@@ -165,7 +166,7 @@ void NbvSetupUtil::unpackTopologyToGmx()
             // No need to check if the keys exist
             // This should have been checked in the topologyBuilder
             auto interactionKey = std::make_tuple(particleType1.name(), particleType2.name());
-            auto paramsTuple = nonBondedInteractionMap.at(interactionKey);
+            auto paramsTuple    = nonBondedInteractionMap.at(interactionKey);
             nonbondedParameters_.push_back(std::get<0>(paramsTuple) * c6factor);
             nonbondedParameters_.push_back(std::get<1>(paramsTuple) * c12factor);
         }
@@ -188,7 +189,7 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
     const int  numThreads = options_->numThreads;
     // Note: the options and Nbnxm combination rule enums values should match
     // const int combinationRule = static_cast<int>(options_->ljCombinationRule);
-    const int combinationRule = static_cast<int>(system_->topology().getCombinationRule());
+    const int combinationRule = static_cast<int>(system_.topology().getCombinationRule());
 
     auto messageWhenInvalid = checkKernelSetup(*options_);
     if (messageWhenInvalid)
@@ -212,32 +213,30 @@ std::unique_ptr<nonbonded_verlet_t> NbvSetupUtil::setupNbnxmInstance()
     auto nbv = std::make_unique<nonbonded_verlet_t>(std::move(pairlistSets), std::move(pairSearch),
                                                     std::move(atomData), kernelSetup, nullptr, nullptr);
 
-    //! Needs to be called with the number of unique ParticleTypes
+    // Needs to be called with the number of unique ParticleTypes
     nbnxn_atomdata_init(gmx::MDLogger(), nbv->nbat.get(), kernelSetup.kernelType, combinationRule,
-                        system_->topology().getParticleTypes().size(), nonbondedParameters_, 1,
-                        numThreads);
+                        system_.topology().getParticleTypes().size(), nonbondedParameters_, 1, numThreads);
 
     matrix box_;
-    gmx::fillLegacyMatrix(system_->box().matrix(), box_);
+    gmx::fillLegacyMatrix(system_.box().matrix(), box_);
 
     GMX_RELEASE_ASSERT(!TRICLINIC(box_), "Only rectangular unit-cells are supported here");
     const rvec lowerCorner = { 0, 0, 0 };
     const rvec upperCorner = { box_[XX][XX], box_[YY][YY], box_[ZZ][ZZ] };
 
-    const real particleDensity = system_->coordinates().size() / det(box_);
+    const real particleDensity = system_.coordinates().size() / det(box_);
 
     nbnxn_put_on_grid(nbv.get(), box_, 0, lowerCorner, upperCorner, nullptr,
-                      { 0, int(system_->coordinates().size()) }, particleDensity,
-                      particleInfoAllVdw_, system_->coordinates(), 0, nullptr);
+                      { 0, int(system_.coordinates().size()) }, particleDensity,
+                      particleInfoAllVdw_, system_.coordinates(), 0, nullptr);
 
     t_nrnb nrnb;
-    nbv->constructPairlist(gmx::InteractionLocality::Local, system_->topology().getGmxExclusions(),
-                           0, &nrnb);
+    nbv->constructPairlist(gmx::InteractionLocality::Local, system_.topology().getGmxExclusions(), 0, &nrnb);
 
     t_mdatoms mdatoms;
     // We only use (read) the atom type and charge from mdatoms
-    mdatoms.typeA = const_cast<int*>(system_->topology().getParticleTypeIdOfAllParticles().data());
-    mdatoms.chargeA = const_cast<real*>(system_->topology().getCharges().data());
+    mdatoms.typeA   = const_cast<int*>(system_.topology().getParticleTypeIdOfAllParticles().data());
+    mdatoms.chargeA = const_cast<real*>(system_.topology().getCharges().data());
     nbv->setAtomProperties(mdatoms, particleInfoAllVdw_);
 
     return nbv;
@@ -254,16 +253,16 @@ std::unique_ptr<GmxForceCalculator> NbvSetupUtil::setupGmxForceCalculator()
     // gmx_cycles_t cycles = gmx_cycles_read();
 
     matrix box_;
-    gmx::fillLegacyMatrix(system_->box().matrix(), box_);
+    gmx::fillLegacyMatrix(system_.box().matrix(), box_);
 
     gmxForceCalculator_p->forcerec_.nbfp = nonbondedParameters_;
     snew(gmxForceCalculator_p->forcerec_.shift_vec, SHIFTS);
     calc_shifts(box_, gmxForceCalculator_p->forcerec_.shift_vec);
 
-    put_atoms_in_box(PbcType::Xyz, box_, system_->coordinates());
+    put_atoms_in_box(PbcType::Xyz, box_, system_.coordinates());
 
     gmxForceCalculator_p->verletForces_ =
-            gmx::PaddedHostVector<gmx::RVec>(system_->topology().numParticles(), gmx::RVec(0, 0, 0));
+            gmx::PaddedHostVector<gmx::RVec>(system_.topology().numParticles(), gmx::RVec(0, 0, 0));
 
     return gmxForceCalculator_p;
 }

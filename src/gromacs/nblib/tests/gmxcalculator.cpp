@@ -34,63 +34,60 @@
  */
 /*! \internal \file
  * \brief
- * Implements nblib ForceCalculator
+ * This implements basic nblib utility tests
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
-#ifndef GMX_NBLIB_FORCECALCULATOR_H
-#define GMX_NBLIB_FORCECALCULATOR_H
+#include "gmxpre.h"
 
-#include "gromacs/gpu_utils/hostallocator.h"
+#include <gtest/gtest.h>
+
+#include "gromacs/nblib/gmxsetup.h"
 #include "gromacs/nblib/simulationstate.h"
-#include "gromacs/timing/cyclecounter.h"
 
-#include "nbkerneldef.h"
-#include "nbkerneloptions.h"
-#include "interactions.h"
+#include "testhelpers.h"
+#include "testsystems.h"
 
 namespace nblib
 {
-struct NbvSetupUtil;
-class GmxForceCalculator;
-
-class ForceCalculator
+namespace test
 {
-public:
-    /*! \brief Constructor
-     *
-     * \todo: Depend on simulationState
-     */
-    ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
+namespace
+{
 
-    //! Sets up and runs the kernel calls
-    //! returns the forces as a vector
+TEST(NBlibTest, CanConstructGmxForceCalculator)
+{
+    ArgonSimulationStateBuilder      argonSystemBuilder;
+    SimulationState                  simState = argonSystemBuilder.setupSimulationState();
+    std::shared_ptr<NBKernelOptions> options = std::make_shared<NBKernelOptions>(NBKernelOptions());
+    EXPECT_NO_THROW(GmxForceCalculator(simState, options));
+}
 
-    /*! \brief Sets up and runs the kernel calls
-     *
-     * \todo Refactor this function to return a handle to dispatchNonbondedKernel
-     *       that callers can manipulate directly.
-     */
-    gmx::PaddedHostVector<gmx::RVec> compute();
+TEST(NBlibTest, GmxForceCalculatorCanCompute)
+{
+    ArgonSimulationStateBuilder argonSystemBuilder;
+    SimulationState             simState       = argonSystemBuilder.setupSimulationState();
+    NBKernelOptions             options        = NBKernelOptions();
+    options.nbnxmSimd                          = BenchMarkKernels::SimdNo;
+    std::unique_ptr<NbvSetupUtil> nbvSetupUtil = std::make_unique<NbvSetupUtil>(simState, options);
+    std::unique_ptr<GmxForceCalculator> gmxForceCalculator = nbvSetupUtil->setupGmxForceCalculator();
+    EXPECT_NO_THROW(gmxForceCalculator->compute());
+}
 
-private:
-    // void printTimingsOutput(const NBKernelOptions &options,
-    //                        const SimulationState &system,
-    //                        const gmx::index      &numPairs,
-    //                        gmx_cycles_t           cycles);
+TEST(NBlibTest, CanSetupStepWorkload)
+{
+    std::shared_ptr<NBKernelOptions> options = std::make_shared<NBKernelOptions>(NBKernelOptions());
+    EXPECT_NO_THROW(setupStepWorkload(options));
+}
 
-    //! Struct to handle translation from NBLIB inputs to setup GMX data structures
-    std::unique_ptr<NbvSetupUtil> nbvSetupUtil_;
-    //! GROMACS force calculator to compute forces
-    std::unique_ptr<GmxForceCalculator> gmxForceCalculator_;
-
-    //    //! Particles masses
-    //    std::vector<real> masses_;
-};
-
+TEST(NBlibTest, GmxForceCalculatorCanSetupInteractionConst)
+{
+    std::shared_ptr<NBKernelOptions> options = std::make_shared<NBKernelOptions>(NBKernelOptions());
+    EXPECT_NO_THROW(setupInteractionConst(options));
+}
+} // namespace
+} // namespace test
 } // namespace nblib
-
-#endif // GMX_NBLIB_FORCECALCULATOR_H
