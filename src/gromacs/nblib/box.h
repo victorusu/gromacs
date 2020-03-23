@@ -47,6 +47,7 @@
 #include <array>
 
 #include "gromacs/math/matrix.h"
+#include "gromacs/math/vectypes.h"
 
 namespace nblib
 {
@@ -54,18 +55,23 @@ namespace nblib
 class Box
 {
 public:
-    using Matrix = gmx::Matrix3x3;
+    using Matrix       = gmx::Matrix3x3;
+    using LegacyMatrix = matrix;
 
     Box(real l);
 
     Box(real x, real y, real z);
 
-    Matrix matrix();
+    Matrix gmxMatrix();
 
-    const Matrix& matrix() const;
+    const Matrix& gmxMatrix() const;
+
+    const LegacyMatrix& legacyMatrix() const { return legacyMatrix_; }
 
 private:
     Matrix box_;
+
+    LegacyMatrix legacyMatrix_;
 };
 
 } // namespace nblib
