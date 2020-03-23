@@ -73,8 +73,8 @@ class Molecule
     {
         using type = Bond;
 
-        std::unordered_map<Name, Bond>                            interactionTypes_;
-        std::vector<std::tuple<ParticleName, ParticleName, Name>> interactions_;
+        std::unordered_map<Name, Bond> interactionTypes_;
+        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName, Name>> interactions_;
     };
 
     using InteractionTuple =
@@ -83,7 +83,10 @@ class Molecule
 public:
     Molecule(std::string moleculeName);
 
-    // Add a particle to the molecule with full specification of parameters.
+    //! The molecule name
+    std::string name() const;
+
+    //! Add a particle to the molecule with full specification of parameters.
     Molecule& addParticle(const ParticleName& particleName,
                           const ResidueName&  residueName,
                           const Charge&       charge,
@@ -96,19 +99,19 @@ public:
                           const V&            charge,
                           ParticleType const& particleType) = delete;
 
-    // Add a particle to the molecule with implicit charge of 0
+    //! Add a particle to the molecule with implicit charge of 0
     Molecule& addParticle(const ParticleName& particleName,
                           const ResidueName&  residueName,
                           ParticleType const& particleType);
 
-    // Add a particle to the molecule with residueName set using particleName
+    //! Add a particle to the molecule with residueName set using particleName
     Molecule& addParticle(const ParticleName& particleName, const Charge& charge, ParticleType const& particleType);
 
     // Force explicit use of correct types, covers both implicit charge and residueName
     template<typename T, typename U>
     Molecule& addParticle(const T& particleName, const U& charge, ParticleType const& particleType) = delete;
 
-    // Add a particle to the molecule with residueName set using particleName with implicit charge of 0
+    //! Add a particle to the molecule with residueName set using particleName with implicit charge of 0
     Molecule& addParticle(const ParticleName& particleName, ParticleType const& particleType);
 
     // Force explicit use of correct types
@@ -118,38 +121,54 @@ public:
     // TODO: add exclusions based on the unique ID given to the particle of the molecule
     void addExclusion(int particleIndex, int particleIndexToExclude);
 
-    // Specify an exclusion with particle and residue names that have been added to molecule
+    //! Specify an exclusion with particle and residue names that have been added to molecule
     void addExclusion(std::tuple<std::string, std::string> particle,
                       std::tuple<std::string, std::string> particleToExclude);
 
-    // Specify an exclusion with particle names that have been added to molecule
+    //! Specify an exclusion with particle names that have been added to molecule
     void addExclusion(const std::string& particleName, const std::string& particleNameToExclude);
 
     //! add various types of interactions to the molecule
     //! Note: adding an interaction type not listed in InteractionTuple in this class results in a compilation error
     template<class Interaction>
-    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, Interaction interaction)
+    void addInteraction(const ParticleName& particleNameI,
+                        const ResidueName&  residueNameI,
+                        const ParticleName& particleNameJ,
+                        const ResidueName&  residueNameJ,
+                        Interaction         interaction)
     {
         auto& interactionContainer = pickType<Interaction>(interactionData_);
-        interactionContainer.interactions_.emplace_back(particleNameI, particleNameJ, interaction.name());
-        if (interactionContainer.interactionTypes_.count(interaction.name()) == 0)
-        {
-            interactionContainer.interactionTypes_[interaction.name()] = std::move(interaction);
-        }
+        interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
+                                                        residueNameJ, interaction.name());
+        interactionContainer.interactionTypes_.insert(
+                std::make_pair(interaction.name(), std::move(interaction)));
     }
 
-    // The number of molecules
+    //! add interactions with default residue name
+    template<class Interaction>
+    void addInteraction(const ParticleName& particleNameI, const ParticleName& particleNameJ, Interaction interaction)
+    {
+        addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
+    }
+
+    //! The number of molecules
     int numParticlesInMolecule() const;
 
-    // Return the ParticleType data for a specific particle name that has been added to the molecule
+    //! Return the ParticleType data for a specific particle name that has been added to the molecule
     const ParticleType& at(const std::string& particlesTypeName) const;
 
-    // convert exclusions given by name to indices and unify with exclusions given by indices
-    // returns a sorted vector containing no duplicates of particles to exclude by indices
+    //! convert exclusions given by name to indices and unify with exclusions given by indices
+    //! returns a sorted vector containing no duplicates of particles to exclude by indices
     std::vector<std::tuple<int, int>> getExclusions() const;
 
     //! return all interactions stored in Molecule
     const InteractionTuple& interactionData() const;
+
+    //! return name of ith particle
+    const ParticleName& particleName(int i) const;
+
+    //! return name of ith residue
+    const ResidueName& residueName(int i) const;
 
     friend class TopologyBuilder;
 

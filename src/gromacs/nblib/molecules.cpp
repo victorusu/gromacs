@@ -57,6 +57,11 @@ namespace nblib
 
 Molecule::Molecule(std::string moleculeName) : name_(std::move(moleculeName)) {}
 
+std::string Molecule::name() const
+{
+    return name_;
+}
+
 Molecule& Molecule::addParticle(const ParticleName& particleName,
                                 const ResidueName&  residueName,
                                 const Charge&       charge,
@@ -81,7 +86,7 @@ Molecule& Molecule::addParticle(const ParticleName& particleName,
 
     //! Add self exclusion. We just added the particle, so we know its index and that the exclusion doesn't exist yet
     std::size_t id = particles_.size() - 1;
-    exclusions_.emplace_back(std::make_tuple(id, id));
+    exclusions_.emplace_back(id, id);
 
     return *this;
 }
@@ -151,6 +156,16 @@ const Molecule::InteractionTuple& Molecule::interactionData() const
 const ParticleType& Molecule::at(const std::string& particleTypeName) const
 {
     return particleTypes_.at(particleTypeName);
+}
+
+const ParticleName& Molecule::particleName(int i) const
+{
+    return particles_[i].particleName_;
+}
+
+const ResidueName& Molecule::residueName(int i) const
+{
+    return particles_[i].residueName_;
 }
 
 std::vector<std::tuple<int, int>> Molecule::getExclusions() const

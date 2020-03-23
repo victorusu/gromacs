@@ -68,6 +68,24 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 // Add offset to all indices in inBlock
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
+//! Helper class for Topology to keep track of particle IDs
+class EnumerationKey
+{
+    // store by (molecule name, molecule nr, residue name, particle name)
+    using DataType =
+            std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<ResidueName, std::unordered_map<ParticleName, int>>>>;
+
+public:
+    //! build sequence from a list of molecules
+    void enumerate(const std::vector<std::tuple<Molecule, int>>&);
+
+    //! access ID by (molecule name, molecule nr, residue name, particle name)
+    int operator()(const std::string&, int, const ResidueName&, const ParticleName&);
+
+private:
+    DataType data_;
+};
+
 } // namespace detail
 
 /*! \inpublicapi
@@ -97,6 +115,8 @@ public:
     //! Returns exclusions in proper, performant, GROMACS layout
     const gmx::ListOfLists<int>& getGmxExclusions() const { return exclusions_; }
 
+    int sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName);
+
 private:
     Topology() = default;
 
@@ -112,6 +132,8 @@ private:
     std::vector<real> charges_;
     //! Information about exclusions.
     gmx::ListOfLists<int> exclusions_;
+    //! Associate molecule, residue and particle names with sequence numbers
+    detail::EnumerationKey enumerationKey_;
 };
 
 /*! \brief Topology Builder
