@@ -53,6 +53,16 @@
 namespace nblib
 {
 
+C6 NonBondedInteractionMap::getC6(const ParticleTypeName& name1, const ParticleTypeName& name2) const
+{
+    return std::get<0>(this->at(std::make_tuple(name1, name2)));
+}
+
+C12 NonBondedInteractionMap::getC12(const ParticleTypeName& name1, const ParticleTypeName& name2) const
+{
+    return std::get<1>(this->at(std::make_tuple(name1, name2)));
+}
+
 namespace detail
 {
 real combineNonbondedParameters(real v, real w, CombinationRule combinationRule)

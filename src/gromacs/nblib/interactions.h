@@ -56,8 +56,15 @@
 namespace nblib
 {
 using ParticleTypeName = std::string;
-using NonBondedInteractionMap =
+using NonBondedInteractionMapImpl =
         std::map<std::tuple<ParticleTypeName, ParticleTypeName>, std::tuple<C6, C12>>;
+
+class NonBondedInteractionMap : public NonBondedInteractionMapImpl
+{
+public:
+    C6  getC6(const ParticleTypeName&, const ParticleTypeName&) const;
+    C12 getC12(const ParticleTypeName&, const ParticleTypeName&) const;
+};
 
 namespace detail
 {

@@ -160,10 +160,10 @@ void NbvSetupUtil::setNonBondedParameters(const std::vector<ParticleType>& parti
     {
         for (const ParticleType& particleType2 : particleTypes)
         {
-            auto interactionKey = std::make_tuple(particleType1.name(), particleType2.name());
-            auto paramsTuple    = nonBondedInteractionMap.at(interactionKey);
-            nonbondedParameters_.push_back(std::get<0>(paramsTuple) * c6factor);
-            nonbondedParameters_.push_back(std::get<1>(paramsTuple) * c12factor);
+            nonbondedParameters_.push_back(
+                    nonBondedInteractionMap.getC6(particleType1.name(), particleType2.name()) * c6factor);
+            nonbondedParameters_.push_back(
+                    nonBondedInteractionMap.getC12(particleType1.name(), particleType2.name()) * c12factor);
         }
     }
 }
