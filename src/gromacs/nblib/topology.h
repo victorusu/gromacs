@@ -154,7 +154,7 @@ public:
     // Adds a molecules of a certain type into the topology
     TopologyBuilder& addMolecule(const Molecule& moleculeType, int nMolecules);
 
-    void addParticleTypesInteractions(ParticleTypesInteractions particleTypesInteractions);
+    void addParticleTypesInteractions(const ParticleTypesInteractions& particleTypesInteractions);
 
 private:
     //! Internally stored topology

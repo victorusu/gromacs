@@ -120,6 +120,59 @@ TEST(NBlibTest, NonBondedForceParamsCorrect)
     EXPECT_THROW_GMX(interactions.generateTable(), gmx::InvalidInputError);
 }
 
+TEST(NBlibTest, CanMergeInteractions)
+{
+    ParticleType atom1(ParticleName("a1"), Mass(1));
+    ParticleType atom2(ParticleName("a2"), Mass(1));
+    ParticleType atom3(ParticleName("a3"), Mass(1));
+
+    ParticleTypesInteractions interactions;
+
+    real c6_1  = 1.6;
+    real c12_1 = 1.12;
+    real c6_2  = 2.6;
+    real c12_2 = 2.12;
+    real c6_3  = 3.6;
+    real c12_3 = 3.12;
+
+    real c6comb  = 40;
+    real c12comb = 41;
+
+    interactions.add(atom1.name(), c6_1, c12_1);
+    interactions.add(atom2.name(), c6_2, c12_2);
+    interactions.add(atom3.name(), c6_3, c12_3);
+    interactions.add(atom2.name(), atom3.name(), c6comb, c12comb);
+
+    ParticleType atom4(ParticleName("a4"), Mass(1));
+    ParticleType atom5(ParticleName("a5"), Mass(1));
+    real         c6_4  = 4.6;
+    real         c12_4 = 4.12;
+
+    real c6_5  = 5.6;
+    real c12_5 = 5.12;
+
+    real c6_override  = 45.6;
+    real c12_override = 45.12;
+
+    ParticleTypesInteractions otherInteractions;
+    otherInteractions.add(atom4.name(), c6_4, c12_4);
+    otherInteractions.add(atom5.name(), c6_5, c12_5);
+    otherInteractions.add(atom4.name(), atom5.name(), c6_override, c12_override);
+
+    interactions.merge(otherInteractions);
+
+    auto nbfp = interactions.generateTable();
+
+    EXPECT_REAL_EQ_TOL(std::sqrt(c6_3 * c6_4), nbfp.getC6(atom3.name(), atom4.name()),
+                       gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(std::sqrt(c12_3 * c12_4), nbfp.getC12(atom3.name(), atom4.name()),
+                       gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(c6_override, nbfp.getC6(atom4.name(), atom5.name()),
+                       gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(c12_override, nbfp.getC12(atom4.name(), atom5.name()),
+                       gmx::test::defaultRealTolerance());
+}
+
 } // namespace
 } // namespace test
 } // namespace nblib

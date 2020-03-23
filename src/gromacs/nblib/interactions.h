@@ -87,6 +87,8 @@ public:
 
     CombinationRule getCombinationRule() const;
 
+    void merge(const ParticleTypesInteractions&);
+
 private:
     CombinationRule combinationRule_;
 

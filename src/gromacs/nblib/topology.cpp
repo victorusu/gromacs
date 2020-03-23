@@ -256,9 +256,9 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
     return *this;
 }
 
-void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions particleTypesInteractions)
+void TopologyBuilder::addParticleTypesInteractions(const ParticleTypesInteractions& particleTypesInteractions)
 {
-    particleTypesInteractions_ = std::move(particleTypesInteractions);
+    particleTypesInteractions_.merge(particleTypesInteractions);
 }
 
 const int& Topology::numParticles() const

@@ -187,4 +187,18 @@ CombinationRule ParticleTypesInteractions::getCombinationRule() const
     return combinationRule_;
 }
 
+void ParticleTypesInteractions::merge(const ParticleTypesInteractions& other)
+{
+    for (const auto& keyval : other.singleParticleInteractionsMap_)
+    {
+        add(keyval.first, std::get<0>(keyval.second), std::get<1>(keyval.second));
+    }
+
+    for (const auto& keyval : other.twoParticlesInteractionsMap_)
+    {
+        add(std::get<0>(keyval.first), std::get<1>(keyval.first), std::get<0>(keyval.second),
+            std::get<1>(keyval.second));
+    }
+}
+
 } // namespace nblib
