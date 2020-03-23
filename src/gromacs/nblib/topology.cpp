@@ -202,11 +202,8 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
-    if (particleTypesInteractions_ == nullptr) {
-        GMX_THROW(gmx::InvalidInputError("ParticleTypesInteractions not specified"));
-    }
-    topology_.combinationRule_         = particleTypesInteractions_->getCombinationRule();
-    topology_.nonBondedInteractionMap_ = particleTypesInteractions_->generateTable();
+    topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
+    topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes
@@ -259,9 +256,9 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
     return *this;
 }
 
-void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions)
+void TopologyBuilder::addParticleTypesInteractions(ParticleTypesInteractions particleTypesInteractions)
 {
-    particleTypesInteractions_ = std::make_shared<ParticleTypesInteractions>(particleTypesInteractions);
+    particleTypesInteractions_ = std::move(particleTypesInteractions);
 }
 
 const int& Topology::numParticles() const

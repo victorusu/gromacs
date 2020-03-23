@@ -99,7 +99,7 @@ public:
     //! Returns exclusions in proper, performant, GROMACS layout
     const gmx::ListOfLists<int>& getGmxExclusions() const { return exclusions_; }
 
-    //! Returns a vector of particles partial charges
+    //! Returns a map of non-bonded force parameters indexed by ParticleType names
     const NonBondedInteractionMap& getNonBondedInteractionMap() const;
 
     //! Returns the combination rule used to generate the NonBondedInteractionMap
@@ -154,7 +154,7 @@ public:
     // Adds a molecules of a certain type into the topology
     TopologyBuilder& addMolecule(const Molecule& moleculeType, int nMolecules);
 
-    void addParticleTypesInteractions(ParticleTypesInteractions& particleTypesInteractions);
+    void addParticleTypesInteractions(ParticleTypesInteractions particleTypesInteractions);
 
 private:
     //! Internally stored topology
@@ -177,7 +177,7 @@ private:
     std::unordered_map<std::string, ParticleType> particleTypes_;
 
     //! ParticleType nonbonded parameters
-    std::shared_ptr<ParticleTypesInteractions> particleTypesInteractions_;
+    ParticleTypesInteractions particleTypesInteractions_;
 };
 
 //! utility function to extract Particle quantities and expand them to the full
