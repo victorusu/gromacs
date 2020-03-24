@@ -50,14 +50,9 @@
 #include <vector>
 
 #include "gromacs/math/vec.h"
-#include "gromacs/mdlib/dispersioncorrection.h"
-#include "gromacs/mdtypes/forcerec.h"
-#include "nblib/nblib/particletype.h"
-#include "nblib/nblib/util.h"
-#include "gromacs/nbnxm/nbnxm.h"
-#include "gromacs/pbcutil/ishift.h"
 #include "gromacs/pbcutil/pbc.h"
 #include "gromacs/utility/exceptions.h"
+#include "nblib/nblib/util.h"
 
 #include "coords.h"
 
@@ -69,7 +64,8 @@ SimulationState::Impl::Impl(const std::vector<gmx::RVec>& coordinates,
                             const std::vector<gmx::RVec>& forces,
                             Box                           box,
                             Topology                      topology) :
-    box_(std::move(box)), topology_(std::move(topology))
+    box_(std::move(box)),
+    topology_(std::move(topology))
 {
     if (!checkNumericValues(coordinates))
     {

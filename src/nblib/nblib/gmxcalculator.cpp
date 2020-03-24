@@ -46,16 +46,16 @@
 
 #include "gromacs/ewald/ewald_utils.h"
 #include "gromacs/math/units.h"
-#include "gromacs/mdlib/rf_util.h"
+#include "gromacs/math/vectypes.h"
 #include "gromacs/mdtypes/interaction_const.h"
-#include "nblib/nblib/simulationstate.h"
 #include "gromacs/nbnxm/nbnxm.h"
 #include "gromacs/utility/range.h"
+#include "nblib/nblib/simulationstate.h"
 
 namespace nblib
 {
 
-gmx::PaddedHostVector<gmx::RVec> GmxForceCalculator::compute()
+gmx::ArrayRef<gmx::RVec> GmxForceCalculator::compute()
 {
 
     nbv_->dispatchNonbondedKernel(gmx::InteractionLocality::Local, interactionConst_, stepWork_,

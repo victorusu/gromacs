@@ -39,6 +39,10 @@ set(LIBGROMACS_SOURCES ${LIBGROMACS_SOURCES} ${MATH_SOURCES} PARENT_SCOPE)
 # TODO: (https://redmine.gromacs.org/issues/988) Find a new convention for defining public API.
 install(FILES
         vectypes.h
+        vec.h
+        functions.h
+        matrix.h
+        multidimarray.h
         DESTINATION include/gromacs/math)
 
 if (BUILD_TESTING)

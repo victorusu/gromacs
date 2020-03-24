@@ -43,15 +43,12 @@
  */
 #include "gmxpre.h"
 
-#include "nblib/nblib/topology.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "nblib/nblib/particletype.h"
 #include "gromacs/topology/exclusionblocks.h"
-
-#include "testutils/testasserts.h"
+#include "nblib/nblib/particletype.h"
+#include "nblib/nblib/topology.h"
 
 #include "testsystems.h"
 

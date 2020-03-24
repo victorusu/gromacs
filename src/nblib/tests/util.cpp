@@ -43,11 +43,10 @@
  */
 #include "gmxpre.h"
 
-#include "nblib/nblib/util.h"
-
 #include <vector>
 
 #include "gromacs/math/vectypes.h"
+#include "nblib/nblib/util.h"
 
 #include "testutils/testasserts.h"
 

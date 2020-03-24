@@ -34,7 +34,7 @@
 # To help us fund GROMACS development, we humbly ask that you cite
 # the research papers on the package. Check out http://www.gromacs.org.
 
-cmake_minimum_required(VERSION 3.9.6)
+cmake_minimum_required(VERSION 3.13.0)
 if(POLICY CMP0074) #3.12
     cmake_policy(SET CMP0074 NEW)
 endif()
@@ -200,6 +200,8 @@ gmx_add_cache_dependency(GMX_COOL_QUOTES BOOL "NOT GMX_FAHCORE" OFF)
 option(GMX_USE_OPENCL "Enable OpenCL acceleration" OFF)
 
 option(GMX_INSTALL_LEGACY_API "Install legacy headers" OFF)
+
+option(GMX_INSTALL_NBLIB_API "Install nblib headers" OFF)
 
 # The earliest version of the CUDA toolkit that supports c++14 is 9.0
 set(REQUIRED_CUDA_VERSION 9.0)

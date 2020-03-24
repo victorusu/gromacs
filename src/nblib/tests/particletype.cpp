@@ -45,9 +45,9 @@
  */
 #include "gmxpre.h"
 
-#include "nblib/nblib/particletype.h"
-
 #include <cmath>
+
+#include "nblib/nblib/particletype.h"
 
 #include "testutils/testasserts.h"
 

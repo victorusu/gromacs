@@ -32,6 +32,16 @@
 # To help us fund GROMACS development, we humbly ask that you cite
 # the research papers on the package. Check out http://www.gromacs.org.
 
+file(GLOB MDSPAN_SOURCES *.cpp)
+set(LIBGROMACS_SOURCES ${LIBGROMACS_SOURCES} ${MDSPAN_SOURCES} PARENT_SCOPE)
+
+install(FILES
+        accessor_policy.h
+        extents.h
+        layouts.h
+        mdspan.h
+        DESTINATION include/gromacs/mdspan)
+
 if (BUILD_TESTING)
     add_subdirectory(tests)
 endif()

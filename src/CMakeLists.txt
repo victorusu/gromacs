@@ -138,6 +138,12 @@ endif()
 
 add_subdirectory(gromacs)
 add_subdirectory(programs)
+
+if(GMX_INSTALL_NBLIB_API)
+    install(FILES
+            DESTINATION include/nblib)
+endif()
+
 add_subdirectory(nblib)
 
 # Activate targets for new C++ API components and docs.

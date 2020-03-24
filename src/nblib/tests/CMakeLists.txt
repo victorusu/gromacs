@@ -61,7 +61,7 @@ gmx_add_gtest_executable(
     # pseudo-library for code for mdrun
     #$<TARGET_OBJECTS:nblib_objlib>
     )
-target_link_libraries(${exename} PRIVATE nblib_test_infrastructure)
+target_link_libraries(${exename} PRIVATE Gromacs::nblib nblib_test_infrastructure)
 gmx_register_gtest_test(${testname} ${exename} OPENMP_THREADS 1 INTEGRATION_TEST)
 
 

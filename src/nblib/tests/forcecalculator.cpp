@@ -43,13 +43,12 @@
  */
 #include "gmxpre.h"
 
+#include "gromacs/topology/block.h"
+#include "gromacs/topology/exclusionblocks.h"
 #include "nblib/nblib/forcecalculator.h"
-
 #include "nblib/nblib/particletype.h"
 #include "nblib/nblib/simulationstate.h"
 #include "nblib/nblib/topology.h"
-#include "gromacs/topology/block.h"
-#include "gromacs/topology/exclusionblocks.h"
 
 #include "testutils/testasserts.h"
 

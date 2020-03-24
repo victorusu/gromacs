@@ -44,10 +44,9 @@
  */
 #include "gmxpre.h"
 
-#include "nblib/nblib/molecules.h"
-
 #include <iostream>
 
+#include "nblib/nblib/molecules.h"
 #include "nblib/nblib/particletype.h"
 
 #include "testutils/testasserts.h"

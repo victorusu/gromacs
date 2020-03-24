@@ -48,7 +48,6 @@
 #define GROMACS_GMXCALCULATOR_H
 
 #include "gromacs/gmxlib/nrnb.h"
-#include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/mdlib/forcerec.h"
 #include "gromacs/mdtypes/enerdata.h"
 #include "gromacs/mdtypes/forcerec.h"
@@ -70,7 +69,7 @@ public:
     GmxForceCalculator() : enerd_(gmx_enerdata_t(1, 0)) {}
 
     //! Compute forces and return
-    gmx::PaddedHostVector<gmx::RVec> compute();
+    gmx::ArrayRef<gmx::RVec> compute();
 
     //! Puts particles on a grid based on bounds specified by the box
     void setParticlesOnGrid(std::vector<int>&             particleInfoAllVdw,
@@ -87,7 +86,7 @@ private:
     t_forcerec forcerec_;
 
     //! Contains array for computed forces
-    gmx::PaddedHostVector<gmx::RVec> verletForces_ = {};
+    std::vector<gmx::RVec> verletForces_ = {};
 
     //! Parameters for various interactions in the system
     interaction_const_t interactionConst_;

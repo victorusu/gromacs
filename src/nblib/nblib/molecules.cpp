@@ -48,8 +48,8 @@
 
 #include <tuple>
 
-#include "nblib/nblib/particletype.h"
 #include "gromacs/utility/exceptions.h"
+#include "nblib/nblib/particletype.h"
 
 namespace nblib
 {

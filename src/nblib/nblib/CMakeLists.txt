@@ -133,6 +133,26 @@ add_library(nblib-detail INTERFACE)
 target_include_directories(nblib-detail
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(GMX_INSTALL_NBLIB_API)
+    install(FILES
+            bondtypes.h
+            box.h
+            forcecalculator.h
+            gmxcalculator.h
+            gmxsetup.h
+            integrator.h
+            interactions.h
+            molecules.h
+            nbkerneldef.h
+            nbkerneloptions.h
+            particletype.h
+            simulationstate.h
+            topology.h
+            util.h
+            DESTINATION include/nblib/nblib)
+endif()
+
+
 #if(BUILD_TESTING)
 #    add_subdirectory(tests)
 #    add_subdirectory(workflow/tests)

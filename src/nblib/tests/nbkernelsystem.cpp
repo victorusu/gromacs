@@ -47,14 +47,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "gromacs/gpu_utils/hostallocator.h"
+#include "gromacs/topology/exclusionblocks.h"
 #include "nblib/nblib/forcecalculator.h"
 #include "nblib/nblib/gmxsetup.h"
 #include "nblib/nblib/integrator.h"
 #include "nblib/nblib/particletype.h"
 #include "nblib/nblib/simulationstate.h"
 #include "nblib/nblib/topology.h"
-#include "gromacs/topology/exclusionblocks.h"
 
 #include "testutils/testasserts.h"
 
@@ -98,10 +97,10 @@ TEST(NBlibTest, canComputeForces)
 
     SpcMethanolSimulationStateBuilder spcMethanolSystemBuilder;
 
-    auto simState        = spcMethanolSystemBuilder.setupSimulationState();
-    auto forceCalculator = ForceCalculator(simState, options);
+    auto            simState = spcMethanolSystemBuilder.setupSimulationState();
+    ForceCalculator forceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> forces;
+    gmx::ArrayRef<gmx::RVec> forces;
     ASSERT_NO_THROW(forces = forceCalculator.compute());
     EXPECT_REAL_EQ_TOL(forces[0][0], -0.381826401, gmx::test::defaultRealTolerance());
     EXPECT_REAL_EQ_TOL(forces[0][1], 0.879227996, gmx::test::defaultRealTolerance());
@@ -130,10 +129,10 @@ TEST(NBlibTest, ExpectedNumberOfForces)
 
     SpcMethanolSimulationStateBuilder spcMethanolSystemBuilder;
 
-    auto simState        = spcMethanolSystemBuilder.setupSimulationState();
-    auto forceCalculator = ForceCalculator(simState, options);
+    auto            simState = spcMethanolSystemBuilder.setupSimulationState();
+    ForceCalculator forceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> forces = forceCalculator.compute();
+    gmx::ArrayRef<gmx::RVec> forces = forceCalculator.compute();
     EXPECT_EQ(simState.topology().numParticles(), forces.size());
 }
 
@@ -145,14 +144,14 @@ TEST(NBlibTest, CanIntegrateSystem)
 
     SpcMethanolSimulationStateBuilder spcMethanolSystemBuilder;
 
-    auto simState        = spcMethanolSystemBuilder.setupSimulationState();
-    auto forceCalculator = ForceCalculator(simState, options);
+    auto            simState = spcMethanolSystemBuilder.setupSimulationState();
+    ForceCalculator forceCalculator(simState, options);
 
     LeapFrog integrator(simState);
 
     for (int iter = 0; iter < options.numIterations; iter++)
     {
-        gmx::PaddedHostVector<gmx::RVec> forces = forceCalculator.compute();
+        forceCalculator.compute();
         EXPECT_NO_THROW(integrator.integrate(1.0));
     }
 }
@@ -192,15 +191,16 @@ TEST(NBlibTest, ArgonForcesAreCorrect)
 
     ArgonSimulationStateBuilder argonSystemBuilder;
 
-    auto simState        = argonSystemBuilder.setupSimulationState();
-    auto forceCalculator = ForceCalculator(simState, options);
+    auto            simState = argonSystemBuilder.setupSimulationState();
+    ForceCalculator forceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> testForces;
+
+    gmx::ArrayRef<gmx::RVec> testForces;
     for (int iter = 0; iter < options.numIterations; iter++)
     {
         testForces = forceCalculator.compute();
     }
-    gmx::PaddedHostVector<gmx::RVec> refForces(simState.topology().numParticles(), gmx::RVec(0, 0, 0));
+    std::vector<gmx::RVec> refForces(simState.topology().numParticles(), gmx::RVec(0, 0, 0));
     // Only 2 particles are within the cutoff, and Newton says their forces differ by a sign
     refForces[0] = { -0.412993, -1.098256, -0.113191 };
     refForces[2] = { 0.412993, 1.098256, 0.113191 };

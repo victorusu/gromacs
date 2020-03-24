@@ -47,7 +47,6 @@
 
 #include <vector>
 
-#include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/math/vectypes.h"
 #include "nblib/nblib/simulationstate.h"
 

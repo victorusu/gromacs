@@ -43,9 +43,9 @@
  */
 #include "gmxpre.h"
 
-#include "nblib/nblib/box.h"
-
 #include <cmath>
+
+#include "nblib/nblib/box.h"
 
 #include "testutils/refdata.h"
 #include "testutils/testasserts.h"

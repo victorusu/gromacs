@@ -46,14 +46,11 @@
 
 #include "topology.h"
 
-#include <numeric>
-
-#include "gromacs/mdtypes/forcerec.h"
-#include "nblib/nblib/particletype.h"
-#include "nblib/nblib/util.h"
 #include "gromacs/topology/exclusionblocks.h"
 #include "gromacs/utility/exceptions.h"
 #include "gromacs/utility/smalloc.h"
+#include "nblib/nblib/particletype.h"
+#include "nblib/nblib/util.h"
 
 namespace nblib
 {
