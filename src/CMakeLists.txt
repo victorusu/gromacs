@@ -138,6 +138,7 @@ endif()
 
 add_subdirectory(gromacs)
 add_subdirectory(programs)
+add_subdirectory(nblib)
 
 # Activate targets for new C++ API components and docs.
 if(GMX_NATIVE_WINDOWS OR GMX_BUILD_MDRUN_ONLY OR NOT BUILD_SHARED_LIBS)
