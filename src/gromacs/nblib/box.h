@@ -66,10 +66,7 @@ public:
 
     const Matrix& gmxMatrix() const;
 
-    const LegacyMatrix& legacyMatrix() const
-    {
-        return legacyMatrix_;
-    }
+    const LegacyMatrix& legacyMatrix() const { return legacyMatrix_; }
 
 private:
     Matrix box_;

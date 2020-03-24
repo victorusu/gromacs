@@ -51,6 +51,8 @@
 #include "gromacs/nblib/molecules.h"
 #include "gromacs/utility/listoflists.h"
 
+#include "interactions.h"
+
 namespace gmx
 {
 struct ExclusionBlock;
@@ -97,6 +99,12 @@ public:
     //! Returns exclusions in proper, performant, GROMACS layout
     const gmx::ListOfLists<int>& getGmxExclusions() const { return exclusions_; }
 
+    //! Returns a map of non-bonded force parameters indexed by ParticleType names
+    const NonBondedInteractionMap& getNonBondedInteractionMap() const;
+
+    //! Returns the combination rule used to generate the NonBondedInteractionMap
+    CombinationRule getCombinationRule() const;
+
 private:
     Topology() = default;
 
@@ -112,6 +120,10 @@ private:
     std::vector<real> charges_;
     //! Information about exclusions.
     gmx::ListOfLists<int> exclusions_;
+    //! Map that should hold all nonbonded interactions for all particle types
+    NonBondedInteractionMap nonBondedInteractionMap_;
+    //! Combination Rule used to generate the nonbonded interactions
+    CombinationRule combinationRule_;
 };
 
 /*! \brief Topology Builder
@@ -142,6 +154,8 @@ public:
     // Adds a molecules of a certain type into the topology
     TopologyBuilder& addMolecule(const Molecule& moleculeType, int nMolecules);
 
+    void addParticleTypesInteractions(const ParticleTypesInteractions& particleTypesInteractions);
+
 private:
     //! Internally stored topology
     Topology topology_;
@@ -161,6 +175,9 @@ private:
 
     //! distinct collection of ParticleTypes
     std::unordered_map<std::string, ParticleType> particleTypes_;
+
+    //! ParticleType nonbonded parameters
+    ParticleTypesInteractions particleTypesInteractions_;
 };
 
 //! utility function to extract Particle quantities and expand them to the full

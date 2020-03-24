@@ -44,14 +44,12 @@
  */
 #include "gmxpre.h"
 
-#include "gromacs/nblib/molecules.h"
-
 #include <iostream>
 
+#include "gromacs/nblib/molecules.h"
 #include "gromacs/nblib/particletype.h"
 
 #include "testutils/testasserts.h"
-
 #include "testsystems.h"
 
 namespace nblib

@@ -45,6 +45,8 @@
 
 #include "gromacs/nblib/forcecalculator.h"
 
+#include "gromacs/nblib/interactions.h"
+#include "gromacs/nblib/nbkerneldef.h"
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nblib/topology.h"
@@ -84,6 +86,10 @@ public:
         ParticleType Ow(ParticleName("Ow"), Mass(16), C6(6.), C12(12.));
         ParticleType Hw(ParticleName("Hw"), Mass(1), C6(0.6), C12(0.12));
 
+        ParticleTypesInteractions particleTypesInteractions;
+        particleTypesInteractions.add(Ow, C6(6.), C12(12.));
+        particleTypesInteractions.add(Hw, C6(0.6), C12(0.12));
+
         //! Define Molecule
         Molecule water("water");
 
@@ -103,6 +109,7 @@ public:
 
         //! Add some molecules to the topology
         topologyBuilder.addMolecule(water, numWaters);
+        topologyBuilder.addParticleTypesInteractions(CombinationRule::Geometric);
 
         coordinates = {
             { 0.569, 1.275, 1.165 }, { 0.476, 1.268, 1.128 }, { 0.580, 1.364, 1.209 },

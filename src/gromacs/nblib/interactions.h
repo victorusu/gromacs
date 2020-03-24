@@ -56,8 +56,15 @@
 namespace nblib
 {
 using ParticleTypeName = std::string;
-using NonBondedInteractionMap =
+using NonBondedInteractionMapImpl =
         std::map<std::tuple<ParticleTypeName, ParticleTypeName>, std::tuple<C6, C12>>;
+
+class NonBondedInteractionMap : public NonBondedInteractionMapImpl
+{
+public:
+    C6  getC6(const ParticleTypeName&, const ParticleTypeName&) const;
+    C12 getC12(const ParticleTypeName&, const ParticleTypeName&) const;
+};
 
 namespace detail
 {
@@ -70,20 +77,23 @@ real combineNonbondedParameters(real v, real w, CombinationRule combinationRule)
 class ParticleTypesInteractions
 {
 public:
-    ParticleTypesInteractions() = default;
+    explicit ParticleTypesInteractions(CombinationRule = CombinationRule::Geometric);
 
-    void add(ParticleType particleType, C6 c6, C12 c12);
+    void add(const ParticleTypeName& particleTypeName, C6 c6, C12 c12);
 
-    void add(ParticleType particleType1, ParticleType particleType2, C6 c6, C12 c12);
+    void add(const ParticleTypeName& particleTypeName1, const ParticleTypeName& particleTypeName2, C6 c6, C12 c12);
 
-    NonBondedInteractionMap generateTable(CombinationRule combinationRule);
+    NonBondedInteractionMap generateTable();
+
+    CombinationRule getCombinationRule() const;
+
+    void merge(const ParticleTypesInteractions&);
 
 private:
+    CombinationRule combinationRule_;
+
     std::unordered_map<ParticleTypeName, std::tuple<C6, C12>> singleParticleInteractionsMap_;
     std::map<std::tuple<ParticleTypeName, ParticleTypeName>, std::tuple<C6, C12>> twoParticlesInteractionsMap_;
-
-    // Helper data structure to collect the unique ParticleTypes
-    std::set<ParticleTypeName> particleTypesSet_;
 };
 
 } // namespace nblib

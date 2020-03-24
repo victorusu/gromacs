@@ -50,6 +50,7 @@
 
 #include "nbkerneldef.h"
 #include "nbkerneloptions.h"
+#include "interactions.h"
 
 namespace nblib
 {

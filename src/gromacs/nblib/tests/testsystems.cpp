@@ -49,36 +49,49 @@
 namespace nblib
 {
 
-struct OwAtom
+//! User class to hold ParticleTypes
+//! Note: this is not part of NBLIB, users should write their own
+class ParticleLibrary
 {
-    ParticleName name = "Ow";
-    Mass         mass = 15.99940;
-    C6           c6   = 0.0026173456;
-    C12          c12  = 2.634129e-06;
-};
+public:
+    ParticleLibrary()
+    {
+        ParticleType Ow(ParticleName("Ow"), Mass(15.99940));
+        ParticleType H(ParticleName("H"), Mass(1.008));
+        ParticleType OMet(ParticleName("OMet"), Mass(15.999));
+        ParticleType CMet(ParticleName("CMet"), Mass(15.035));
+        ParticleType Ar(ParticleName("Ar"), Mass(39.94800));
 
-struct HAtom
-{
-    ParticleName name = "H";
-    Mass         mass = 1.008;
-    C6           c6   = 0;
-    C12          c12  = 0;
-};
+        particles_.insert(std::make_pair(Ow.name(), Ow));
+        particles_.insert(std::make_pair(H.name(), H));
+        particles_.insert(std::make_pair(OMet.name(), OMet));
+        particles_.insert(std::make_pair(CMet.name(), CMet));
+        particles_.insert(std::make_pair(Ar.name(), Ar));
 
-struct OMetAtom
-{
-    ParticleName name = "OMet";
-    Mass         mass = 15.999;
-    C6           c6   = 0.0022619536;
-    C12          c12  = 1.505529e-06;
-};
+        c6_[Ow.name()]   = 0.0026173456;
+        c6_[H.name()]    = 0;
+        c6_[OMet.name()] = 0.0022619536;
+        c6_[CMet.name()] = 0.0088755241;
+        c6_[Ar.name()]   = 0.0062647225;
 
-struct CMetAtom
-{
-    ParticleName name = "CMet";
-    Mass         mass = 15.035; // United atom
-    C6           c6   = 0.0088755241;
-    C12          c12  = 2.0852922e-05;
+        c12_[Ow.name()]   = 2.634129e-06;
+        c12_[H.name()]    = 0;
+        c12_[OMet.name()] = 1.505529e-06;
+        c12_[CMet.name()] = 2.0852922e-05;
+        c12_[Ar.name()]   = 9.847044e-06;
+    }
+
+    ParticleType type(const ParticleName& particleName) const
+    {
+        return particles_.at(particleName);
+    }
+    C6  c6(const ParticleName& particleName) const { return c6_.at(particleName); }
+    C12 c12(const ParticleName& particleName) const { return c12_.at(particleName); }
+
+private:
+    std::map<ParticleName, ParticleType> particles_;
+    std::map<ParticleName, C6>           c6_;
+    std::map<ParticleName, C12>          c12_;
 };
 
 std::unordered_map<std::string, Charge> Charges{ { "Ow", -0.82 },
@@ -89,16 +102,12 @@ std::unordered_map<std::string, Charge> Charges{ { "Ow", -0.82 },
 
 WaterMoleculeBuilder::WaterMoleculeBuilder() : water_("SOL")
 {
-    // Define Particle Types
-    OwAtom       owAtom;
-    ParticleType Ow(owAtom.name, owAtom.mass, owAtom.c6, owAtom.c12);
-    HAtom        hwAtom;
-    ParticleType Hw(hwAtom.name, hwAtom.mass, hwAtom.c6, hwAtom.c12);
+    ParticleLibrary plib;
 
-    // Add the particles
-    water_.addParticle(ParticleName("Oxygen"), Charges.at("Ow"), Ow);
-    water_.addParticle(ParticleName("H1"), Charges.at("Hw"), Hw);
-    water_.addParticle(ParticleName("H2"), Charges.at("Hw"), Hw);
+    //! Add the particles
+    water_.addParticle(ParticleName("Oxygen"), Charges.at("Ow"), plib.type("Ow"));
+    water_.addParticle(ParticleName("H1"), Charges.at("Hw"), plib.type("H"));
+    water_.addParticle(ParticleName("H2"), Charges.at("Hw"), plib.type("H"));
 }
 
 Molecule WaterMoleculeBuilder::waterMolecule()
@@ -121,18 +130,12 @@ void WaterMoleculeBuilder::addExclusionsFromNames()
 
 MethanolMoleculeBuilder::MethanolMoleculeBuilder() : methanol_("MeOH")
 {
-    // Define Particle Types
-    CMetAtom     cMetAtom;
-    ParticleType CMet(cMetAtom.name, cMetAtom.mass, cMetAtom.c6, cMetAtom.c12);
-    OMetAtom     oMetAtom;
-    ParticleType OMet(oMetAtom.name, oMetAtom.mass, oMetAtom.c6, oMetAtom.c12);
-    HAtom        hAtom;
-    ParticleType H(hAtom.name, hAtom.mass, hAtom.c6, hAtom.c12);
+    ParticleLibrary library;
 
-    // Add the particles
-    methanol_.addParticle(ParticleName("Me1"), Charges.at("CMet"), CMet);
-    methanol_.addParticle(ParticleName("O2"), Charges.at("OMet"), OMet);
-    methanol_.addParticle(ParticleName("H3"), Charges.at("HMet"), H);
+    //! Add the particles
+    methanol_.addParticle(ParticleName("Me1"), Charges.at("CMet"), library.type("CMet"));
+    methanol_.addParticle(ParticleName("O2"), Charges.at("OMet"), library.type("OMet"));
+    methanol_.addParticle(ParticleName("H3"), Charges.at("HMet"), library.type("H"));
 
     // Add the exclusions
     methanol_.addExclusion("Me1", "O2");
@@ -148,9 +151,22 @@ Molecule MethanolMoleculeBuilder::methanolMolecule()
 
 Topology WaterTopology::buildTopology(int numMolecules)
 {
-    // Add some molecules to the topology
+    ParticleLibrary library;
+
+    ParticleTypesInteractions interactions;
+    std::vector<std::string>  typeNames = { "Ow", "H" };
+    for (const auto& name : typeNames)
+    {
+        interactions.add(name, library.c6(name), library.c12(name));
+    }
+
+    //! Add some molecules to the topology
     TopologyBuilder topologyBuilder;
     topologyBuilder.addMolecule(water(), numMolecules);
+
+    //! Add non-bonded interaction information
+    topologyBuilder.addParticleTypesInteractions(interactions);
+
     Topology topology = topologyBuilder.buildTopology();
     return topology;
 }
@@ -162,10 +178,23 @@ Molecule WaterTopology::water()
 
 Topology SpcMethanolTopologyBuilder::buildTopology(int numWater, int numMethanol)
 {
-    // Add some molecules to the topology
+    ParticleLibrary library;
+
+    ParticleTypesInteractions interactions;
+    std::vector<std::string>  typeNames = { "Ow", "H", "OMet", "CMet" };
+    for (const auto& name : typeNames)
+    {
+        interactions.add(name, library.c6(name), library.c12(name));
+    }
+
+    //! Add some molecules to the topology
     TopologyBuilder topologyBuilder;
     topologyBuilder.addMolecule(methanol(), numMethanol);
     topologyBuilder.addMolecule(water(), numWater);
+
+    //! Add non-bonded interaction information
+    topologyBuilder.addParticleTypesInteractions(interactions);
+
     Topology topology = topologyBuilder.buildTopology();
     return topology;
 }
@@ -182,13 +211,16 @@ Molecule SpcMethanolTopologyBuilder::water()
 
 ArgonTopologyBuilder::ArgonTopologyBuilder(const int& numParticles)
 {
-    ArAtom       arAtom;
-    ParticleType argonAtom(arAtom.name, arAtom.mass, arAtom.c6, arAtom.c12);
+    ParticleLibrary library;
+
+    ParticleTypesInteractions nbinteractions;
+    nbinteractions.add("Ar", library.c6("Ar"), library.c12("Ar"));
 
     Molecule argonMolecule("AR");
-    argonMolecule.addParticle(ParticleName("AR"), argonAtom);
+    argonMolecule.addParticle(ParticleName("AR"), library.type("Ar"));
 
     topologyBuilder_.addMolecule(argonMolecule, numParticles);
+    topologyBuilder_.addParticleTypesInteractions((nbinteractions));
 }
 
 Topology ArgonTopologyBuilder::argonTopology()

@@ -69,7 +69,8 @@ SimulationState::Impl::Impl(const std::vector<gmx::RVec>& coordinates,
                             const std::vector<gmx::RVec>& forces,
                             Box                           box,
                             Topology                      topology) :
-    box_(std::move(box)), topology_(std::move(topology))
+    box_(std::move(box)),
+    topology_(std::move(topology))
 {
     if (!checkNumericValues(coordinates))
     {
