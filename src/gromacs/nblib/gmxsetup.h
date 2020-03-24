@@ -73,7 +73,8 @@ public:
     void setExecutionContext(const NBKernelOptions& options);
 
     //! Sets non-bonded parameters to be used to build GMX data structures
-    void setNonBondedParameters(const std::vector<ParticleType>& particleTypes);
+    void setNonBondedParameters(const std::vector<ParticleType>& particleTypes,
+                                const NonBondedInteractionMap&);
 
     //! Marks particles to have Van der Waals interactions
     void setParticleInfoAllVdv(size_t numParticles);

@@ -143,7 +143,8 @@ void NbvSetupUtil::setParticleInfoAllVdv(const size_t numParticles)
     }
 }
 
-void NbvSetupUtil::setNonBondedParameters(const std::vector<ParticleType>& particleTypes)
+void NbvSetupUtil::setNonBondedParameters(const std::vector<ParticleType>& particleTypes,
+                                          const NonBondedInteractionMap&   nonBondedInteractionMap)
 {
     /* Todo: Refactor nbnxm to take nonbondedParameters_ directly
      *
@@ -157,17 +158,12 @@ void NbvSetupUtil::setNonBondedParameters(const std::vector<ParticleType>& parti
 
     for (const ParticleType& particleType1 : particleTypes)
     {
-        real c6_1  = particleType1.c6() * c6factor;
-        real c12_1 = particleType1.c12() * c12factor;
         for (const ParticleType& particleType2 : particleTypes)
         {
-            real c6_2  = particleType2.c6() * c6factor;
-            real c12_2 = particleType2.c12() * c12factor;
-
-            real c6_combo = detail::combineNonbondedParameters(c6_1, c6_2, CombinationRule::Geometric);
-            real c12_combo = detail::combineNonbondedParameters(c12_1, c12_2, CombinationRule::Geometric);
-            nonbondedParameters_.push_back(c6_combo);
-            nonbondedParameters_.push_back(c12_combo);
+            nonbondedParameters_.push_back(
+                    nonBondedInteractionMap.getC6(particleType1.name(), particleType2.name()) * c6factor);
+            nonbondedParameters_.push_back(
+                    nonBondedInteractionMap.getC12(particleType1.name(), particleType2.name()) * c12factor);
         }
     }
 }
@@ -321,7 +317,8 @@ std::unique_ptr<GmxForceCalculator> GmxSetupDirector::setupGmxForceCalculator(co
 {
     NbvSetupUtil nbvSetupUtil;
     nbvSetupUtil.setExecutionContext(options);
-    nbvSetupUtil.setNonBondedParameters(system.topology().getParticleTypes());
+    nbvSetupUtil.setNonBondedParameters(system.topology().getParticleTypes(),
+                                        system.topology().getNonBondedInteractionMap());
     nbvSetupUtil.setParticleInfoAllVdv(system.topology().numParticles());
 
     nbvSetupUtil.setupInteractionConst(options);

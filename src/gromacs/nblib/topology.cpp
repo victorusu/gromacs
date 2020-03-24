@@ -54,6 +54,7 @@
 #include "gromacs/topology/exclusionblocks.h"
 #include "gromacs/utility/exceptions.h"
 #include "gromacs/utility/smalloc.h"
+#include "gromacs/utility/stringutil.h"
 
 namespace nblib
 {
@@ -235,6 +236,26 @@ Topology TopologyBuilder::buildTopology()
     enumerationKey.enumerate(molecules_);
     topology_.enumerationKey_ = std::move(enumerationKey);
 
+    topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
+    topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
+
+    // Check whether there is any missing term in the particleTypesInteractions compared to the
+    // list of particletypes
+    for (const auto& particleType1 : particleTypes_)
+    {
+        for (const auto& particleType2 : particleTypes_)
+        {
+            auto interactionKey = std::make_tuple(particleType1.first, particleType2.first);
+            if (topology_.nonBondedInteractionMap_.count(interactionKey) == 0)
+            {
+                std::string message =
+                        gmx::formatString("Missing nonbonded interaction parameters for pair %s %s",
+                                          particleType1.first.c_str(), particleType2.first.c_str());
+                GMX_THROW(gmx::InvalidInputError(message));
+            }
+        }
+    }
+
     return topology_;
 }
 
@@ -269,6 +290,11 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
     return *this;
 }
 
+void TopologyBuilder::addParticleTypesInteractions(const ParticleTypesInteractions& particleTypesInteractions)
+{
+    particleTypesInteractions_.merge(particleTypesInteractions);
+}
+
 const int& Topology::numParticles() const
 {
     return numParticles_;
@@ -292,6 +318,16 @@ const std::vector<int>& Topology::getParticleTypeIdOfAllParticles() const
 int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName)
 {
     return enumerationKey_(moleculeName, moleculeNr, residueName, particleName);
+}
+
+const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
+{
+    return nonBondedInteractionMap_;
+}
+
+CombinationRule Topology::getCombinationRule() const
+{
+    return combinationRule_;
 }
 
 } // namespace nblib
