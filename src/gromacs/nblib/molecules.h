@@ -132,21 +132,13 @@ public:
                         const ResidueName&  residueNameI,
                         const ParticleName& particleNameJ,
                         const ResidueName&  residueNameJ,
-                        Interaction         interaction)
-    {
-        auto& interactionContainer = pickType<Interaction>(interactionData_);
-        interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
-                                                        residueNameJ, interaction.name());
-        interactionContainer.interactionTypes_.insert(
-                std::make_pair(interaction.name(), std::move(interaction)));
-    }
+                        Interaction         interaction);
 
     // add interactions with default residue name
     template<class Interaction>
-    void addInteraction(const ParticleName& particleNameI, const ParticleName& particleNameJ, Interaction interaction)
-    {
-        addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
-    }
+    void addInteraction(const ParticleName& particleNameI,
+                        const ParticleName& particleNameJ,
+                        Interaction         interaction);
 
     // The number of molecules
     int numParticlesInMolecule() const;
@@ -199,6 +191,11 @@ private:
 
     //! collection of data for all types of interactions
     InteractionTuple interactionData_;
+
+    // force code generation for all BondTypes listed in the Interaction tuple
+    // compared to explict template declaration + definition, we don't have to repeat the list of
+    // templates this never gets called
+    void instantiateInteractions();
 };
 
 } // namespace nblib

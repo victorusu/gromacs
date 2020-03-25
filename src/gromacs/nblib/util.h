@@ -125,4 +125,41 @@ decltype(auto) pickType(Tuple& tup)
 
 } // namespace nblib
 
+namespace std17
+{
+
+// std::apply and std::invoke are part of C++17
+// this code can be removed once the project moves to C++17
+
+namespace detail
+{
+
+// stripped down version of std::invoke, does not handle class member functions
+template<class F, class... Args>
+constexpr decltype(auto) invoke(F&& f, Args&&... args)
+{
+    // call f with all arguments
+    return std::forward<F>(f)(std::forward<Args>(args)...);
+}
+
+template<class F, class Tuple, size_t... Is>
+constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...>)
+{
+    // unpack the tuple t into a function parameter pack and forward to invoke
+    return invoke(std::forward<F>(f), std::get<Is>(std::forward<Tuple>(t))...);
+}
+
+} // namespace detail
+
+template<class F, class Tuple>
+constexpr decltype(auto) apply(F&& f, Tuple&& t)
+{
+    // generate an index sequence to access all tuple elements
+    return detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
+                              std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>{}>{});
+}
+
+} // namespace std17
+
+
 #endif // GROMACS_UTIL_H

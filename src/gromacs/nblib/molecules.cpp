@@ -118,6 +118,46 @@ Molecule& Molecule::addParticle(const ParticleName& particleName, const Particle
     return *this;
 }
 
+template<class Interaction>
+void Molecule::addInteraction(const ParticleName& particleNameI,
+                              const ResidueName&  residueNameI,
+                              const ParticleName& particleNameJ,
+                              const ResidueName&  residueNameJ,
+                              Interaction         interaction)
+{
+    auto& interactionContainer = pickType<Interaction>(interactionData_);
+    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
+                                                    residueNameJ, interaction.name());
+    interactionContainer.interactionTypes_.insert(
+            std::make_pair(interaction.name(), std::move(interaction)));
+}
+
+// add interactions with default residue name
+template<class Interaction>
+void Molecule::addInteraction(const ParticleName& particleNameI,
+                              const ParticleName& particleNameJ,
+                              Interaction         interaction)
+{
+    addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
+}
+
+void Molecule::instantiateInteractions()
+{
+    // Note: this never gets called, but forces template instantiations of this->addInteraction for
+    // all types defined in the header
+
+    // if executed, this lambda creates an instance of the "type" defined in the type of its
+    // argument and calls this->addInteraction with this instance
+    auto addEmptyInteraction = [this](auto interactionContainer) {
+        this->addInteraction("", "", typename decltype(interactionContainer)::type{});
+    };
+
+    // execute addEmptyInteraction for each element in interactionData_
+    std17::apply([f = addEmptyInteraction](
+                         auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; },
+                 interactionData_);
+}
+
 int Molecule::numParticlesInMolecule() const
 {
     return particles_.size();

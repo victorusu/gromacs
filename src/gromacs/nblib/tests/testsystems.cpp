@@ -108,6 +108,10 @@ WaterMoleculeBuilder::WaterMoleculeBuilder() : water_("SOL")
     water_.addParticle(ParticleName("Oxygen"), Charges.at("Ow"), plib.type("Ow"));
     water_.addParticle(ParticleName("H1"), Charges.at("Hw"), plib.type("H"));
     water_.addParticle(ParticleName("H2"), Charges.at("Hw"), plib.type("H"));
+
+    HarmonicBondType ohBond("oh", 1., 1.);
+    water_.addInteraction("Oxygen", "H1", ohBond);
+    water_.addInteraction("Oxygen", "H2", ohBond);
 }
 
 Molecule WaterMoleculeBuilder::waterMolecule()
