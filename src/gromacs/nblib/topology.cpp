@@ -182,6 +182,47 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
+template<class B>
+void aggregateBonds(std::vector<B>& aggregatedBonds, const std::vector<std::tuple<Molecule, int>>& molecules)
+{
+    for (auto& molNumberTuple : molecules)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t    numMols  = std::get<1>(molNumberTuple);
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            auto& interactions = pickType<B>(molecule.interactionData()).interactionTypes_;
+            std::copy(std::begin(interactions), std::end(interactions),
+                      std::back_inserter(aggregatedBonds));
+        }
+    }
+
+    std::vector<int> uniqueIndices(aggregatedBonds.size());
+    std::iota(std::begin(uniqueIndices), std::end(uniqueIndices), 0);
+
+    std::vector<std::tuple<B, int>> enumeratedBonds;
+    enumeratedBonds.reserve(aggregatedBonds.size());
+    std::transform(std::begin(aggregatedBonds), std::end(aggregatedBonds), std::begin(uniqueIndices),
+                   std::begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
+
+
+}
+
+void TopologyBuilder::createInteractionData()
+{
+    using BondsVectorTuple = Reduce<std::tuple, Map<std::vector, SupportedBondTypes>>;
+
+    BondsVectorTuple bondsVectorTuple;
+
+    auto aggregator = [this](auto& bondVector){ aggregateBonds(bondVector, this->molecules_); };
+    for_each_tuple(aggregator, bondsVectorTuple);
+
+
+
+    printf("number of bonds %zu", std::get<0>(bondsVectorTuple).size());
+}
+
 template<typename T, class Extractor>
 std::vector<T> TopologyBuilder::extractParticleTypeQuantity(Extractor extractor)
 {
@@ -238,6 +279,8 @@ Topology TopologyBuilder::buildTopology()
 
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
+
+    createInteractionData();
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes

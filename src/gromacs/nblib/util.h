@@ -122,6 +122,33 @@ decltype(auto) pickType(Tuple& tup)
     return detail::MatchingField<0, T, Tuple, detail::CompareField<0, T, Tuple>::value>::get(tup);
 }
 
+template <class... Ts>
+struct TypeList {};
+
+template <template <class...> class P, class L>
+struct Map_ {};
+
+template <template <class...> class P, template <class...> class L, class... Ts>
+struct Map_<P, L<Ts...>>
+{
+    typedef TypeList<P<Ts>...> type;
+};
+
+template <template <class...> class P, class L>
+using Map = typename Map_<P, L>::type;
+
+
+template <template <class...> class P, class L>
+struct Reduce_ {};
+
+template <template <class...> class P, template <class...> class L, class... Ts>
+struct Reduce_<P, L<Ts...>>
+{
+    typedef P<Ts...> type;
+};
+
+template <template <class...> class P, class L>
+using Reduce = typename Reduce_<P, L>::type;
 
 } // namespace nblib
 
@@ -151,6 +178,7 @@ constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...>
 
 } // namespace detail
 
+// call f with all tuple elements as arguments
 template<class F, class Tuple>
 constexpr decltype(auto) apply(F&& f, Tuple&& t)
 {
@@ -160,6 +188,18 @@ constexpr decltype(auto) apply(F&& f, Tuple&& t)
 }
 
 } // namespace std17
+
+namespace nblib
+{
+
+// calls func with each element in tuple_
+template <class F, class... Ts>
+void for_each_tuple(F&& func, std::tuple<Ts...>& tuple_)
+{
+    std17::apply( [f = func](auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; }, tuple_);
+}
+
+}
 
 
 #endif // GROMACS_UTIL_H

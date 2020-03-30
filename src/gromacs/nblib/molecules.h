@@ -66,6 +66,8 @@ using ParticleName = std::string;
 using Charge       = real;
 using ResidueName  = std::string;
 
+using SupportedBondTypes = TypeList<HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType>;
+
 class Molecule
 {
     template<class Bond>
@@ -73,12 +75,14 @@ class Molecule
     {
         using type = Bond;
 
-        std::unordered_map<Name, Bond> interactionTypes_;
-        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName, Name>> interactions_;
+        std::vector<Bond> interactionTypes_;
+        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName>> interactions_;
     };
 
-    using InteractionTuple =
-            std::tuple<BondData<HarmonicBondType>, BondData<G96BondType>, BondData<CubicBondType>, BondData<FENEBondType>, BondData<HalfAttractiveQuarticBondType>>;
+    // BondContainerTypes is TypeList<BondData<HarmonicBondType>, ...>
+    using BondContainerTypes = Map<BondData, SupportedBondTypes>;
+    // InteractionTuple is std::tuple<BondData<HarmonicBondType>, ...>
+    using InteractionTuple = Reduce<std::tuple, BondContainerTypes>;
 
 public:
     Molecule(std::string moleculeName);
@@ -132,13 +136,13 @@ public:
                         const ResidueName&  residueNameI,
                         const ParticleName& particleNameJ,
                         const ResidueName&  residueNameJ,
-                        Interaction         interaction);
+                        const Interaction&  interaction);
 
     // add interactions with default residue name
     template<class Interaction>
     void addInteraction(const ParticleName& particleNameI,
                         const ParticleName& particleNameJ,
-                        Interaction         interaction);
+                        const Interaction&  interaction);
 
     // The number of molecules
     int numParticlesInMolecule() const;

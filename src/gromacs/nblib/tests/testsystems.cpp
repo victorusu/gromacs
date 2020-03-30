@@ -145,6 +145,12 @@ MethanolMoleculeBuilder::MethanolMoleculeBuilder() : methanol_("MeOH")
     methanol_.addExclusion("Me1", "O2");
     methanol_.addExclusion("Me1", "H3");
     methanol_.addExclusion("H3", "O2");
+
+    HarmonicBondType ohBond("oh", 1.01, 1.02);
+    methanol_.addInteraction("O2", "H3", ohBond);
+
+    HarmonicBondType ometBond("omet", 1.1, 1.2);
+    methanol_.addInteraction("Oxygen", "H1", ometBond);
 }
 
 Molecule MethanolMoleculeBuilder::methanolMolecule()

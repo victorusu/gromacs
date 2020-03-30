@@ -123,20 +123,19 @@ void Molecule::addInteraction(const ParticleName& particleNameI,
                               const ResidueName&  residueNameI,
                               const ParticleName& particleNameJ,
                               const ResidueName&  residueNameJ,
-                              Interaction         interaction)
+                              const Interaction&  interaction)
 {
     auto& interactionContainer = pickType<Interaction>(interactionData_);
     interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
-                                                    residueNameJ, interaction.name());
-    interactionContainer.interactionTypes_.insert(
-            std::make_pair(interaction.name(), std::move(interaction)));
+                                                    residueNameJ);
+    interactionContainer.interactionTypes_.push_back(interaction);
 }
 
 // add interactions with default residue name
 template<class Interaction>
 void Molecule::addInteraction(const ParticleName& particleNameI,
                               const ParticleName& particleNameJ,
-                              Interaction         interaction)
+                              const Interaction&  interaction)
 {
     addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
 }

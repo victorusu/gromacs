@@ -191,6 +191,9 @@ private:
     // Builds a GROMACS-compliant performant exclusions list aggregating exclusions from all molecules
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
+    // Gather interaction data from molecules
+    void createInteractionData();
+
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>
     std::vector<T> extractParticleTypeQuantity(Extractor extractor);
