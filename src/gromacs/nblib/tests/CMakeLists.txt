@@ -56,6 +56,7 @@ gmx_add_gtest_executable(
     particletype.cpp
     molecules.cpp
     box.cpp
+    bondtypes.cpp
     util.cpp
     topology.cpp
     interactions.cpp
