@@ -72,7 +72,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;
@@ -102,7 +102,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;
@@ -137,7 +137,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;
@@ -167,7 +167,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;
@@ -198,7 +198,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;
@@ -228,7 +228,7 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto getProperties();
+    static auto properties();
 
 private:
     Name          name_;

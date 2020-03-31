@@ -94,6 +94,11 @@ void testThreeParameterBondLessThan(const B& deduceType)
     B c("h1", 1, 2);
     B d("h1", 1, 2);
     EXPECT_FALSE(c < d);
+
+    B e("a", 1, 3);
+    B f("b", 1, 2);
+    EXPECT_TRUE(e < f);
+    EXPECT_FALSE(f < e);
 }
 
 template<class B>
