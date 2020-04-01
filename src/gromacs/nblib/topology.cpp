@@ -188,7 +188,7 @@ void aggregateBonds(std::vector<B>& aggregatedBonds, const std::vector<std::tupl
     for (auto& molNumberTuple : molecules)
     {
         const Molecule& molecule = std::get<0>(molNumberTuple);
-        size_t    numMols  = std::get<1>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
 
         for (size_t i = 0; i < numMols; ++i)
         {
@@ -201,12 +201,12 @@ void aggregateBonds(std::vector<B>& aggregatedBonds, const std::vector<std::tupl
     std::vector<int> uniqueIndices(aggregatedBonds.size());
     std::iota(std::begin(uniqueIndices), std::end(uniqueIndices), 0);
 
-    std::vector<std::tuple<B, int>> enumeratedBonds;
-    enumeratedBonds.reserve(aggregatedBonds.size());
+    std::vector<std::tuple<B, int>> enumeratedBonds(aggregatedBonds.size());
     std::transform(std::begin(aggregatedBonds), std::end(aggregatedBonds), std::begin(uniqueIndices),
                    std::begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
 
-
+    auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
+    std::sort(std::begin(enumeratedBonds), std::end(enumeratedBonds), sortKey);
 }
 
 void TopologyBuilder::createInteractionData()
@@ -215,9 +215,8 @@ void TopologyBuilder::createInteractionData()
 
     BondsVectorTuple bondsVectorTuple;
 
-    auto aggregator = [this](auto& bondVector){ aggregateBonds(bondVector, this->molecules_); };
+    auto aggregator = [this](auto& bondVector) { aggregateBonds(bondVector, this->molecules_); };
     for_each_tuple(aggregator, bondsVectorTuple);
-
 
 
     printf("number of bonds %zu", std::get<0>(bondsVectorTuple).size());
