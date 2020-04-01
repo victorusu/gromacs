@@ -57,10 +57,15 @@ std::vector<gmx::RVec> generateVelocity(real Temperature, unsigned int seed, std
 
 bool checkNumericValues(const std::vector<gmx::RVec>& values);
 
-template<class... Ts>
-inline void ignore_unused(Ts&... x)
+inline void ignore_unused()
 {
-    std::initializer_list<int>{ (static_cast<void>(x), 0)... };
+}
+
+template<class T, class... Ts>
+inline void ignore_unused(T& x, Ts&... xs)
+{
+    static_cast<void>(x);
+    ignore_unused(xs...);
 }
 
 namespace detail
@@ -200,9 +205,10 @@ namespace nblib
 
 // calls func with each element in tuple_
 template<class F, class... Ts>
-void for_each_tuple(F&& func, std::tuple<Ts...>& tuple_)
+decltype(auto) for_each_tuple(F&& func, std::tuple<Ts...>& tuple_)
 {
-    std17::apply([f = func](auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; }, tuple_);
+    // TODO: change return type to void and add C++17 [[ maybe_unused ]] attribute
+    std17::apply([f = func](auto&... args) { return std::initializer_list<int>{ (f(args), 0)... }; }, tuple_);
 }
 
 // applies func to each element in tuple_ and returns result

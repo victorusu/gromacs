@@ -152,9 +152,7 @@ void Molecule::instantiateInteractions()
     };
 
     // execute addEmptyInteraction for each element in interactionData_
-    std17::apply([f = addEmptyInteraction](
-                         auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; },
-                 interactionData_);
+    for_each_tuple(addEmptyInteraction, interactionData_);
 }
 
 int Molecule::numParticlesInMolecule() const
