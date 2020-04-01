@@ -70,6 +70,16 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 // Add offset to all indices in inBlock
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
+// extract all bonds from a vector of molecules
+template<class B>
+std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>&);
+
+// Return a list of unique BondType instances U and an index list S of size aggregatedBonds.size()
+// such that the BondType instance at aggregatedBonds[i] is equal to U[S[i]]
+// returns std::tuple(S, U)
+template<class B>
+std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& aggregatedBonds);
+
 //! Helper class for Topology to keep track of particle IDs
 class EnumerationKey
 {
@@ -101,6 +111,18 @@ private:
  */
 class Topology
 {
+    template<class B>
+    struct BondData
+    {
+        typedef B type;
+
+        std::vector<std::tuple<int, int, int>> indices;
+        std::vector<B>                         bondInstances;
+    };
+
+    // std::tuple<BondData<BondType1>, ...>
+    using InteractionData = Reduce<std::tuple, Map<BondData, SupportedBondTypes>>;
+
 public:
     //! Returns the total number of particles in the system
     const int& numParticles() const;
@@ -121,6 +143,9 @@ public:
 
     //! Returns a map of non-bonded force parameters indexed by ParticleType names
     const NonBondedInteractionMap& getNonBondedInteractionMap() const;
+
+    //! Returns the interaction data
+    const InteractionData& getInteractionData() const;
 
     //! Returns the combination rule used to generate the NonBondedInteractionMap
     CombinationRule getCombinationRule() const;
@@ -144,6 +169,8 @@ private:
     detail::EnumerationKey enumerationKey_;
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
+    //! data about bonds for all supported types
+    InteractionData interactionData_;
     //! Combination Rule used to generate the nonbonded interactions
     CombinationRule combinationRule_;
 };
@@ -192,7 +219,7 @@ private:
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
     // Gather interaction data from molecules
-    void createInteractionData();
+    Topology::InteractionData createInteractionData();
 
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>

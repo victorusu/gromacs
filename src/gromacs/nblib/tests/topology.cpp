@@ -193,6 +193,41 @@ TEST(NBlibTest, TopologyHasSequencing)
     EXPECT_EQ(5, watersTopology.sequenceID("SOL", 1, "SOL", "H2"));
 }
 
+TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
+{
+    HarmonicBondType b1("b1", 1.0, 2.0);
+    HarmonicBondType b2("b2", 1.1, 2.1);
+    HarmonicBondType b3("b3", 1.2, 2.2);
+
+    std::vector<HarmonicBondType> bonds{ b2, b2, b3, b1, b2, b1, b3, b3 };
+
+    std::tuple<std::vector<int>, std::vector<HarmonicBondType>> bondData =
+            detail::eliminateDuplicateBonds(bonds);
+    auto indices     = std::get<0>(bondData);
+    auto uniqueBonds = std::get<1>(bondData);
+
+    EXPECT_EQ(3, uniqueBonds.size());
+    EXPECT_EQ(uniqueBonds[0].name(), "b1");
+    EXPECT_EQ(uniqueBonds[1].name(), "b2");
+    EXPECT_EQ(uniqueBonds[2].name(), "b3");
+    EXPECT_REAL_EQ_TOL(uniqueBonds[0].forceConstant(), 1.0, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(uniqueBonds[1].forceConstant(), 1.1, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(uniqueBonds[2].forceConstant(), 1.2, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(uniqueBonds[0].equilDistance(), 2.0, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(uniqueBonds[1].equilDistance(), 2.1, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(uniqueBonds[2].equilDistance(), 2.2, gmx::test::defaultRealTolerance());
+
+    EXPECT_EQ(indices.size(), bonds.size());
+    EXPECT_EQ(indices[0], 1);
+    EXPECT_EQ(indices[1], 1);
+    EXPECT_EQ(indices[2], 2);
+    EXPECT_EQ(indices[3], 0);
+    EXPECT_EQ(indices[4], 1);
+    EXPECT_EQ(indices[5], 0);
+    EXPECT_EQ(indices[6], 2);
+    EXPECT_EQ(indices[7], 2);
+}
+
 TEST(NBlibTest, TopologyHasNonbondedParameters)
 {
     WaterTopology waters;

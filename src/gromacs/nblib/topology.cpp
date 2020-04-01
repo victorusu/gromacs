@@ -140,6 +140,80 @@ void EnumerationKey::enumerate(const std::vector<std::tuple<Molecule, int>>& mol
     }
 }
 
+template<class B>
+std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>& molecules)
+{
+    std::vector<B> aggregatedBonds;
+    for (auto& molNumberTuple : molecules)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            auto& interactions = pickType<B>(molecule.interactionData()).interactionTypes_;
+            std::copy(std::begin(interactions), std::end(interactions),
+                      std::back_inserter(aggregatedBonds));
+        }
+    }
+    return aggregatedBonds;
+}
+
+template<class B>
+std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& aggregatedBonds)
+{
+    std::vector<int> uniqueIndices(aggregatedBonds.size());
+    std::vector<B>   uniqueBondInstances;
+    // if there are no interactions of type B we're done now
+    if (aggregatedBonds.empty())
+    {
+        return std::make_tuple(uniqueIndices, uniqueBondInstances);
+    }
+
+    // create 0,1,2,... sequence
+    std::iota(begin(uniqueIndices), end(uniqueIndices), 0);
+
+    std::vector<std::tuple<B, int>> enumeratedBonds(aggregatedBonds.size());
+    // append each interaction with its index
+    std::transform(std::begin(aggregatedBonds), std::end(aggregatedBonds), std::begin(uniqueIndices),
+                   std::begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
+
+    auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
+    // sort w.r.t bonds. the result will contain contiguous segments of identical bond instances
+    // the associated int indicates the original index of each bond instance
+    std::sort(std::begin(enumeratedBonds), std::end(enumeratedBonds), sortKey);
+
+    // initialize it1 and it2 to delimit first range of equal bond instances
+    auto range = std::equal_range(std::begin(enumeratedBonds), std::end(enumeratedBonds),
+                                  enumeratedBonds[0], sortKey);
+    auto it1   = range.first;
+    auto it2   = range.second;
+
+    // number of unique instances of BondType B = number of contiguous segments in enumeratedBonds =
+    //         number of iterations in the outer while loop below
+    while (it1 != std::end(enumeratedBonds))
+    {
+        uniqueBondInstances.push_back(std::get<0>(*it1));
+
+        // loop over all identical bonds;
+        for (; it1 != it2; ++it1)
+        {
+            // we note down that the bond instance at index <interactionIndex>
+            // can be found in the uniqueBondInstances container at index <uniqueBondInstances.size()>
+            int interactionIndex            = std::get<1>(*it1);
+            uniqueIndices[interactionIndex] = uniqueBondInstances.size() - 1;
+        }
+
+        // Note it1 has been incremented and is now equal to it2
+        if (it1 != std::end(enumeratedBonds))
+        {
+            it2 = std::upper_bound(it1, std::end(enumeratedBonds), *it1, sortKey);
+        }
+    }
+
+    return std::make_tuple(uniqueIndices, uniqueBondInstances);
+}
+
 } // namespace detail
 
 TopologyBuilder::TopologyBuilder() : numParticles_(0) {}
@@ -182,44 +256,20 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
-template<class B>
-void aggregateBonds(std::vector<B>& aggregatedBonds, const std::vector<std::tuple<Molecule, int>>& molecules)
+Topology::InteractionData TopologyBuilder::createInteractionData()
 {
-    for (auto& molNumberTuple : molecules)
-    {
-        const Molecule& molecule = std::get<0>(molNumberTuple);
-        size_t          numMols  = std::get<1>(molNumberTuple);
+    Topology::InteractionData interactionData;
 
-        for (size_t i = 0; i < numMols; ++i)
-        {
-            auto& interactions = pickType<B>(molecule.interactionData()).interactionTypes_;
-            std::copy(std::begin(interactions), std::end(interactions),
-                      std::back_inserter(aggregatedBonds));
-        }
-    }
+    auto bondVector = detail::aggregateBonds<HarmonicBondType>(this->molecules_);
+    auto hdata      = detail::eliminateDuplicateBonds(bondVector);
 
-    std::vector<int> uniqueIndices(aggregatedBonds.size());
-    std::iota(std::begin(uniqueIndices), std::end(uniqueIndices), 0);
+    std::vector<std::tuple<int, int, int>> bondIndices(bondVector.size());
+    std::transform(begin(std::get<0>(hdata)), end(std::get<0>(hdata)), begin(bondIndices),
+                   [](int i) { return std::make_tuple(0, 0, i); });
+    pickType<HarmonicBondType>(interactionData).bondInstances = std::get<1>(hdata);
+    pickType<HarmonicBondType>(interactionData).indices       = bondIndices;
 
-    std::vector<std::tuple<B, int>> enumeratedBonds(aggregatedBonds.size());
-    std::transform(std::begin(aggregatedBonds), std::end(aggregatedBonds), std::begin(uniqueIndices),
-                   std::begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
-
-    auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
-    std::sort(std::begin(enumeratedBonds), std::end(enumeratedBonds), sortKey);
-}
-
-void TopologyBuilder::createInteractionData()
-{
-    using BondsVectorTuple = Reduce<std::tuple, Map<std::vector, SupportedBondTypes>>;
-
-    BondsVectorTuple bondsVectorTuple;
-
-    auto aggregator = [this](auto& bondVector) { aggregateBonds(bondVector, this->molecules_); };
-    for_each_tuple(aggregator, bondsVectorTuple);
-
-
-    printf("number of bonds %zu", std::get<0>(bondsVectorTuple).size());
+    return interactionData;
 }
 
 template<typename T, class Extractor>
@@ -279,7 +329,7 @@ Topology TopologyBuilder::buildTopology()
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
 
-    createInteractionData();
+    topology_.interactionData_ = createInteractionData();
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes
@@ -365,6 +415,11 @@ int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName r
 const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
 {
     return nonBondedInteractionMap_;
+}
+
+const Topology::InteractionData& Topology::getInteractionData() const
+{
+    return interactionData_;
 }
 
 CombinationRule Topology::getCombinationRule() const
