@@ -66,7 +66,7 @@ gmx::PaddedHostVector<gmx::RVec> GmxForceCalculator::compute()
     return verletForces_;
 }
 
-void GmxForceCalculator::setParticlesOnGrid(std::vector<int>&             particleInfoAllVdw,
+void GmxForceCalculator::setParticlesOnGrid(const std::vector<int>&       particleInfoAllVdw,
                                             const std::vector<gmx::RVec>& coordinates,
                                             const Box&                    box)
 {

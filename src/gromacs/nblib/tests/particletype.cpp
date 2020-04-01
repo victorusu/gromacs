@@ -53,8 +53,6 @@
 
 #include "testsystems.h"
 
-using gmx::test::defaultRealTolerance;
-
 namespace nblib
 {
 

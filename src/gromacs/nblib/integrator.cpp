@@ -50,7 +50,7 @@
 
 namespace nblib
 {
-
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
 LeapFrog::LeapFrog(SimulationState simulationState) : simulationState_(simulationState)
 {
     inverseMasses_.resize(simulationState_.topology().numParticles());
