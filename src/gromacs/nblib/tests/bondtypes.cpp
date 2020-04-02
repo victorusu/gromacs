@@ -44,13 +44,10 @@
 #include "gmxpre.h"
 
 #include "gromacs/nblib/bondtypes.h"
+
 #include "gromacs/nblib/util.h"
 
-
-#include "testutils/refdata.h"
 #include "testutils/testasserts.h"
-
-using gmx::test::defaultRealTolerance;
 
 namespace nblib
 {

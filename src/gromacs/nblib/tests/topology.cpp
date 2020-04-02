@@ -96,11 +96,11 @@ TEST(NBlibTest, TopologyHasNumParticles)
 
 TEST(NBlibTest, TopologyHasCharges)
 {
-    WaterTopology           waters;
-    Topology                watersTopology = waters.buildTopology(2);
-    const std::vector<real> test           = watersTopology.getCharges();
-    const std::vector<real> ref            = { Charges.at("Ow"), Charges.at("Hw"), Charges.at("Hw"),
-                                    Charges.at("Ow"), Charges.at("Hw"), Charges.at("Hw") };
+    WaterTopology            waters;
+    Topology                 watersTopology = waters.buildTopology(2);
+    const std::vector<real>& test           = watersTopology.getCharges();
+    const std::vector<real>& ref = { Charges.at("Ow"), Charges.at("Hw"), Charges.at("Hw"),
+                                     Charges.at("Ow"), Charges.at("Hw"), Charges.at("Hw") };
     EXPECT_EQ(ref, test);
 }
 
@@ -118,13 +118,13 @@ TEST(NBlibTest, TopologyHasMasses)
 
 TEST(NBlibTest, TopologyHasParticleTypes)
 {
-    WaterTopology                   waters;
-    Topology                        watersTopology = waters.buildTopology(2);
-    const std::vector<ParticleType> test           = watersTopology.getParticleTypes();
-    const ParticleType              refOw          = waters.water().at("Ow");
-    const ParticleType              refHw          = waters.water().at("H");
-    const std::vector<ParticleType> ref            = { refOw, refHw };
-    const std::vector<ParticleType> ref2           = { refHw, refOw };
+    WaterTopology                    waters;
+    Topology                         watersTopology = waters.buildTopology(2);
+    const std::vector<ParticleType>& test           = watersTopology.getParticleTypes();
+    const ParticleType               refOw          = waters.water().at("Ow");
+    const ParticleType               refHw          = waters.water().at("H");
+    const std::vector<ParticleType>& ref            = { refOw, refHw };
+    const std::vector<ParticleType>& ref2           = { refHw, refOw };
     EXPECT_TRUE(ref == test || ref2 == test);
 }
 
@@ -133,10 +133,11 @@ TEST(NBlibTest, TopologyHasParticleTypeIds)
     WaterTopology waters;
     Topology      watersTopology = waters.buildTopology(2);
 
-    const std::vector<int>          testIds   = watersTopology.getParticleTypeIdOfAllParticles();
-    const std::vector<ParticleType> testTypes = watersTopology.getParticleTypes();
+    const std::vector<int>&          testIds   = watersTopology.getParticleTypeIdOfAllParticles();
+    const std::vector<ParticleType>& testTypes = watersTopology.getParticleTypes();
 
     std::vector<ParticleType> testTypesExpanded;
+    testTypesExpanded.reserve(testTypes.size());
     for (int i : testIds)
     {
         testTypesExpanded.push_back(testTypes[i]);
@@ -170,12 +171,12 @@ TEST(NBlibTest, TopologyThrowsIdenticalParticleType)
 
 TEST(NBlibTest, TopologyHasExclusions)
 {
-    WaterTopology         waters;
-    Topology              watersTopology = waters.buildTopology(2);
-    gmx::ListOfLists<int> testExclusions = watersTopology.getGmxExclusions();
+    WaterTopology                waters;
+    Topology                     watersTopology = waters.buildTopology(2);
+    const gmx::ListOfLists<int>& testExclusions = watersTopology.getGmxExclusions();
 
-    const std::vector<std::vector<int>> refExclusions = { { 0, 1, 2 }, { 0, 1, 2 }, { 0, 1, 2 },
-                                                          { 3, 4, 5 }, { 3, 4, 5 }, { 3, 4, 5 } };
+    const std::vector<std::vector<int>>& refExclusions = { { 0, 1, 2 }, { 0, 1, 2 }, { 0, 1, 2 },
+                                                           { 3, 4, 5 }, { 3, 4, 5 }, { 3, 4, 5 } };
 
     compareLists(testExclusions, refExclusions);
 }

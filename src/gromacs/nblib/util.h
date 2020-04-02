@@ -57,9 +57,7 @@ std::vector<gmx::RVec> generateVelocity(real Temperature, unsigned int seed, std
 
 bool checkNumericValues(const std::vector<gmx::RVec>& values);
 
-inline void ignore_unused()
-{
-}
+inline void ignore_unused() {}
 
 template<class T, class... Ts>
 inline void ignore_unused(T& x, Ts&... xs)
@@ -181,7 +179,7 @@ constexpr decltype(auto) invoke(F&& f, Args&&... args)
 }
 
 template<class F, class Tuple, size_t... Is>
-constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...>)
+constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...> /* unused */)
 {
     // unpack the tuple t into a function parameter pack and forward to invoke
     return invoke(std::forward<F>(f), std::get<Is>(std::forward<Tuple>(t))...);
