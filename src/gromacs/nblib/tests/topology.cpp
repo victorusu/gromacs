@@ -193,6 +193,22 @@ TEST(NBlibTest, TopologyHasSequencing)
     EXPECT_EQ(5, watersTopology.sequenceID("SOL", 1, "SOL", "H2"));
 }
 
+TEST(NBlibTest, TopologyCanAggregateBonds)
+{
+    Molecule water = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2), std::make_tuple(methanol, 1) };
+    std::vector<HarmonicBondType> bonds = detail::aggregateBonds<HarmonicBondType>(molecules);
+
+    HarmonicBondType oh{ "oh", 1., 1. };
+    HarmonicBondType ohmet("oh", 1.01, 1.02);
+    HarmonicBondType omet("omet", 1.1, 1.2);
+    std::vector<HarmonicBondType> bonds_reference{ oh, oh, oh, oh, ohmet, omet };
+
+    EXPECT_EQ(bonds, bonds_reference);
+}
+
 TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 {
     HarmonicBondType b1("b1", 1.0, 2.0);
@@ -217,15 +233,8 @@ TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
     EXPECT_REAL_EQ_TOL(uniqueBonds[1].equilDistance(), 2.1, gmx::test::defaultRealTolerance());
     EXPECT_REAL_EQ_TOL(uniqueBonds[2].equilDistance(), 2.2, gmx::test::defaultRealTolerance());
 
-    EXPECT_EQ(indices.size(), bonds.size());
-    EXPECT_EQ(indices[0], 1);
-    EXPECT_EQ(indices[1], 1);
-    EXPECT_EQ(indices[2], 2);
-    EXPECT_EQ(indices[3], 0);
-    EXPECT_EQ(indices[4], 1);
-    EXPECT_EQ(indices[5], 0);
-    EXPECT_EQ(indices[6], 2);
-    EXPECT_EQ(indices[7], 2);
+    std::vector<int> indices_reference{ 1, 1, 2, 0, 1, 0, 2, 2 };
+    EXPECT_EQ(indices_reference, indices);
 }
 
 TEST(NBlibTest, TopologyHasNonbondedParameters)

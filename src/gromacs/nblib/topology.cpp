@@ -180,10 +180,10 @@ std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::
 
     auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
     // sort w.r.t bonds. the result will contain contiguous segments of identical bond instances
-    // the associated int indicates the original index of each bond instance
+    // the associated int indicates the original index of each BondType instance in the input vector
     std::sort(std::begin(enumeratedBonds), std::end(enumeratedBonds), sortKey);
 
-    // initialize it1 and it2 to delimit first range of equal bond instances
+    // initialize it1 and it2 to delimit first range of equal BondType instances
     auto range = std::equal_range(std::begin(enumeratedBonds), std::end(enumeratedBonds),
                                   enumeratedBonds[0], sortKey);
     auto it1   = range.first;
@@ -195,10 +195,10 @@ std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::
     {
         uniqueBondInstances.push_back(std::get<0>(*it1));
 
-        // loop over all identical bonds;
+        // loop over all identical BondType instances;
         for (; it1 != it2; ++it1)
         {
-            // we note down that the bond instance at index <interactionIndex>
+            // we note down that the BondType instance at index <interactionIndex>
             // can be found in the uniqueBondInstances container at index <uniqueBondInstances.size()>
             int interactionIndex            = std::get<1>(*it1);
             uniqueIndices[interactionIndex] = uniqueBondInstances.size() - 1;
