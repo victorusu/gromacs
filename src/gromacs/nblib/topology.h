@@ -74,6 +74,7 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
 template<class B>
 std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>&);
 
+
 // Return a list of unique BondType instances U and an index list S of size aggregatedBonds.size()
 // such that the BondType instance at aggregatedBonds[i] is equal to U[S[i]]
 // returns std::tuple(S, U)
@@ -92,11 +93,15 @@ public:
     void enumerate(const std::vector<std::tuple<Molecule, int>>&);
 
     //! access ID by (molecule name, molecule nr, residue name, particle name)
-    int operator()(const std::string&, int, const ResidueName&, const ParticleName&);
+    int operator()(const std::string&, int, const ResidueName&, const ParticleName&) const;
 
 private:
     DataType data_;
 };
+
+template<class B>
+std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>&,
+                                                  const detail::EnumerationKey&);
 
 } // namespace detail
 
@@ -219,7 +224,7 @@ private:
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
     // Gather interaction data from molecules
-    Topology::InteractionData createInteractionData();
+    Topology::InteractionData createInteractionData(const detail::EnumerationKey&);
 
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>

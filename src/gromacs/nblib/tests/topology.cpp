@@ -215,6 +215,38 @@ TEST(NBlibTest, TopologyCanAggregateBonds)
     EXPECT_EQ(bonds, bonds_reference);
 }
 
+TEST(NBlibTest, TopologyCanSequencePairIDs)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
+    detail::EnumerationKey                 enumerationKey;
+    enumerationKey.enumerate(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, enumerationKey);
+
+    int Ow1 = enumerationKey("SOL", 0, "SOL", "Oxygen");
+    int H11 = enumerationKey("SOL", 0, "SOL", "H1");
+    int H12 = enumerationKey("SOL", 0, "SOL", "H2");
+    int Ow2 = enumerationKey("SOL", 1, "SOL", "Oxygen");
+    int H21 = enumerationKey("SOL", 1, "SOL", "H1");
+    int H22 = enumerationKey("SOL", 1, "SOL", "H2");
+
+    int Me  = enumerationKey("MeOH", 0, "MeOH", "Me1");
+    int MeO = enumerationKey("MeOH", 0, "MeOH", "O2");
+    int MeH = enumerationKey("MeOH", 0, "MeOH", "H3");
+
+#define SORT(i, j) (i < j) ? i : j, (i < j) ? j : i
+
+    std::vector<std::tuple<int, int>> pairs_reference{ { SORT(Ow1, H11) }, { SORT(Ow1, H12) },
+                                                       { SORT(Ow2, H21) }, { SORT(Ow2, H22) },
+                                                       { SORT(MeO, MeH) }, { SORT(MeO, Me) } };
+#undef SORT
+
+    EXPECT_EQ(pairs, pairs_reference);
+}
+
 TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 {
     HarmonicBondType b1("b1", 1.0, 2.0);
@@ -241,6 +273,59 @@ TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 
     std::vector<int> indices_reference{ 1, 1, 2, 0, 1, 0, 2, 2 };
     EXPECT_EQ(indices_reference, indices);
+}
+
+TEST(NBlibTest, TopologyListedInteractions)
+{
+    Topology spcTopology = SpcMethanolTopologyBuilder{}.buildTopology(1, 2);
+
+    auto interactionData = spcTopology.getInteractionData();
+    auto harmonicBonds   = pickType<HarmonicBondType>(interactionData);
+
+    auto& indices = harmonicBonds.indices;
+    auto& bonds   = harmonicBonds.bondInstances;
+
+    // there should be 3 unique HarmonicBondType instances
+    EXPECT_EQ(bonds.size(), 3);
+    // and 6 interaction pairs (bonds)
+    EXPECT_EQ(indices.size(), 6);
+
+    HarmonicBondType ohBond("oh", 1., 1.);
+    HarmonicBondType ohBondMethanol("oh", 1.01, 1.02);
+    HarmonicBondType ometBond("omet", 1.1, 1.2);
+
+    std::map<std::tuple<int, int>, HarmonicBondType> interactions_reference;
+
+    int Ow = spcTopology.sequenceID("SOL", 0, "SOL", "Oxygen");
+    int H1 = spcTopology.sequenceID("SOL", 0, "SOL", "H1");
+    int H2 = spcTopology.sequenceID("SOL", 0, "SOL", "H2");
+
+    int Me1  = spcTopology.sequenceID("MeOH", 0, "MeOH", "Me1");
+    int MeO1 = spcTopology.sequenceID("MeOH", 0, "MeOH", "O2");
+    int MeH1 = spcTopology.sequenceID("MeOH", 0, "MeOH", "H3");
+
+    int Me2  = spcTopology.sequenceID("MeOH", 1, "MeOH", "Me1");
+    int MeO2 = spcTopology.sequenceID("MeOH", 1, "MeOH", "O2");
+    int MeH2 = spcTopology.sequenceID("MeOH", 1, "MeOH", "H3");
+
+#define SORT(i, j) (i < j) ? i : j, (i < j) ? j : i
+    interactions_reference[std::make_tuple(SORT(Ow, H1))]     = ohBond;
+    interactions_reference[std::make_tuple(SORT(Ow, H2))]     = ohBond;
+    interactions_reference[std::make_tuple(SORT(MeO1, MeH1))] = ohBondMethanol;
+    interactions_reference[std::make_tuple(SORT(MeO1, Me1))]  = ometBond;
+    interactions_reference[std::make_tuple(SORT(MeO2, MeH2))] = ohBondMethanol;
+    interactions_reference[std::make_tuple(SORT(MeO2, Me2))]  = ometBond;
+#undef SORT
+
+    std::map<std::tuple<int, int>, HarmonicBondType> interactions_test;
+    for (auto& ituple : indices)
+    {
+        interactions_test[std::make_tuple(std::get<0>(ituple), std::get<1>(ituple))] =
+                bonds[std::get<2>(ituple)];
+    }
+
+    EXPECT_TRUE(std::equal(begin(interactions_reference), end(interactions_reference),
+                           begin(interactions_test)));
 }
 
 TEST(NBlibTest, TopologyHasNonbondedParameters)

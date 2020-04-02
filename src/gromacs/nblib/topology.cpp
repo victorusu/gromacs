@@ -47,6 +47,7 @@
 #include "topology.h"
 
 #include <numeric>
+#include <sstream>
 
 #include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/nblib/particletype.h"
@@ -114,9 +115,25 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
 int EnumerationKey::operator()(const std::string&  moleculeName,
                                int                 moleculeNr,
                                const ResidueName&  residueName,
-                               const ParticleName& particleName)
+                               const ParticleName& particleName) const
 {
-    return data_[moleculeName][moleculeNr][residueName][particleName];
+    try
+    {
+        return data_.at(moleculeName).at(moleculeNr).at(residueName).at(particleName);
+    }
+    catch (const std::out_of_range& outOfRange)
+    {
+        // printf("%s, %d, %s, %s not found", moleculeName.c_str(), moleculeNr, residueName.c_str(), particleName.c_str()) ;
+        std::ostringstream os;
+        os << "No particle " << particleName;
+        if (particleName != residueName)
+        {
+            os << " in residue " << residueName;
+        }
+        os << " in molecule " << moleculeName << " nr " << moleculeNr << " found";
+
+        throw gmx::InvalidInputError(os.str());
+    };
 }
 
 void EnumerationKey::enumerate(const std::vector<std::tuple<Molecule, int>>& moleculesList)
@@ -157,6 +174,32 @@ std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>& mole
         }
     }
     return aggregatedBonds;
+}
+
+template<class B>
+std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>& molecules,
+                                                  const detail::EnumerationKey& enumerationKey)
+{
+    std::vector<std::tuple<int, int>> interactionPairIDs;
+    for (auto& molNumberTuple : molecules)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            auto& interactions = pickType<B>(molecule.interactionData()).interactions_;
+            for (const auto& interactionPair : interactions)
+            {
+                int id1 = enumerationKey(molecule.name(), i, std::get<1>(interactionPair),
+                                         std::get<0>(interactionPair));
+                int id2 = enumerationKey(molecule.name(), i, std::get<3>(interactionPair),
+                                         std::get<2>(interactionPair));
+                interactionPairIDs.emplace_back(std::min(id1, id2), std::max(id1, id2));
+            }
+        }
+    }
+    return interactionPairIDs;
 }
 
 template<class B>
@@ -255,18 +298,27 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
-Topology::InteractionData TopologyBuilder::createInteractionData()
+Topology::InteractionData TopologyBuilder::createInteractionData(const detail::EnumerationKey& enumerationKey)
 {
     Topology::InteractionData interactionData;
 
-    auto bondVector = detail::aggregateBonds<HarmonicBondType>(this->molecules_);
-    auto hdata      = detail::eliminateDuplicateBonds(bondVector);
+    // TODO: repeat for all BondTypes
+    auto uniqueData =
+            detail::eliminateDuplicateBonds(detail::aggregateBonds<HarmonicBondType>(this->molecules_));
+    auto& uniqueIndices       = std::get<0>(uniqueData);
+    auto& uniqueBondInstances = std::get<1>(uniqueData);
 
-    std::vector<std::tuple<int, int, int>> bondIndices(bondVector.size());
-    std::transform(begin(std::get<0>(hdata)), end(std::get<0>(hdata)), begin(bondIndices),
-                   [](int i) { return std::make_tuple(0, 0, i); });
-    pickType<HarmonicBondType>(interactionData).bondInstances = std::get<1>(hdata);
-    pickType<HarmonicBondType>(interactionData).indices       = bondIndices;
+    // add data about BondType instances
+    pickType<HarmonicBondType>(interactionData).bondInstances = uniqueBondInstances;
+
+    // add data about interaction pair indices
+    auto& indexTriples = pickType<HarmonicBondType>(interactionData).indices;
+    indexTriples.resize(uniqueIndices.size());
+    auto pairIndices = detail::sequencePairIDs<HarmonicBondType>(this->molecules_, enumerationKey);
+    std::transform(begin(pairIndices), end(pairIndices), begin(uniqueIndices), begin(indexTriples),
+                   [](auto pairIndex, auto bondIndex) {
+                       return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
+                   });
 
     return interactionData;
 }
@@ -328,7 +380,7 @@ Topology TopologyBuilder::buildTopology()
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
 
-    topology_.interactionData_ = createInteractionData();
+    topology_.interactionData_ = createInteractionData(topology_.enumerationKey_);
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes

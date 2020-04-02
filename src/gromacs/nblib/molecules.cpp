@@ -125,9 +125,14 @@ void Molecule::addInteraction(const ParticleName& particleNameI,
                               const ResidueName&  residueNameJ,
                               const Interaction&  interaction)
 {
+    if (particleNameI == particleNameJ and residueNameI == residueNameJ)
+    {
+        throw gmx::InvalidInputError(std::string("Cannot add interaction of particle ")
+                                     + particleNameI + " with itself in molecule " + name_);
+    }
+
     auto& interactionContainer = pickType<Interaction>(interactionData_);
-    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
-                                                    residueNameJ);
+    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ, residueNameJ);
     interactionContainer.interactionTypes_.push_back(interaction);
 }
 
