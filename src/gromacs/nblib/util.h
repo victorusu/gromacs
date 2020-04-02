@@ -179,7 +179,7 @@ constexpr decltype(auto) invoke(F&& f, Args&&... args)
 }
 
 template<class F, class Tuple, size_t... Is>
-constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...>)
+constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Is...> /* unused */)
 {
     // unpack the tuple t into a function parameter pack and forward to invoke
     return invoke(std::forward<F>(f), std::get<Is>(std::forward<Tuple>(t))...);

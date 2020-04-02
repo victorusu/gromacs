@@ -48,9 +48,9 @@
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/timing/cyclecounter.h"
 
+#include "interactions.h"
 #include "nbkerneldef.h"
 #include "nbkerneloptions.h"
-#include "interactions.h"
 
 namespace nblib
 {

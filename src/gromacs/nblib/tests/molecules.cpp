@@ -44,12 +44,14 @@
  */
 #include "gmxpre.h"
 
+#include "gromacs/nblib/molecules.h"
+
 #include <iostream>
 
-#include "gromacs/nblib/molecules.h"
 #include "gromacs/nblib/particletype.h"
 
 #include "testutils/testasserts.h"
+
 #include "testsystems.h"
 
 namespace nblib
@@ -112,7 +114,9 @@ TEST(NBlibTest, CanConstructExclusionListFromNames)
 
     ASSERT_EQ(exclusions.size(), 9);
     for (std::size_t i = 0; i < exclusions.size(); ++i)
+    {
         EXPECT_EQ(exclusions[i], reference[i]);
+    }
 }
 
 TEST(NBlibTest, CanConstructExclusionListFromIndices)
@@ -132,7 +136,9 @@ TEST(NBlibTest, CanConstructExclusionListFromIndices)
 
     ASSERT_EQ(exclusions.size(), 9);
     for (std::size_t i = 0; i < exclusions.size(); ++i)
+    {
         EXPECT_EQ(exclusions[i], reference[i]);
+    }
 }
 
 TEST(NBlibTest, CanConstructExclusionListFromNamesAndIndicesMixed)
@@ -152,7 +158,9 @@ TEST(NBlibTest, CanConstructExclusionListFromNamesAndIndicesMixed)
 
     ASSERT_EQ(exclusions.size(), 9);
     for (std::size_t i = 0; i < exclusions.size(); ++i)
+    {
         EXPECT_EQ(exclusions[i], reference[i]);
+    }
 }
 
 TEST(NBlibTest, AtWorks)

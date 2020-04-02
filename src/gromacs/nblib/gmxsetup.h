@@ -74,7 +74,7 @@ public:
 
     //! Sets non-bonded parameters to be used to build GMX data structures
     void setNonBondedParameters(const std::vector<ParticleType>& particleTypes,
-                                const NonBondedInteractionMap&);
+                                const NonBondedInteractionMap&   nonBondedInteractionMap);
 
     //! Marks particles to have Van der Waals interactions
     void setParticleInfoAllVdv(size_t numParticles);
@@ -93,7 +93,7 @@ public:
                            const std::vector<real>& charges);
 
     //! Sets up non-bonded verlet on the GmxForceCalculator
-    void setupNbnxmInstance(const size_t numParticleTypes, const NBKernelOptions& options);
+    void setupNbnxmInstance(size_t numParticleTypes, const NBKernelOptions& options);
 
     //! Puts particles on a grid based on bounds specified by the box
     void setParticlesOnGrid(const std::vector<gmx::RVec>& coordinates, const Box& box);
