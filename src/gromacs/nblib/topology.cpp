@@ -175,23 +175,22 @@ std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::
 
     std::vector<std::tuple<B, int>> enumeratedBonds(aggregatedBonds.size());
     // append each interaction with its index
-    std::transform(std::begin(aggregatedBonds), std::end(aggregatedBonds), std::begin(uniqueIndices),
-                   std::begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
+    std::transform(begin(aggregatedBonds), end(aggregatedBonds), begin(uniqueIndices),
+                   begin(enumeratedBonds), [](B b, int i) { return std::make_tuple(b, i); });
 
     auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
     // sort w.r.t bonds. the result will contain contiguous segments of identical bond instances
     // the associated int indicates the original index of each BondType instance in the input vector
-    std::sort(std::begin(enumeratedBonds), std::end(enumeratedBonds), sortKey);
+    std::sort(begin(enumeratedBonds), end(enumeratedBonds), sortKey);
 
     // initialize it1 and it2 to delimit first range of equal BondType instances
-    auto range = std::equal_range(std::begin(enumeratedBonds), std::end(enumeratedBonds),
-                                  enumeratedBonds[0], sortKey);
-    auto it1   = range.first;
-    auto it2   = range.second;
+    auto range = std::equal_range(begin(enumeratedBonds), end(enumeratedBonds), enumeratedBonds[0], sortKey);
+    auto it1 = range.first;
+    auto it2 = range.second;
 
     // number of unique instances of BondType B = number of contiguous segments in enumeratedBonds =
     //         number of iterations in the outer while loop below
-    while (it1 != std::end(enumeratedBonds))
+    while (it1 != end(enumeratedBonds))
     {
         uniqueBondInstances.push_back(std::get<0>(*it1));
 
@@ -205,13 +204,13 @@ std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::
         }
 
         // Note it1 has been incremented and is now equal to it2
-        if (it1 != std::end(enumeratedBonds))
+        if (it1 != end(enumeratedBonds))
         {
-            it2 = std::upper_bound(it1, std::end(enumeratedBonds), *it1, sortKey);
+            it2 = std::upper_bound(it1, end(enumeratedBonds), *it1, sortKey);
         }
     }
 
-    return std::make_tuple(uniqueIndices, uniqueBondInstances);
+    return make_tuple(uniqueIndices, uniqueBondInstances);
 }
 
 } // namespace detail

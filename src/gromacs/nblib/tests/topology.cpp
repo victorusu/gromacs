@@ -195,16 +195,22 @@ TEST(NBlibTest, TopologyHasSequencing)
 
 TEST(NBlibTest, TopologyCanAggregateBonds)
 {
-    Molecule water = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
     Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
 
-    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2), std::make_tuple(methanol, 1) };
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
     std::vector<HarmonicBondType> bonds = detail::aggregateBonds<HarmonicBondType>(molecules);
 
-    HarmonicBondType oh{ "oh", 1., 1. };
-    HarmonicBondType ohmet("oh", 1.01, 1.02);
-    HarmonicBondType omet("omet", 1.1, 1.2);
-    std::vector<HarmonicBondType> bonds_reference{ oh, oh, oh, oh, ohmet, omet };
+    std::vector<HarmonicBondType> waterBonds =
+            pickType<HarmonicBondType>(water.interactionData()).interactionTypes_;
+    std::vector<HarmonicBondType> methanolBonds =
+            pickType<HarmonicBondType>(methanol.interactionData()).interactionTypes_;
+
+    std::vector<HarmonicBondType> bonds_reference;
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bonds_reference));
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bonds_reference));
+    std::copy(begin(methanolBonds), end(methanolBonds), std::back_inserter(bonds_reference));
 
     EXPECT_EQ(bonds, bonds_reference);
 }
