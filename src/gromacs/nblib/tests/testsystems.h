@@ -74,7 +74,7 @@ extern std::unordered_map<std::string, Charge> Charges;
 class WaterMoleculeBuilder
 {
 public:
-    //! There is no default ctor for a Molecule so it must be initialized
+    // There is no default ctor for a Molecule so it must be initialized
     WaterMoleculeBuilder();
 
     //! Return the initialized water Molecule, with exclusions
@@ -95,7 +95,7 @@ private:
 class MethanolMoleculeBuilder
 {
 public:
-    //! There is no default ctor for a Molecule so it must be initialized
+    // There is no default ctor for a Molecule so it must be initialized
     MethanolMoleculeBuilder();
 
     //! Return the initialized water Molecule, with exclusions
@@ -109,7 +109,7 @@ private:
 class WaterTopology
 {
 public:
-    //! Return a topology with specified SPC water molecules
+    // Return a topology with specified SPC water molecules
     Topology buildTopology(int numMolecules);
 
     //! Return the actual water Molecule used in the topology
@@ -122,7 +122,7 @@ private:
 class SpcMethanolTopologyBuilder
 {
 public:
-    //! Return a topology with specified methanol molecules
+    // Return a topology with specified methanol molecules
     Topology buildTopology(int numWater, int numMethanol);
 
     //! Return the actual methanol Molecule used in the topology

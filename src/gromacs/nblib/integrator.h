@@ -74,7 +74,7 @@ public:
      *
      * \param[in] dt  Timestep.
      */
-    void integrate(const real dt);
+    void integrate(real dt);
 
 private:
     //! 1/mass for all atoms (GPU)

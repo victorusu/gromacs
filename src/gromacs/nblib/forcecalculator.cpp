@@ -53,7 +53,7 @@ namespace nblib
 
 ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOptions& options)
 {
-    gmxForceCalculator_ = GmxSetupDirector{}.setupGmxForceCalculator(system, options);
+    gmxForceCalculator_ = nblib::GmxSetupDirector::setupGmxForceCalculator(system, options);
 }
 
 gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute()

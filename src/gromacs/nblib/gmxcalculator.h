@@ -73,7 +73,7 @@ public:
     gmx::PaddedHostVector<gmx::RVec> compute();
 
     //! Puts particles on a grid based on bounds specified by the box
-    void setParticlesOnGrid(std::vector<int>&             particleInfoAllVdw,
+    void setParticlesOnGrid(const std::vector<int>&       particleInfoAllVdw,
                             const std::vector<gmx::RVec>& coordinates,
                             const Box&                    box);
 

@@ -61,8 +61,8 @@ namespace
 TEST(NBlibTest, checkNumericValues)
 {
     std::vector<gmx::RVec> vec;
-    vec.push_back({ 1., 1., 1. });
-    vec.push_back({ 2., 2., 2. });
+    vec.emplace_back(1., 1., 1.);
+    vec.emplace_back(2., 2., 2.);
 
     bool ret = checkNumericValues(vec);
     EXPECT_EQ(ret, true);
@@ -71,10 +71,10 @@ TEST(NBlibTest, checkNumericValues)
 TEST(NBlibTest, checkNumericValuesHasNan)
 {
     std::vector<gmx::RVec> vec;
-    vec.push_back({ 1., 1., 1. });
-    vec.push_back({ 2., 2., 2. });
+    vec.emplace_back(1., 1., 1.);
+    vec.emplace_back(2., 2., 2.);
 
-    vec.push_back({ (real)NAN, (real)NAN, (real)NAN });
+    vec.emplace_back(NAN, NAN, NAN);
 
     bool ret = checkNumericValues(vec);
     EXPECT_EQ(ret, false);
@@ -83,10 +83,10 @@ TEST(NBlibTest, checkNumericValuesHasNan)
 TEST(NBlibTest, checkNumericValuesHasInf)
 {
     std::vector<gmx::RVec> vec;
-    vec.push_back({ 1., 1., 1. });
-    vec.push_back({ 2., 2., 2. });
+    vec.emplace_back(1., 1., 1.);
+    vec.emplace_back(2., 2., 2.);
 
-    vec.push_back({ (real)INFINITY, (real)INFINITY, (real)INFINITY });
+    vec.emplace_back(INFINITY, INFINITY, INFINITY);
 
     bool ret = checkNumericValues(vec);
     EXPECT_EQ(ret, false);
