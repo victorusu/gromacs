@@ -46,7 +46,6 @@
 
 #include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/nblib/simulationstate.h"
-#include "gromacs/timing/cyclecounter.h"
 
 #include "interactions.h"
 #include "nbkerneldef.h"
@@ -66,9 +65,6 @@ public:
      */
     ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
 
-    //! Sets up and runs the kernel calls
-    //! returns the forces as a vector
-
     /*! \brief Sets up and runs the kernel calls
      *
      * \todo Refactor this function to return a handle to dispatchNonbondedKernel
@@ -77,16 +73,8 @@ public:
     gmx::PaddedHostVector<gmx::RVec> compute();
 
 private:
-    // void printTimingsOutput(const NBKernelOptions &options,
-    //                        const SimulationState &system,
-    //                        const gmx::index      &numPairs,
-    //                        gmx_cycles_t           cycles);
-
     //! GROMACS force calculator to compute forces
     std::unique_ptr<GmxForceCalculator> gmxForceCalculator_;
-
-    //    //! Particles masses
-    //    std::vector<real> masses_;
 };
 
 } // namespace nblib

@@ -41,11 +41,11 @@
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
  */
+
 #include "gmxpre.h"
 
 #include "util.h"
 
-#include "gromacs/math/units.h"
 #include "gromacs/random/tabulatednormaldistribution.h"
 #include "gromacs/random/threefry.h"
 #include "gromacs/utility/fatalerror.h"

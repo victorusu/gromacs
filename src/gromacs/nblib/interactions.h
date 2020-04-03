@@ -48,7 +48,6 @@
 #include <map>
 #include <set>
 
-#include "gromacs/math/vectypes.h"
 #include "gromacs/nblib/particletype.h"
 
 #include "nbkerneldef.h"
