@@ -208,12 +208,12 @@ TEST(NBlibTest, TopologyCanAggregateBonds)
     std::vector<HarmonicBondType> methanolBonds =
             pickType<HarmonicBondType>(methanol.interactionData()).interactionTypes_;
 
-    std::vector<HarmonicBondType> bonds_reference;
-    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bonds_reference));
-    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bonds_reference));
-    std::copy(begin(methanolBonds), end(methanolBonds), std::back_inserter(bonds_reference));
+    std::vector<HarmonicBondType> bondsReference;
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bondsReference));
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bondsReference));
+    std::copy(begin(methanolBonds), end(methanolBonds), std::back_inserter(bondsReference));
 
-    EXPECT_EQ(bonds, bonds_reference);
+    EXPECT_EQ(bonds, bondsReference);
 }
 
 TEST(NBlibTest, TopologyCanSequencePairIDs)
@@ -248,43 +248,60 @@ TEST(NBlibTest, TopologyCanSequencePairIDs)
     EXPECT_EQ(pairs, pairs_reference);
 }
 
+TEST(NBlibTest, TopologySequenceIdThrows)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
+    detail::EnumerationKey                 enumerationKey;
+    enumerationKey.enumerate(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, enumerationKey);
+
+    // Input error: no particle called O-Atom in molecule "water"
+    EXPECT_THROW(enumerationKey("SOL", 0, "SOL", "O-Atom"), gmx::InvalidInputError);
+}
+
 TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 {
     HarmonicBondType b1("b1", 1.0, 2.0);
     HarmonicBondType b2("b2", 1.1, 2.1);
     HarmonicBondType b3("b3", 1.2, 2.2);
 
+    // can be compressed to {b1,b2,b3} + {1,1,2,0,1,0,2,2}
     std::vector<HarmonicBondType> bonds{ b2, b2, b3, b1, b2, b1, b3, b3 };
+
+    // expected output
+    std::vector<HarmonicBondType> uniqueBondsReference{ b1, b2, b3 };
+    std::vector<int>              indicesReference{ 1, 1, 2, 0, 1, 0, 2, 2 };
 
     std::tuple<std::vector<int>, std::vector<HarmonicBondType>> bondData =
             detail::eliminateDuplicateBonds(bonds);
+
     auto indices     = std::get<0>(bondData);
     auto uniqueBonds = std::get<1>(bondData);
 
-    EXPECT_EQ(3, uniqueBonds.size());
-    EXPECT_EQ(uniqueBonds[0].name(), "b1");
-    EXPECT_EQ(uniqueBonds[1].name(), "b2");
-    EXPECT_EQ(uniqueBonds[2].name(), "b3");
-    EXPECT_REAL_EQ_TOL(uniqueBonds[0].forceConstant(), 1.0, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(uniqueBonds[1].forceConstant(), 1.1, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(uniqueBonds[2].forceConstant(), 1.2, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(uniqueBonds[0].equilDistance(), 2.0, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(uniqueBonds[1].equilDistance(), 2.1, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(uniqueBonds[2].equilDistance(), 2.2, gmx::test::defaultRealTolerance());
-
-    std::vector<int> indices_reference{ 1, 1, 2, 0, 1, 0, 2, 2 };
-    EXPECT_EQ(indices_reference, indices);
+    EXPECT_EQ(uniqueBondsReference, uniqueBonds);
+    EXPECT_EQ(indicesReference, indices);
 }
 
 TEST(NBlibTest, TopologyListedInteractions)
 {
     Topology spcTopology = SpcMethanolTopologyBuilder{}.buildTopology(1, 2);
 
-    auto interactionData = spcTopology.getInteractionData();
-    auto harmonicBonds   = pickType<HarmonicBondType>(interactionData);
+    auto  interactionData = spcTopology.getInteractionData();
+    auto& harmonicBonds   = pickType<HarmonicBondType>(interactionData);
 
     auto& indices = harmonicBonds.indices;
     auto& bonds   = harmonicBonds.bondInstances;
+
+    std::map<std::tuple<int, int>, HarmonicBondType> interactions_test;
+    for (auto& ituple : indices)
+    {
+        interactions_test[std::make_tuple(std::get<0>(ituple), std::get<1>(ituple))] =
+                bonds[std::get<2>(ituple)];
+    }
 
     // there should be 3 unique HarmonicBondType instances
     EXPECT_EQ(bonds.size(), 3);
@@ -318,15 +335,25 @@ TEST(NBlibTest, TopologyListedInteractions)
     interactions_reference[std::make_tuple(SORT(MeO2, Me2))]  = ometBond;
 #undef SORT
 
-    std::map<std::tuple<int, int>, HarmonicBondType> interactions_test;
-    for (auto& ituple : indices)
-    {
-        interactions_test[std::make_tuple(std::get<0>(ituple), std::get<1>(ituple))] =
-                bonds[std::get<2>(ituple)];
-    }
-
     EXPECT_TRUE(std::equal(begin(interactions_reference), end(interactions_reference),
                            begin(interactions_test)));
+}
+
+TEST(NBlibTest, TopologyInvalidParticleInInteractionThrows)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    HarmonicBondType testBond("test", 1., 1.);
+
+    // Invalid input: no particle named "Iron" in molecule water
+    water.addInteraction("H1", "Iron", testBond);
+
+    TopologyBuilder topologyBuilder;
+    topologyBuilder.addMolecule(water, 1);
+    topologyBuilder.addMolecule(methanol, 1);
+
+    EXPECT_THROW(topologyBuilder.buildTopology(), gmx::InvalidInputError);
 }
 
 TEST(NBlibTest, TopologyHasNonbondedParameters)
