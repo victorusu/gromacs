@@ -70,6 +70,24 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 // Add offset to all indices in inBlock
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
+//! Helper class for Topology to keep track of particle IDs
+class ParticleSequencer
+{
+    // store by (molecule name, molecule nr, residue name, particle name)
+    using DataType =
+            std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<ResidueName, std::unordered_map<ParticleName, int>>>>;
+
+public:
+    //! build sequence from a list of molecules
+    void build(const std::vector<std::tuple<Molecule, int>>& moleculesList);
+
+    //! access ID by (molecule name, molecule nr, residue name, particle name)
+    int operator()(const std::string&, int, const ResidueName&, const ParticleName&);
+
+private:
+    DataType data_;
+};
+
 } // namespace detail
 
 /*! \inpublicapi
@@ -99,6 +117,8 @@ public:
     //! Returns exclusions in proper, performant, GROMACS layout
     const gmx::ListOfLists<int>& getGmxExclusions() const { return exclusions_; }
 
+    int sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName);
+
     //! Returns a map of non-bonded force parameters indexed by ParticleType names
     const NonBondedInteractionMap& getNonBondedInteractionMap() const;
 
@@ -120,6 +140,8 @@ private:
     std::vector<real> charges_;
     //! Information about exclusions.
     gmx::ListOfLists<int> exclusions_;
+    //! Associate molecule, residue and particle names with sequence numbers
+    detail::ParticleSequencer particleSequencer_;
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
     //! Combination Rule used to generate the nonbonded interactions

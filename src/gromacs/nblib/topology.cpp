@@ -111,6 +111,35 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
     return inBlock;
 }
 
+int ParticleSequencer::operator()(const std::string&  moleculeName,
+                                  int                 moleculeNr,
+                                  const ResidueName&  residueName,
+                                  const ParticleName& particleName)
+{
+    return data_[moleculeName][moleculeNr][residueName][particleName];
+}
+
+void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& moleculesList)
+{
+    int currentID = 0;
+    for (auto& molNumberTuple : moleculesList)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
+
+        auto& moleculeMap = data_[molecule.name()];
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            auto& moleculeNrMap = moleculeMap[i];
+            for (int j = 0; j < molecule.numParticlesInMolecule(); ++j)
+            {
+                moleculeNrMap[molecule.residueName(j)][molecule.particleName(j)] = currentID++;
+            }
+        }
+    }
+}
+
 } // namespace detail
 
 TopologyBuilder::TopologyBuilder() : numParticles_(0) {}
@@ -189,6 +218,7 @@ Topology TopologyBuilder::buildTopology()
         return data.charge_;
     });
 
+    // map unique ParticleTypes to IDs
     std::unordered_map<std::string, int> nameToId;
     for (auto& name_particleType_tuple : particleTypes_)
     {
@@ -201,6 +231,10 @@ Topology TopologyBuilder::buildTopology()
                 ignore_unused(map);
                 return nameToId[data.particleTypeName_];
             });
+
+    detail::ParticleSequencer particleSequencer;
+    particleSequencer.build(molecules_);
+    topology_.particleSequencer_ = std::move(particleSequencer);
 
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
@@ -232,7 +266,7 @@ TopologyBuilder& TopologyBuilder::addMolecule(const Molecule& molecule, const in
      * 2. Append exclusion list into the data structure
      */
 
-    molecules_.emplace_back(std::make_tuple(molecule, nMolecules));
+    molecules_.emplace_back(molecule, nMolecules);
     numParticles_ += nMolecules * molecule.numParticlesInMolecule();
 
     for (const auto& name_type_tuple : molecule.particleTypes_)
@@ -279,6 +313,11 @@ const std::vector<ParticleType>& Topology::getParticleTypes() const
 const std::vector<int>& Topology::getParticleTypeIdOfAllParticles() const
 {
     return particleTypeIdOfAllParticles_;
+}
+
+int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName)
+{
+    return particleSequencer_(moleculeName, moleculeNr, residueName, particleName);
 }
 
 const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const

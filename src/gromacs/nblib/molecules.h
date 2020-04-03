@@ -73,8 +73,8 @@ class Molecule
     {
         using type = Bond;
 
-        std::unordered_map<Name, Bond>                            interactionTypes_;
-        std::vector<std::tuple<ParticleName, ParticleName, Name>> interactions_;
+        std::unordered_map<Name, Bond> interactionTypes_;
+        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName, Name>> interactions_;
     };
 
     using InteractionTuple =
@@ -128,15 +128,17 @@ public:
     //! add various types of interactions to the molecule
     //! Note: adding an interaction type not listed in InteractionTuple in this class results in a compilation error
     template<class Interaction>
-    void addInteraction(ParticleName particleNameI, ParticleName particleNameJ, Interaction interaction)
-    {
-        auto& interactionContainer = pickType<Interaction>(interactionData_);
-        interactionContainer.interactions_.emplace_back(particleNameI, particleNameJ, interaction.name());
-        if (interactionContainer.interactionTypes_.count(interaction.name()) == 0)
-        {
-            interactionContainer.interactionTypes_[interaction.name()] = std::move(interaction);
-        }
-    }
+    void addInteraction(const ParticleName& particleNameI,
+                        const ResidueName&  residueNameI,
+                        const ParticleName& particleNameJ,
+                        const ResidueName&  residueNameJ,
+                        Interaction         interaction);
+
+    // add interactions with default residue name
+    template<class Interaction>
+    void addInteraction(const ParticleName& particleNameI,
+                        const ParticleName& particleNameJ,
+                        Interaction         interaction);
 
     // The number of molecules
     int numParticlesInMolecule() const;
@@ -148,8 +150,17 @@ public:
     // returns a sorted vector containing no duplicates of particles to exclude by indices
     std::vector<std::tuple<int, int>> getExclusions() const;
 
-    //! return all interactions stored in Molecule
+    // return all interactions stored in Molecule
     const InteractionTuple& interactionData() const;
+
+    // return name of ith particle
+    const ParticleName& particleName(int i) const;
+
+    // return name of ith residue
+    const ResidueName& residueName(int i) const;
+
+    // The molecule name
+    std::string name() const;
 
     friend class TopologyBuilder;
 
@@ -180,6 +191,11 @@ private:
 
     //! collection of data for all types of interactions
     InteractionTuple interactionData_;
+
+    // force code generation for all BondTypes listed in the Interaction tuple
+    // compared to explict template declaration + definition, we don't have to repeat the list of
+    // templates this never gets called
+    void instantiateInteractions();
 };
 
 } // namespace nblib

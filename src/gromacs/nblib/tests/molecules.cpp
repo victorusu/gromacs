@@ -235,23 +235,26 @@ TEST(NBlibTest, MoleculeNoThrowsSameParticleTypeName)
 
 TEST(NBlibTest, CanAddInteractions)
 {
-    WaterMoleculeBuilder waterMolecule;
-    Molecule             water = waterMolecule.waterMolecule();
+    Molecule     molecule("BondTest");
+    ParticleType O(ParticleName("Ow"), Mass(1), C6(2), C12(3));
+    ParticleType H(ParticleName("Hw"), Mass(1), C6(2), C12(3));
+    molecule.addParticle(ParticleName("O"), O);
+    molecule.addParticle(ParticleName("H1"), H);
+    molecule.addParticle(ParticleName("H2"), H);
 
     HarmonicBondType hb("hb1", 1, 2);
     CubicBondType    cub("cub", 1, 2, 3);
 
-    water.addInteraction("O", "H1", hb);
-    water.addInteraction("O", "H2", hb);
-    water.addInteraction("H1", "H2", cub);
+    molecule.addInteraction("O", "H1", hb);
+    molecule.addInteraction("O", "H2", hb);
+    molecule.addInteraction("H1", "H2", cub);
 
-    const auto& interactionData = water.interactionData();
+    const auto& interactionData = molecule.interactionData();
 
     //! harmonic bonds
-    EXPECT_EQ(pickType<HarmonicBondType>(interactionData).interactionTypes_.size(), 1);
     EXPECT_EQ(pickType<HarmonicBondType>(interactionData).interactions_.size(), 2);
     //! cubic bonds
-    EXPECT_EQ(pickType<CubicBondType>(interactionData).interactionTypes_.size(), 1);
+    EXPECT_EQ(pickType<CubicBondType>(interactionData).interactions_.size(), 1);
 }
 
 } // namespace

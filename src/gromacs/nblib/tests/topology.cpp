@@ -181,6 +181,19 @@ TEST(NBlibTest, TopologyHasExclusions)
     compareLists(testExclusions, refExclusions);
 }
 
+TEST(NBlibTest, TopologyHasSequencing)
+{
+    WaterTopology waters;
+    Topology      watersTopology = waters.buildTopology(2);
+
+    EXPECT_EQ(0, watersTopology.sequenceID("SOL", 0, "SOL", "Oxygen"));
+    EXPECT_EQ(1, watersTopology.sequenceID("SOL", 0, "SOL", "H1"));
+    EXPECT_EQ(2, watersTopology.sequenceID("SOL", 0, "SOL", "H2"));
+    EXPECT_EQ(3, watersTopology.sequenceID("SOL", 1, "SOL", "Oxygen"));
+    EXPECT_EQ(4, watersTopology.sequenceID("SOL", 1, "SOL", "H1"));
+    EXPECT_EQ(5, watersTopology.sequenceID("SOL", 1, "SOL", "H2"));
+}
+
 TEST(NBlibTest, TopologyHasNonbondedParameters)
 {
     WaterTopology waters;
@@ -198,21 +211,6 @@ TEST(NBlibTest, TopologyHasNonbondedParameters)
     EXPECT_EQ(refC6, testC6);
     EXPECT_EQ(refC12, testC12);
 }
-
-//! Todo: this belongs to ForceCalculator
-// TEST(NBlibTest, TopologyHasParticlesInfoAllVdw)
-//{
-//    TwoWaterMolecules      waters;
-//    Topology               watersTopology = waters.buildTopology();
-//    const std::vector<int> test           = watersTopology.getParticleInfoAllVdw();
-//    std::vector<int>       ref;
-//    ref.resize(watersTopology.numParticles());
-//    for (size_t particleI = 0; particleI < ref.size(); particleI++)
-//    {
-//        SET_CGINFO_HAS_VDW(ref[particleI]);
-//    }
-//    EXPECT_EQ(ref, test);
-//}
 
 TEST(NBlibTest, toGmxExclusionBlockWorks)
 {

@@ -57,6 +57,11 @@ namespace nblib
 
 Molecule::Molecule(std::string moleculeName) : name_(std::move(moleculeName)) {}
 
+std::string Molecule::name() const
+{
+    return name_;
+}
+
 Molecule& Molecule::addParticle(const ParticleName& particleName,
                                 const ResidueName&  residueName,
                                 const Charge&       charge,
@@ -81,7 +86,7 @@ Molecule& Molecule::addParticle(const ParticleName& particleName,
 
     //! Add self exclusion. We just added the particle, so we know its index and that the exclusion doesn't exist yet
     std::size_t id = particles_.size() - 1;
-    exclusions_.emplace_back(std::make_tuple(id, id));
+    exclusions_.emplace_back(id, id);
 
     return *this;
 }
@@ -111,6 +116,46 @@ Molecule& Molecule::addParticle(const ParticleName& particleName, const Particle
     addParticle(particleName, name_, charge, particleType);
 
     return *this;
+}
+
+template<class Interaction>
+void Molecule::addInteraction(const ParticleName& particleNameI,
+                              const ResidueName&  residueNameI,
+                              const ParticleName& particleNameJ,
+                              const ResidueName&  residueNameJ,
+                              Interaction         interaction)
+{
+    auto& interactionContainer = pickType<Interaction>(interactionData_);
+    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
+                                                    residueNameJ, interaction.name());
+    interactionContainer.interactionTypes_.insert(
+            std::make_pair(interaction.name(), std::move(interaction)));
+}
+
+// add interactions with default residue name
+template<class Interaction>
+void Molecule::addInteraction(const ParticleName& particleNameI,
+                              const ParticleName& particleNameJ,
+                              Interaction         interaction)
+{
+    addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
+}
+
+void Molecule::instantiateInteractions()
+{
+    // Note: this never gets called, but forces template instantiations of this->addInteraction for
+    // all types defined in the header
+
+    // if executed, this lambda creates an instance of the "type" defined in the type of its
+    // argument and calls this->addInteraction with this instance
+    auto addEmptyInteraction = [this](auto interactionContainer) {
+        this->addInteraction("", "", typename decltype(interactionContainer)::type{});
+    };
+
+    // execute addEmptyInteraction for each element in interactionData_
+    std17::apply([f = addEmptyInteraction](
+                         auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; },
+                 interactionData_);
 }
 
 int Molecule::numParticlesInMolecule() const
@@ -151,6 +196,16 @@ const Molecule::InteractionTuple& Molecule::interactionData() const
 const ParticleType& Molecule::at(const std::string& particleTypeName) const
 {
     return particleTypes_.at(particleTypeName);
+}
+
+const ParticleName& Molecule::particleName(int i) const
+{
+    return particles_[i].particleName_;
+}
+
+const ResidueName& Molecule::residueName(int i) const
+{
+    return particles_[i].residueName_;
 }
 
 std::vector<std::tuple<int, int>> Molecule::getExclusions() const

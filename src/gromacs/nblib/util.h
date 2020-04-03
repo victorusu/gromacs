@@ -232,5 +232,4 @@ auto binary_fold(Op&& op, First&& first, Ts&&... args)
 
 } // namespace nblib
 
-
 #endif // GROMACS_UTIL_H
