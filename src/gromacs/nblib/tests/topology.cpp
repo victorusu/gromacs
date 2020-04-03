@@ -346,7 +346,6 @@ TEST(NBlibTest, TopologyListedInteractionsMultipleTypes)
 
     CubicBondType testBond("test", 1., 1., 1.);
 
-    // Invalid input: no particle named "Iron" in molecule water
     water.addInteraction("H1", "H2", testBond);
 
     ParticleTypesInteractions nbInteractions;
