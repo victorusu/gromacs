@@ -71,7 +71,7 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
 //! Helper class for Topology to keep track of particle IDs
-class EnumerationKey
+class ParticleSequencer
 {
     // store by (molecule name, molecule nr, residue name, particle name)
     using DataType =
@@ -79,7 +79,7 @@ class EnumerationKey
 
 public:
     //! build sequence from a list of molecules
-    void enumerate(const std::vector<std::tuple<Molecule, int>>&);
+    void build(const std::vector<std::tuple<Molecule, int>>& moleculesList);
 
     //! access ID by (molecule name, molecule nr, residue name, particle name)
     int operator()(const std::string&, int, const ResidueName&, const ParticleName&);
@@ -141,7 +141,7 @@ private:
     //! Information about exclusions.
     gmx::ListOfLists<int> exclusions_;
     //! Associate molecule, residue and particle names with sequence numbers
-    detail::EnumerationKey enumerationKey_;
+    detail::ParticleSequencer particleSequencer_;
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
     //! Combination Rule used to generate the nonbonded interactions

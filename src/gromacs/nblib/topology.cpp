@@ -111,15 +111,15 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
     return inBlock;
 }
 
-int EnumerationKey::operator()(const std::string&  moleculeName,
-                               int                 moleculeNr,
-                               const ResidueName&  residueName,
-                               const ParticleName& particleName)
+int ParticleSequencer::operator()(const std::string&  moleculeName,
+                                  int                 moleculeNr,
+                                  const ResidueName&  residueName,
+                                  const ParticleName& particleName)
 {
     return data_[moleculeName][moleculeNr][residueName][particleName];
 }
 
-void EnumerationKey::enumerate(const std::vector<std::tuple<Molecule, int>>& moleculesList)
+void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& moleculesList)
 {
     int currentID = 0;
     for (auto& molNumberTuple : moleculesList)
@@ -232,9 +232,9 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
-    detail::EnumerationKey enumerationKey;
-    enumerationKey.enumerate(molecules_);
-    topology_.enumerationKey_ = std::move(enumerationKey);
+    detail::ParticleSequencer particleSequencer;
+    particleSequencer.build(molecules_);
+    topology_.particleSequencer_ = std::move(particleSequencer);
 
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
@@ -317,7 +317,7 @@ const std::vector<int>& Topology::getParticleTypeIdOfAllParticles() const
 
 int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName)
 {
-    return enumerationKey_(moleculeName, moleculeNr, residueName, particleName);
+    return particleSequencer_(moleculeName, moleculeNr, residueName, particleName);
 }
 
 const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
