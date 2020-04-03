@@ -228,7 +228,7 @@ private:
 
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>
-    std::vector<T> extractParticleTypeQuantity(Extractor extractor);
+    std::vector<T> extractParticleTypeQuantity(Extractor&& extractor);
 
     //! distinct collection of ParticleTypes
     std::unordered_map<std::string, ParticleType> particleTypes_;
@@ -240,7 +240,7 @@ private:
 //! utility function to extract Particle quantities and expand them to the full
 //! array of length numParticles()
 template<class F>
-inline auto expandQuantity(const Topology& topology, F particleTypeExtractor)
+inline auto expandQuantity(const Topology& topology, F&& particleTypeExtractor)
 {
     using ValueType = decltype((std::declval<ParticleType>().*std::declval<F>())());
 

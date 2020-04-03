@@ -324,7 +324,7 @@ Topology::InteractionData TopologyBuilder::createInteractionData(const detail::P
 }
 
 template<typename T, class Extractor>
-std::vector<T> TopologyBuilder::extractParticleTypeQuantity(Extractor extractor)
+std::vector<T> TopologyBuilder::extractParticleTypeQuantity(Extractor&& extractor)
 {
     auto& moleculesList = molecules_;
 
