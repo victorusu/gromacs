@@ -339,6 +339,51 @@ TEST(NBlibTest, TopologyListedInteractions)
                            begin(interactions_test)));
 }
 
+TEST(NBlibTest, TopologyListedInteractionsMultipleTypes)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    CubicBondType testBond("test", 1., 1., 1.);
+
+    // Invalid input: no particle named "Iron" in molecule water
+    water.addInteraction("H1", "H2", testBond);
+
+    ParticleTypesInteractions nbInteractions;
+    std::vector<std::string>  particleTypeNames = { "Ow", "H", "OMet", "CMet" };
+    for (const auto& name : particleTypeNames)
+    {
+        nbInteractions.add(name, 0, 0);
+    }
+
+    TopologyBuilder topologyBuilder;
+    topologyBuilder.addMolecule(water, 1);
+    topologyBuilder.addMolecule(methanol, 1);
+    topologyBuilder.addParticleTypesInteractions(nbInteractions);
+
+    Topology topology = topologyBuilder.buildTopology();
+
+    auto  interactionData = topology.getInteractionData();
+    auto& harmonicBonds   = pickType<HarmonicBondType>(interactionData);
+    auto& cubicBonds      = pickType<CubicBondType>(interactionData);
+
+    HarmonicBondType              ohBond("oh", 1., 1.);
+    HarmonicBondType              ohBondMethanol("oh", 1.01, 1.02);
+    HarmonicBondType              ometBond("omet", 1.1, 1.2);
+    std::vector<HarmonicBondType> harmonicBondsReference{ ohBond, ohBondMethanol, ometBond };
+
+    EXPECT_EQ(harmonicBonds.bondInstances, harmonicBondsReference);
+
+    int H1 = topology.sequenceID("SOL", 0, "SOL", "H1");
+    int H2 = topology.sequenceID("SOL", 0, "SOL", "H2");
+
+    std::vector<CubicBondType>             cubicBondsReference{ testBond };
+    std::vector<std::tuple<int, int, int>> cubicIndicesReference{ std::make_tuple(
+            std::min(H1, H2), std::max(H1, H2), 0) };
+    EXPECT_EQ(cubicBondsReference, cubicBonds.bondInstances);
+    EXPECT_EQ(cubicIndicesReference, cubicBonds.indices);
+}
+
 TEST(NBlibTest, TopologyInvalidParticleInInteractionThrows)
 {
     Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
@@ -349,9 +394,17 @@ TEST(NBlibTest, TopologyInvalidParticleInInteractionThrows)
     // Invalid input: no particle named "Iron" in molecule water
     water.addInteraction("H1", "Iron", testBond);
 
+    ParticleTypesInteractions nbInteractions;
+    std::vector<std::string>  particleTypeNames = { "Ow", "H", "OMet", "CMet" };
+    for (const auto& name : particleTypeNames)
+    {
+        nbInteractions.add(name, 0, 0);
+    }
+
     TopologyBuilder topologyBuilder;
     topologyBuilder.addMolecule(water, 1);
     topologyBuilder.addMolecule(methanol, 1);
+    topologyBuilder.addParticleTypesInteractions(nbInteractions);
 
     EXPECT_THROW(topologyBuilder.buildTopology(), gmx::InvalidInputError);
 }

@@ -300,25 +300,33 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
 
 Topology::InteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
 {
+    auto create = [](auto& output, const auto& molecules, const auto& sequencer) {
+        using BondType = typename std::decay_t<decltype(output)>::type;
+        auto uniqueData = detail::eliminateDuplicateBonds(detail::aggregateBonds<BondType>(molecules));
+        auto& uniqueIndices       = std::get<0>(uniqueData);
+        auto& uniqueBondInstances = std::get<1>(uniqueData);
+
+        // add data about BondType instances
+        output.bondInstances = uniqueBondInstances;
+
+        // add data about interaction pair indices
+        auto& indexTriples = output.indices;
+        indexTriples.resize(uniqueIndices.size());
+        auto pairIndices = detail::sequencePairIDs<BondType>(molecules, sequencer);
+        std::transform(begin(pairIndices), end(pairIndices), begin(uniqueIndices),
+                       begin(indexTriples), [](auto pairIndex, auto bondIndex) {
+                           return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
+                       });
+    };
+
     Topology::InteractionData interactionData;
 
-    // TODO: repeat for all BondTypes
-    auto uniqueData =
-            detail::eliminateDuplicateBonds(detail::aggregateBonds<HarmonicBondType>(this->molecules_));
-    auto& uniqueIndices       = std::get<0>(uniqueData);
-    auto& uniqueBondInstances = std::get<1>(uniqueData);
-
-    // add data about BondType instances
-    pickType<HarmonicBondType>(interactionData).bondInstances = uniqueBondInstances;
-
-    // add data about interaction pair indices
-    auto& indexTriples = pickType<HarmonicBondType>(interactionData).indices;
-    indexTriples.resize(uniqueIndices.size());
-    auto pairIndices = detail::sequencePairIDs<HarmonicBondType>(this->molecules_, particleSequencer);
-    std::transform(begin(pairIndices), end(pairIndices), begin(uniqueIndices), begin(indexTriples),
-                   [](auto pairIndex, auto bondIndex) {
-                       return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
-                   });
+    // inject molecule_ and particleSequencer arguments
+    auto create_this = [this, &particleSequencer, f = create](auto& output) {
+        f(output, this->molecules_, particleSequencer);
+    };
+    // call for all BondTypes
+    for_each_tuple(create_this, interactionData);
 
     return interactionData;
 }
