@@ -82,7 +82,7 @@ template<class B>
 std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& aggregatedBonds);
 
 //! Helper class for Topology to keep track of particle IDs
-class EnumerationKey
+class ParticleSequencer
 {
     // store by (molecule name, molecule nr, residue name, particle name)
     using DataType =
@@ -90,7 +90,7 @@ class EnumerationKey
 
 public:
     //! build sequence from a list of molecules
-    void enumerate(const std::vector<std::tuple<Molecule, int>>&);
+    void build(const std::vector<std::tuple<Molecule, int>>& moleculesList);
 
     //! access ID by (molecule name, molecule nr, residue name, particle name)
     int operator()(const std::string&, int, const ResidueName&, const ParticleName&) const;
@@ -101,7 +101,7 @@ private:
 
 template<class B>
 std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>&,
-                                                  const detail::EnumerationKey&);
+                                                  const detail::ParticleSequencer&);
 
 } // namespace detail
 
@@ -171,7 +171,7 @@ private:
     //! Information about exclusions.
     gmx::ListOfLists<int> exclusions_;
     //! Associate molecule, residue and particle names with sequence numbers
-    detail::EnumerationKey enumerationKey_;
+    detail::ParticleSequencer particleSequencer_;
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
     //! data about bonds for all supported types
@@ -224,7 +224,7 @@ private:
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
     // Gather interaction data from molecules
-    Topology::InteractionData createInteractionData(const detail::EnumerationKey&);
+    Topology::InteractionData createInteractionData(const detail::ParticleSequencer&);
 
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>

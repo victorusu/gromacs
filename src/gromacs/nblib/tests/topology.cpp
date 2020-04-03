@@ -223,20 +223,20 @@ TEST(NBlibTest, TopologyCanSequencePairIDs)
 
     std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
                                                       std::make_tuple(methanol, 1) };
-    detail::EnumerationKey                 enumerationKey;
-    enumerationKey.enumerate(molecules);
-    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, enumerationKey);
+    detail::ParticleSequencer              particleSequencer;
+    particleSequencer.build(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, particleSequencer);
 
-    int Ow1 = enumerationKey("SOL", 0, "SOL", "Oxygen");
-    int H11 = enumerationKey("SOL", 0, "SOL", "H1");
-    int H12 = enumerationKey("SOL", 0, "SOL", "H2");
-    int Ow2 = enumerationKey("SOL", 1, "SOL", "Oxygen");
-    int H21 = enumerationKey("SOL", 1, "SOL", "H1");
-    int H22 = enumerationKey("SOL", 1, "SOL", "H2");
+    int Ow1 = particleSequencer("SOL", 0, "SOL", "Oxygen");
+    int H11 = particleSequencer("SOL", 0, "SOL", "H1");
+    int H12 = particleSequencer("SOL", 0, "SOL", "H2");
+    int Ow2 = particleSequencer("SOL", 1, "SOL", "Oxygen");
+    int H21 = particleSequencer("SOL", 1, "SOL", "H1");
+    int H22 = particleSequencer("SOL", 1, "SOL", "H2");
 
-    int Me  = enumerationKey("MeOH", 0, "MeOH", "Me1");
-    int MeO = enumerationKey("MeOH", 0, "MeOH", "O2");
-    int MeH = enumerationKey("MeOH", 0, "MeOH", "H3");
+    int Me  = particleSequencer("MeOH", 0, "MeOH", "Me1");
+    int MeO = particleSequencer("MeOH", 0, "MeOH", "O2");
+    int MeH = particleSequencer("MeOH", 0, "MeOH", "H3");
 
 #define SORT(i, j) (i < j) ? i : j, (i < j) ? j : i
 
@@ -255,12 +255,12 @@ TEST(NBlibTest, TopologySequenceIdThrows)
 
     std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
                                                       std::make_tuple(methanol, 1) };
-    detail::EnumerationKey                 enumerationKey;
-    enumerationKey.enumerate(molecules);
-    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, enumerationKey);
+    detail::ParticleSequencer              particleSequencer;
+    particleSequencer.build(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, particleSequencer);
 
     // Input error: no particle called O-Atom in molecule "water"
-    EXPECT_THROW(enumerationKey("SOL", 0, "SOL", "O-Atom"), gmx::InvalidInputError);
+    EXPECT_THROW(particleSequencer("SOL", 0, "SOL", "O-Atom"), gmx::InvalidInputError);
 }
 
 TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)

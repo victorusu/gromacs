@@ -112,10 +112,10 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
     return inBlock;
 }
 
-int EnumerationKey::operator()(const std::string&  moleculeName,
-                               int                 moleculeNr,
-                               const ResidueName&  residueName,
-                               const ParticleName& particleName) const
+int ParticleSequencer::operator()(const std::string&  moleculeName,
+                                  int                 moleculeNr,
+                                  const ResidueName&  residueName,
+                                  const ParticleName& particleName) const
 {
     try
     {
@@ -136,7 +136,7 @@ int EnumerationKey::operator()(const std::string&  moleculeName,
     };
 }
 
-void EnumerationKey::enumerate(const std::vector<std::tuple<Molecule, int>>& moleculesList)
+void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& moleculesList)
 {
     int currentID = 0;
     for (auto& molNumberTuple : moleculesList)
@@ -178,7 +178,7 @@ std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>& mole
 
 template<class B>
 std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>& molecules,
-                                                  const detail::EnumerationKey& enumerationKey)
+                                                  const detail::ParticleSequencer& particleSequencer)
 {
     std::vector<std::tuple<int, int>> interactionPairIDs;
     for (auto& molNumberTuple : molecules)
@@ -191,10 +191,10 @@ std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<M
             auto& interactions = pickType<B>(molecule.interactionData()).interactions_;
             for (const auto& interactionPair : interactions)
             {
-                int id1 = enumerationKey(molecule.name(), i, std::get<1>(interactionPair),
-                                         std::get<0>(interactionPair));
-                int id2 = enumerationKey(molecule.name(), i, std::get<3>(interactionPair),
-                                         std::get<2>(interactionPair));
+                int id1 = particleSequencer(molecule.name(), i, std::get<1>(interactionPair),
+                                            std::get<0>(interactionPair));
+                int id2 = particleSequencer(molecule.name(), i, std::get<3>(interactionPair),
+                                            std::get<2>(interactionPair));
                 interactionPairIDs.emplace_back(std::min(id1, id2), std::max(id1, id2));
             }
         }
@@ -298,7 +298,7 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
-Topology::InteractionData TopologyBuilder::createInteractionData(const detail::EnumerationKey& enumerationKey)
+Topology::InteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
 {
     Topology::InteractionData interactionData;
 
@@ -314,7 +314,7 @@ Topology::InteractionData TopologyBuilder::createInteractionData(const detail::E
     // add data about interaction pair indices
     auto& indexTriples = pickType<HarmonicBondType>(interactionData).indices;
     indexTriples.resize(uniqueIndices.size());
-    auto pairIndices = detail::sequencePairIDs<HarmonicBondType>(this->molecules_, enumerationKey);
+    auto pairIndices = detail::sequencePairIDs<HarmonicBondType>(this->molecules_, particleSequencer);
     std::transform(begin(pairIndices), end(pairIndices), begin(uniqueIndices), begin(indexTriples),
                    [](auto pairIndex, auto bondIndex) {
                        return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
@@ -373,14 +373,14 @@ Topology TopologyBuilder::buildTopology()
                 return nameToId[data.particleTypeName_];
             });
 
-    detail::EnumerationKey enumerationKey;
-    enumerationKey.enumerate(molecules_);
-    topology_.enumerationKey_ = std::move(enumerationKey);
+    detail::ParticleSequencer particleSequencer;
+    particleSequencer.build(molecules_);
+    topology_.particleSequencer_ = std::move(particleSequencer);
 
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
 
-    topology_.interactionData_ = createInteractionData(topology_.enumerationKey_);
+    topology_.interactionData_ = createInteractionData(topology_.particleSequencer_);
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes
@@ -460,7 +460,7 @@ const std::vector<int>& Topology::getParticleTypeIdOfAllParticles() const
 
 int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName residueName, ParticleName particleName)
 {
-    return enumerationKey_(moleculeName, moleculeNr, residueName, particleName);
+    return particleSequencer_(moleculeName, moleculeNr, residueName, particleName);
 }
 
 const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
