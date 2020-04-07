@@ -44,7 +44,8 @@
 
 #include "gmxsetup.h"
 
-#include "gromacs/compat/optional.h"
+#include <external/nonstd/optional.hpp>
+
 #include "gromacs/ewald/ewald_utils.h"
 #include "gromacs/gmxlib/nrnb.h"
 #include "gromacs/math/units.h"
@@ -79,7 +80,7 @@ static Nbnxm::KernelType translateBenchmarkEnum(const BenchMarkKernels& kernel)
  *
  * Returns an error string when the kernel is not available.
  */
-static gmx::compat::optional<std::string> checkKernelSetup(const NBKernelOptions& options)
+static nonstd::optional<std::string> checkKernelSetup(const NBKernelOptions& options)
 {
     GMX_RELEASE_ASSERT(options.nbnxmSimd < BenchMarkKernels::Count
                                && options.nbnxmSimd != BenchMarkKernels::SimdAuto,

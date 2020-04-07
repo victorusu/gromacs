@@ -38,47 +38,4 @@
 # \author Sebastian Keller <keller@cscs.ch>
 #
 
-# Make a static library for test infrastructure code that we re-use
-# in multiple test executables across the repository.
-gmx_add_unit_test_library(nblib_test_infrastructure
-  testhelpers.cpp
-  testsystems.cpp
-    )
-target_include_directories(nblib_test_infrastructure SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/src/external)
-
-set(testname "NbLibSetupTests")
-set(exename "nblib-setup-test")
-
-gmx_add_gtest_executable(
-    ${exename}
-    # files with code for tests
-    integrator.cpp
-    particletype.cpp
-    molecules.cpp
-    box.cpp
-    bondtypes.cpp
-    util.cpp
-    topology.cpp
-    interactions.cpp
-    # pseudo-library for code for mdrun
-    #$<TARGET_OBJECTS:nblib_objlib>
-    )
-target_link_libraries(${exename} PRIVATE nblib_test_infrastructure nblib)
-gmx_register_gtest_test(${testname} ${exename} OPENMP_THREADS 1 INTEGRATION_TEST)
-
-
-set(testname "NbLibTests")
-set(exename "nblib-test")
-
-gmx_add_gtest_executable(
-    ${exename}
-    # files with code for tests
-    simstate.cpp
-    nbkernelsystem.cpp
-    nbnxnsetup.cpp
-    gmxcalculator.cpp
-    # pseudo-library for code for mdrun
-    #$<TARGET_OBJECTS:nblib_objlib>
-    )
-target_link_libraries(${exename} PRIVATE nblib_test_infrastructure nblib)
-gmx_register_gtest_test(${testname} ${exename} OPENMP_THREADS 1 INTEGRATION_TEST)
+add_subdirectory(fmt)

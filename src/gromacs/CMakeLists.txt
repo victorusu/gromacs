@@ -259,6 +259,8 @@ a clFFT package, or use the latest GROMACS 2018 point release.")
     endif()
 endif()
 
+target_sources(libgromacs PRIVATE nblib)
+
 # Permit GROMACS code to include externally developed headers, such as
 # the functionality from the nonstd project that we use for
 # gmx::compat::optional. These are included as system headers so that
