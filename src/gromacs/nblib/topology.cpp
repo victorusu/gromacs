@@ -123,16 +123,18 @@ int ParticleSequencer::operator()(const std::string&  moleculeName,
     }
     catch (const std::out_of_range& outOfRange)
     {
-        // printf("%s, %d, %s, %s not found", moleculeName.c_str(), moleculeNr, residueName.c_str(), particleName.c_str()) ;
-        std::ostringstream os;
-        os << "No particle " << particleName;
-        if (particleName != residueName)
+        // TODO: use string format function once we have it
+        if (moleculeName != residueName)
         {
-            os << " in residue " << residueName;
+            printf("No particle %s in residue %s in molecule %s found", particleName.c_str(),
+                   residueName.c_str(), moleculeName.c_str());
         }
-        os << " in molecule " << moleculeName << " nr " << moleculeNr << " found";
+        else
+        {
+            printf("No particle %s in molecule %s found", particleName.c_str(), moleculeName.c_str());
+        }
 
-        throw gmx::InvalidInputError(os.str());
+        throw gmx::InvalidInputError(outOfRange.what());
     };
 }
 
@@ -158,9 +160,9 @@ void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& mole
 }
 
 template<class B>
-std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>& molecules)
+std::vector<B> collectBonds(const std::vector<std::tuple<Molecule, int>>& molecules)
 {
-    std::vector<B> aggregatedBonds;
+    std::vector<B> collectedBonds;
     for (auto& molNumberTuple : molecules)
     {
         const Molecule& molecule = std::get<0>(molNumberTuple);
@@ -169,18 +171,21 @@ std::vector<B> aggregateBonds(const std::vector<std::tuple<Molecule, int>>& mole
         for (size_t i = 0; i < numMols; ++i)
         {
             auto& interactions = pickType<B>(molecule.interactionData()).interactionTypes_;
-            std::copy(std::begin(interactions), std::end(interactions),
-                      std::back_inserter(aggregatedBonds));
+            std::copy(std::begin(interactions), std::end(interactions), std::back_inserter(collectedBonds));
         }
     }
-    return aggregatedBonds;
+    return collectedBonds;
 }
 
+//! for each interaction, translate the (moleculeName, nr, residueName, particleName)-pair
+//! to particle sequence ID pairs
 template<class B>
 std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>& molecules,
                                                   const detail::ParticleSequencer& particleSequencer)
 {
     std::vector<std::tuple<int, int>> interactionPairIDs;
+
+    // loop over all molecules
     for (auto& molNumberTuple : molecules)
     {
         const Molecule& molecule = std::get<0>(molNumberTuple);
@@ -191,10 +196,15 @@ std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<M
             auto& interactions = pickType<B>(molecule.interactionData()).interactions_;
             for (const auto& interactionPair : interactions)
             {
+                // the particle sequence ID of the first particle
                 int id1 = particleSequencer(molecule.name(), i, std::get<1>(interactionPair),
                                             std::get<0>(interactionPair));
+                // the particle sequence ID of the second particle
                 int id2 = particleSequencer(molecule.name(), i, std::get<3>(interactionPair),
                                             std::get<2>(interactionPair));
+
+                // we choose to store the lower sequence ID first. this allows for better unit tests
+                // that are agnostic to how the input was set up
                 interactionPairIDs.emplace_back(std::min(id1, id2), std::max(id1, id2));
             }
         }
@@ -300,33 +310,33 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
 
 Topology::InteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
 {
-    auto create = [](auto& output, const auto& molecules, const auto& sequencer) {
-        using BondType = typename std::decay_t<decltype(output)>::type;
-        auto uniqueData = detail::eliminateDuplicateBonds(detail::aggregateBonds<BondType>(molecules));
-        auto& uniqueIndices       = std::get<0>(uniqueData);
-        auto& uniqueBondInstances = std::get<1>(uniqueData);
+    Topology::InteractionData interactionData;
+
+    // this code is doing the compile time equivalent of
+    // for (int i = 0; i < interactionData.size(); ++i)
+    //     create(get<i>(interactionData));
+
+    auto create = [this, &particleSequencer](auto& interactionDataElement) {
+        using BondType = typename std::decay_t<decltype(interactionDataElement)>::type;
+        auto compressedData =
+                detail::eliminateDuplicateBonds(detail::collectBonds<BondType>(this->molecules_));
+        auto& bondIndices         = std::get<0>(compressedData);
+        auto& uniqueBondInstances = std::get<1>(compressedData);
 
         // add data about BondType instances
-        output.bondInstances = uniqueBondInstances;
+        interactionDataElement.bondInstances = std::move(uniqueBondInstances);
 
-        // add data about interaction pair indices
-        auto& indexTriples = output.indices;
-        indexTriples.resize(uniqueIndices.size());
-        auto pairIndices = detail::sequencePairIDs<BondType>(molecules, sequencer);
-        std::transform(begin(pairIndices), end(pairIndices), begin(uniqueIndices),
-                       begin(indexTriples), [](auto pairIndex, auto bondIndex) {
+        interactionDataElement.indices.resize(bondIndices.size());
+        // pairIndices contains the particle sequence IDs (i,j) of all interaction pairs of type <BondType>
+        auto pairIndices = detail::sequencePairIDs<BondType>(this->molecules_, particleSequencer);
+        // zip pairIndices (i,j) with the bondIndices to give the output (i,j,bondIndex) triples
+        std::transform(begin(pairIndices), end(pairIndices), begin(bondIndices),
+                       begin(interactionDataElement.indices), [](auto pairIndex, auto bondIndex) {
                            return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
                        });
     };
 
-    Topology::InteractionData interactionData;
-
-    // inject molecule_ and particleSequencer arguments
-    auto create_this = [this, &particleSequencer, f = create](auto& output) {
-        f(output, this->molecules_, particleSequencer);
-    };
-    // call for all BondTypes
-    for_each_tuple(create_this, interactionData);
+    for_each_tuple(create, interactionData);
 
     return interactionData;
 }

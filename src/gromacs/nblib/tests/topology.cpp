@@ -201,7 +201,7 @@ TEST(NBlibTest, TopologyCanAggregateBonds)
 
     std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
                                                       std::make_tuple(methanol, 1) };
-    std::vector<HarmonicBondType> bonds = detail::aggregateBonds<HarmonicBondType>(molecules);
+    std::vector<HarmonicBondType> bonds = detail::collectBonds<HarmonicBondType>(molecules);
 
     std::vector<HarmonicBondType> waterBonds =
             pickType<HarmonicBondType>(water.interactionData()).interactionTypes_;
