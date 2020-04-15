@@ -201,7 +201,14 @@ TEST(NBlibTest, TopologyCanAggregateBonds)
 
     std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
                                                       std::make_tuple(methanol, 1) };
-    std::vector<HarmonicBondType> bonds = detail::collectBonds<HarmonicBondType>(molecules);
+    std::vector<HarmonicBondType>          bonds;
+    std::vector<size_t>                    bondsExpansion;
+    std::tie(bondsExpansion, bonds) = detail::collectBonds<HarmonicBondType>(molecules);
+
+    std::vector<HarmonicBondType> bondsTest;
+    // use the expansionArray (bondsExpansion) to expand to the full list if bonds
+    std::transform(begin(bondsExpansion), end(bondsExpansion), std::back_inserter(bondsTest),
+                   [&bonds](size_t i) { return bonds[i]; });
 
     std::vector<HarmonicBondType> waterBonds =
             pickType<HarmonicBondType>(water.interactionData()).interactionTypes_;
@@ -213,7 +220,7 @@ TEST(NBlibTest, TopologyCanAggregateBonds)
     std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bondsReference));
     std::copy(begin(methanolBonds), end(methanolBonds), std::back_inserter(bondsReference));
 
-    EXPECT_EQ(bonds, bondsReference);
+    EXPECT_EQ(bondsTest, bondsReference);
 }
 
 TEST(NBlibTest, TopologyCanSequencePairIDs)
@@ -274,9 +281,9 @@ TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 
     // expected output
     std::vector<HarmonicBondType> uniqueBondsReference{ b1, b2, b3 };
-    std::vector<int>              indicesReference{ 1, 1, 2, 0, 1, 0, 2, 2 };
+    std::vector<size_t>           indicesReference{ 1, 1, 2, 0, 1, 0, 2, 2 };
 
-    std::tuple<std::vector<int>, std::vector<HarmonicBondType>> bondData =
+    std::tuple<std::vector<size_t>, std::vector<HarmonicBondType>> bondData =
             detail::eliminateDuplicateBonds(bonds);
 
     auto indices     = std::get<0>(bondData);

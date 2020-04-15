@@ -70,17 +70,18 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 // Add offset to all indices in inBlock
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
-// extract all bonds of type B from a vector of molecules. the second tuple element specifies
-// multiples of the molecule given as first tuple element
+// extract all bonds of type B from a vector of molecules. The second argument tuple element
+// specifies multiples of the molecule given as first tuple element. Let (S, I) denote the return
+// value tuple. Then J[i] = I[S[i]] for all i in 0...S.size() is the full sequence of BondType
+// instances as they occur in the input tuple
 template<class B>
-std::vector<B> collectBonds(const std::vector<std::tuple<Molecule, int>>&);
-
+std::tuple<std::vector<size_t>, std::vector<B>> collectBonds(const std::vector<std::tuple<Molecule, int>>&);
 
 // Return a list of unique BondType instances U and an index list S of size aggregatedBonds.size()
 // such that the BondType instance at aggregatedBonds[i] is equal to U[S[i]]
 // returns std::tuple(S, U)
 template<class B>
-std::tuple<std::vector<int>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& collectedBonds);
+std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& collectedBonds);
 
 //! Helper class for Topology to keep track of particle IDs
 class ParticleSequencer
