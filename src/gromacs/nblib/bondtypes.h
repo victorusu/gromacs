@@ -72,16 +72,17 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const HarmonicBondType& other) const;
+    bool operator<(const HarmonicBondType& other) const;
 
 private:
     Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
-
-bool operator==(const HarmonicBondType& a, const HarmonicBondType& b);
-bool operator<(const HarmonicBondType& a, const HarmonicBondType& b);
 
 
 /*! \brief GROMOS bond type
@@ -102,7 +103,11 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const G96BondType& other) const;
+    bool operator<(const G96BondType& other) const;
 
 private:
     Name          name_;
@@ -110,8 +115,6 @@ private:
     EquilDistance equilDistance_;
 };
 
-bool operator==(const G96BondType& a, const G96BondType& b);
-bool operator<(const G96BondType& a, const G96BondType& b);
 
 /*! \brief Cubic bond type
  *
@@ -137,7 +140,11 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const CubicBondType& other) const;
+    bool operator<(const CubicBondType& other) const;
 
 private:
     Name          name_;
@@ -146,8 +153,6 @@ private:
     EquilDistance equilDistance_;
 };
 
-bool operator==(const CubicBondType& a, const CubicBondType& b);
-bool operator<(const CubicBondType& a, const CubicBondType& b);
 
 /*! \brief FENE bond type
  *
@@ -167,7 +172,11 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const FENEBondType& other) const;
+    bool operator<(const FENEBondType& other) const;
 
 private:
     Name          name_;
@@ -175,8 +184,6 @@ private:
     EquilDistance equilDistance_;
 };
 
-bool operator==(const FENEBondType& a, const FENEBondType& b);
-bool operator<(const FENEBondType& a, const FENEBondType& b);
 
 /*! \brief Morse bond type
  *
@@ -198,7 +205,11 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const MorseBondType& other) const;
+    bool operator<(const MorseBondType& other) const;
 
 private:
     Name          name_;
@@ -207,8 +218,6 @@ private:
     EquilDistance equilDistance_;
 };
 
-bool operator==(const MorseBondType& a, const MorseBondType& b);
-bool operator<(const MorseBondType& a, const MorseBondType& b);
 
 /*! \brief Half-attractive quartic bond type
  *
@@ -228,16 +237,17 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const HalfAttractiveQuarticBondType& other) const;
+    bool operator<(const HalfAttractiveQuarticBondType& other) const;
 
 private:
     Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
-
-bool operator==(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b);
-bool operator<(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b);
 
 } // namespace nblib
 #endif // GMX_NBLIB_BONDTYPES_H

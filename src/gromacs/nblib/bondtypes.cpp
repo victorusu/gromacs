@@ -52,57 +52,6 @@
 namespace nblib
 {
 
-namespace detail
-{
-
-template<class B, class... Ps>
-bool commonCompare(const B& a, const B& b, const std::tuple<Ps...>& properties)
-{
-    auto elementComparison = transform_tuple([&a, &b](const auto& f) { return f(a) == f(b); }, properties);
-    auto logicalAnd        = [](auto&& a, auto&& b) { return a && b; };
-    return std17::apply([f = logicalAnd](auto&&... args) { return binary_fold(f, args...); },
-                        elementComparison);
-}
-
-template<class B, class Op, class... Ps>
-bool commonRelational(const B& a, const B& b, Op&& op, const std::tuple<Ps...>& properties)
-{
-    auto compare = [](const auto& a, const auto& b, auto&& op, const auto&... properties) {
-        auto start = [](auto&& recurse, const auto& a, const auto& b, auto&& op,
-                        const auto& property, const auto&... properties) {
-            if (op(property(a), property(b)))
-            {
-                return true;
-            }
-            else if (op(property(b), property(a)))
-            {
-                return false;
-            }
-            else
-            {
-                return std::get<(sizeof...(properties) == 0)>(recurse)(
-                        std::forward<decltype(recurse)>(recurse), a, b,
-                        std::forward<decltype(op)>(op), properties...);
-            }
-        };
-
-        auto stop = [](auto&&... args) {
-            ignore_unused(args...);
-            return false;
-        };
-
-        return start(std::make_tuple(start, stop), a, b, std::forward<decltype(op)>(op), properties...);
-    };
-
-    return std17::apply(
-            [&a, &b, &op, f = compare](const auto&... args) {
-                return f(a, b, std::forward<Op>(op), args...);
-            },
-            properties);
-}
-
-} // namespace detail
-
 HarmonicBondType::HarmonicBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
     name_(std::move(name)),
     forceConstant_(forceConstant),
@@ -110,26 +59,19 @@ HarmonicBondType::HarmonicBondType(Name name, ForceConstant forceConstant, Equil
 {
 }
 
-auto HarmonicBondType::properties()
+decltype(auto) HarmonicBondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.equilDistance(); },
-                           [](const auto& x) { return x.forceConstant(); });
+    return std::tie(name_, forceConstant_, equilDistance_);
 }
 
-bool operator==(const HarmonicBondType& a, const HarmonicBondType& b)
+bool HarmonicBondType::operator==(const HarmonicBondType& other) const
 {
-    static_assert(sizeof(HarmonicBondType)
-                          == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "HarmonicBondType operator == incorrect");
-
-    return detail::commonCompare(a, b, HarmonicBondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const HarmonicBondType& a, const HarmonicBondType& b)
+bool HarmonicBondType::operator<(const HarmonicBondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan), HarmonicBondType::properties());
+    return properties() < other.properties();
 }
 
 G96BondType::G96BondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
@@ -139,25 +81,19 @@ G96BondType::G96BondType(Name name, ForceConstant forceConstant, EquilDistance e
 {
 }
 
-auto G96BondType::properties()
+decltype(auto) G96BondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.equilDistance(); },
-                           [](const auto& x) { return x.forceConstant(); });
+    return std::tie(name_, forceConstant_, equilDistance_);
 }
 
-bool operator==(const G96BondType& a, const G96BondType& b)
+bool G96BondType::operator==(const G96BondType& other) const
 {
-    static_assert(sizeof(G96BondType) == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
-    return detail::commonCompare(a, b, G96BondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const G96BondType& a, const G96BondType& b)
+bool G96BondType::operator<(const G96BondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan), G96BondType::properties());
+    return properties() < other.properties();
 }
 
 CubicBondType::CubicBondType(Name          name,
@@ -171,28 +107,21 @@ CubicBondType::CubicBondType(Name          name,
 {
 }
 
-auto CubicBondType::properties()
+decltype(auto) CubicBondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.quadraticForceConstant(); },
-                           [](const auto& x) { return x.cubicForceConstant(); },
-                           [](const auto& x) { return x.equilDistance(); });
+    return std::tie(name_, quadraticForceConstant_, cubicForceConstant_, equilDistance_);
 }
 
-bool operator==(const CubicBondType& a, const CubicBondType& b)
+bool CubicBondType::operator==(const CubicBondType& other) const
 {
-    static_assert(sizeof(CubicBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "CubicBondType operator == incorrect");
-
-    return detail::commonCompare(a, b, CubicBondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const CubicBondType& a, const CubicBondType& b)
+bool CubicBondType::operator<(const CubicBondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan), CubicBondType::properties());
+    return properties() < other.properties();
 }
+
 
 FENEBondType::FENEBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
     name_(std::move(name)),
@@ -201,25 +130,19 @@ FENEBondType::FENEBondType(Name name, ForceConstant forceConstant, EquilDistance
 {
 }
 
-auto FENEBondType::properties()
+decltype(auto) FENEBondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.equilDistance(); },
-                           [](const auto& x) { return x.forceConstant(); });
+    return std::tie(name_, forceConstant_, equilDistance_);
 }
 
-bool operator==(const FENEBondType& a, const FENEBondType& b)
+bool FENEBondType::operator==(const FENEBondType& other) const
 {
-    static_assert(sizeof(FENEBondType) == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
-    return detail::commonCompare(a, b, FENEBondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const FENEBondType& a, const FENEBondType& b)
+bool FENEBondType::operator<(const FENEBondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan), FENEBondType::properties());
+    return properties() < other.properties();
 }
 
 MorseBondType::MorseBondType(Name name, ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance) :
@@ -230,27 +153,19 @@ MorseBondType::MorseBondType(Name name, ForceConstant forceConstant, Exponent ex
 {
 }
 
-auto MorseBondType::properties()
+decltype(auto) MorseBondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.forceConstant(); },
-                           [](const auto& x) { return x.exponent(); },
-                           [](const auto& x) { return x.equilDistance(); });
+    return std::tie(name_, forceConstant_, exponent_, equilDistance_);
 }
 
-bool operator==(const MorseBondType& a, const MorseBondType& b)
+bool MorseBondType::operator==(const MorseBondType& other) const
 {
-    static_assert(sizeof(MorseBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "CubicBondType operator == incorrect");
-
-    return detail::commonCompare(a, b, MorseBondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const MorseBondType& a, const MorseBondType& b)
+bool MorseBondType::operator<(const MorseBondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan), MorseBondType::properties());
+    return properties() < other.properties();
 }
 
 HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(Name          name,
@@ -262,27 +177,19 @@ HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(Name          name,
 {
 }
 
-auto HalfAttractiveQuarticBondType::properties()
+decltype(auto) HalfAttractiveQuarticBondType::properties() const
 {
-    return std::make_tuple([](const auto& x) { return x.name(); },
-                           [](const auto& x) { return x.equilDistance(); },
-                           [](const auto& x) { return x.forceConstant(); });
+    return std::tie(name_, forceConstant_, equilDistance_);
 }
 
-bool operator==(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b)
+bool HalfAttractiveQuarticBondType::operator==(const HalfAttractiveQuarticBondType& other) const
 {
-    static_assert(sizeof(HalfAttractiveQuarticBondType)
-                          == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
-    return detail::commonCompare(a, b, HalfAttractiveQuarticBondType::properties());
+    return properties() == other.properties();
 }
 
-bool operator<(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b)
+bool HalfAttractiveQuarticBondType::operator<(const HalfAttractiveQuarticBondType& other) const
 {
-    auto lessThan = [](const auto& a, const auto& b) { return a < b; };
-    return detail::commonRelational(a, b, std::move(lessThan),
-                                    HalfAttractiveQuarticBondType::properties());
+    return properties() < other.properties();
 }
 
 } // namespace nblib
