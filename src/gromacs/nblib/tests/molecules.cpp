@@ -242,8 +242,8 @@ TEST(NBlibTest, CanAddInteractions)
     molecule.addParticle(ParticleName("H1"), H);
     molecule.addParticle(ParticleName("H2"), H);
 
-    HarmonicBondType hb("hb1", 1, 2);
-    CubicBondType    cub("cub", 1, 2, 3);
+    HarmonicBondType hb(1, 2);
+    CubicBondType    cub(1, 2, 3);
 
     molecule.addInteraction("O", "H1", hb);
     molecule.addInteraction("O", "H2", hb);

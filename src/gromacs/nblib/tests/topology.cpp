@@ -272,9 +272,9 @@ TEST(NBlibTest, TopologySequenceIdThrows)
 
 TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
 {
-    HarmonicBondType b1("b1", 1.0, 2.0);
-    HarmonicBondType b2("b2", 1.1, 2.1);
-    HarmonicBondType b3("b3", 1.2, 2.2);
+    HarmonicBondType b1(1.0, 2.0);
+    HarmonicBondType b2(1.1, 2.1);
+    HarmonicBondType b3(1.2, 2.2);
 
     // can be compressed to {b1,b2,b3} + {1,1,2,0,1,0,2,2}
     std::vector<HarmonicBondType> bonds{ b2, b2, b3, b1, b2, b1, b3, b3 };
@@ -315,9 +315,9 @@ TEST(NBlibTest, TopologyListedInteractions)
     // and 6 interaction pairs (bonds)
     EXPECT_EQ(indices.size(), 6);
 
-    HarmonicBondType ohBond("oh", 1., 1.);
-    HarmonicBondType ohBondMethanol("oh", 1.01, 1.02);
-    HarmonicBondType ometBond("omet", 1.1, 1.2);
+    HarmonicBondType ohBond(1., 1.);
+    HarmonicBondType ohBondMethanol(1.01, 1.02);
+    HarmonicBondType ometBond(1.1, 1.2);
 
     std::map<std::tuple<int, int>, HarmonicBondType> interactions_reference;
 
@@ -351,7 +351,7 @@ TEST(NBlibTest, TopologyListedInteractionsMultipleTypes)
     Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
     Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
 
-    CubicBondType testBond("test", 1., 1., 1.);
+    CubicBondType testBond(1., 1., 1.);
 
     water.addInteraction("H1", "H2", testBond);
 
@@ -373,9 +373,9 @@ TEST(NBlibTest, TopologyListedInteractionsMultipleTypes)
     auto& harmonicBonds   = pickType<HarmonicBondType>(interactionData);
     auto& cubicBonds      = pickType<CubicBondType>(interactionData);
 
-    HarmonicBondType              ohBond("oh", 1., 1.);
-    HarmonicBondType              ohBondMethanol("oh", 1.01, 1.02);
-    HarmonicBondType              ometBond("omet", 1.1, 1.2);
+    HarmonicBondType              ohBond(1., 1.);
+    HarmonicBondType              ohBondMethanol(1.01, 1.02);
+    HarmonicBondType              ometBond(1.1, 1.2);
     std::vector<HarmonicBondType> harmonicBondsReference{ ohBond, ohBondMethanol, ometBond };
 
     EXPECT_EQ(harmonicBonds.bondInstances, harmonicBondsReference);
@@ -395,7 +395,7 @@ TEST(NBlibTest, TopologyInvalidParticleInInteractionThrows)
     Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
     Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
 
-    HarmonicBondType testBond("test", 1., 1.);
+    HarmonicBondType testBond(1., 1.);
 
     // Invalid input: no particle named "Iron" in molecule water
     water.addInteraction("H1", "Iron", testBond);

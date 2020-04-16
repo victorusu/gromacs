@@ -52,8 +52,7 @@
 namespace nblib
 {
 
-HarmonicBondType::HarmonicBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
+HarmonicBondType::HarmonicBondType(ForceConstant forceConstant, EquilDistance equilDistance) :
     forceConstant_(forceConstant),
     equilDistance_(equilDistance)
 {
@@ -61,7 +60,7 @@ HarmonicBondType::HarmonicBondType(Name name, ForceConstant forceConstant, Equil
 
 decltype(auto) HarmonicBondType::properties() const
 {
-    return std::tie(name_, forceConstant_, equilDistance_);
+    return std::tie(forceConstant_, equilDistance_);
 }
 
 bool HarmonicBondType::operator==(const HarmonicBondType& other) const
@@ -74,8 +73,7 @@ bool HarmonicBondType::operator<(const HarmonicBondType& other) const
     return properties() < other.properties();
 }
 
-G96BondType::G96BondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
+G96BondType::G96BondType(ForceConstant forceConstant, EquilDistance equilDistance) :
     forceConstant_(forceConstant),
     equilDistance_(equilDistance)
 {
@@ -83,7 +81,7 @@ G96BondType::G96BondType(Name name, ForceConstant forceConstant, EquilDistance e
 
 decltype(auto) G96BondType::properties() const
 {
-    return std::tie(name_, forceConstant_, equilDistance_);
+    return std::tie(forceConstant_, equilDistance_);
 }
 
 bool G96BondType::operator==(const G96BondType& other) const
@@ -96,11 +94,9 @@ bool G96BondType::operator<(const G96BondType& other) const
     return properties() < other.properties();
 }
 
-CubicBondType::CubicBondType(Name          name,
-                             ForceConstant quadraticForceConstant,
+CubicBondType::CubicBondType(ForceConstant quadraticForceConstant,
                              ForceConstant cubicForceConstant,
                              EquilDistance equilDistance) :
-    name_(std::move(name)),
     quadraticForceConstant_(quadraticForceConstant),
     cubicForceConstant_(cubicForceConstant),
     equilDistance_(equilDistance)
@@ -109,7 +105,7 @@ CubicBondType::CubicBondType(Name          name,
 
 decltype(auto) CubicBondType::properties() const
 {
-    return std::tie(name_, quadraticForceConstant_, cubicForceConstant_, equilDistance_);
+    return std::tie(quadraticForceConstant_, cubicForceConstant_, equilDistance_);
 }
 
 bool CubicBondType::operator==(const CubicBondType& other) const
@@ -123,8 +119,7 @@ bool CubicBondType::operator<(const CubicBondType& other) const
 }
 
 
-FENEBondType::FENEBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
+FENEBondType::FENEBondType(ForceConstant forceConstant, EquilDistance equilDistance) :
     forceConstant_(forceConstant),
     equilDistance_(equilDistance)
 {
@@ -132,7 +127,7 @@ FENEBondType::FENEBondType(Name name, ForceConstant forceConstant, EquilDistance
 
 decltype(auto) FENEBondType::properties() const
 {
-    return std::tie(name_, forceConstant_, equilDistance_);
+    return std::tie(forceConstant_, equilDistance_);
 }
 
 bool FENEBondType::operator==(const FENEBondType& other) const
@@ -145,8 +140,7 @@ bool FENEBondType::operator<(const FENEBondType& other) const
     return properties() < other.properties();
 }
 
-MorseBondType::MorseBondType(Name name, ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance) :
-    name_(std::move(name)),
+MorseBondType::MorseBondType(ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance) :
     forceConstant_(forceConstant),
     exponent_(exponent),
     equilDistance_(equilDistance)
@@ -155,7 +149,7 @@ MorseBondType::MorseBondType(Name name, ForceConstant forceConstant, Exponent ex
 
 decltype(auto) MorseBondType::properties() const
 {
-    return std::tie(name_, forceConstant_, exponent_, equilDistance_);
+    return std::tie(forceConstant_, exponent_, equilDistance_);
 }
 
 bool MorseBondType::operator==(const MorseBondType& other) const
@@ -168,10 +162,8 @@ bool MorseBondType::operator<(const MorseBondType& other) const
     return properties() < other.properties();
 }
 
-HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(Name          name,
-                                                             ForceConstant forceConstant,
+HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(ForceConstant forceConstant,
                                                              EquilDistance equilDistance) :
-    name_(std::move(name)),
     forceConstant_(forceConstant),
     equilDistance_(equilDistance)
 {
@@ -179,7 +171,7 @@ HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(Name          name,
 
 decltype(auto) HalfAttractiveQuarticBondType::properties() const
 {
-    return std::tie(name_, forceConstant_, equilDistance_);
+    return std::tie(forceConstant_, equilDistance_);
 }
 
 bool HalfAttractiveQuarticBondType::operator==(const HalfAttractiveQuarticBondType& other) const

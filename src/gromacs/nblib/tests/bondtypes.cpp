@@ -59,11 +59,11 @@ template<class B>
 void testThreeParameterBondEquality(const B& deduceType)
 {
     ignore_unused(deduceType);
-    B a("someName", 1, 2);
-    B b("someName", 1, 2);
+    B a(1, 2);
+    B b(1, 2);
     EXPECT_TRUE(a == b);
 
-    B c("someName", 1, 3);
+    B c(1, 3);
     EXPECT_FALSE(a == c);
 }
 
@@ -71,11 +71,11 @@ template<class B>
 void testFourParameterBondEquality(const B& deduceType)
 {
     ignore_unused(deduceType);
-    B a("someName", 1, 2, 3);
-    B b("someName", 1, 2, 3);
+    B a(1, 2, 3);
+    B b(1, 2, 3);
     EXPECT_TRUE(a == b);
 
-    B c("someName", 2, 3, 4);
+    B c(2, 3, 4);
     EXPECT_FALSE(a == c);
 }
 
@@ -83,17 +83,17 @@ template<class B>
 void testThreeParameterBondLessThan(const B& deduceType)
 {
     ignore_unused(deduceType);
-    B a("h1", 1, 2);
-    B b("h1", 1, 3);
+    B a(1, 2);
+    B b(1, 3);
     EXPECT_TRUE(a < b);
     EXPECT_FALSE(b < a);
 
-    B c("h1", 1, 2);
-    B d("h1", 1, 2);
+    B c(1, 2);
+    B d(1, 2);
     EXPECT_FALSE(c < d);
 
-    B e("a", 1, 3);
-    B f("b", 1, 2);
+    B e(2, 1);
+    B f(3, 1);
     EXPECT_TRUE(e < f);
     EXPECT_FALSE(f < e);
 }
@@ -102,14 +102,19 @@ template<class B>
 void testFourParameterBondLessThan(const B& deduceType)
 {
     ignore_unused(deduceType);
-    B a("h1", 1, 2, 1);
-    B b("h1", 1, 3, 1);
+    B a(1, 2, 1);
+    B b(1, 3, 1);
     EXPECT_TRUE(a < b);
     EXPECT_FALSE(b < a);
 
-    B c("h1", 1, 2, 3);
-    B d("h1", 1, 2, 3);
+    B c(1, 2, 3);
+    B d(1, 2, 3);
     EXPECT_FALSE(c < d);
+
+    B e(4, 1, 3);
+    B f(5, 1, 2);
+    EXPECT_TRUE(e < f);
+    EXPECT_FALSE(f < e);
 }
 
 } // namespace test_detail

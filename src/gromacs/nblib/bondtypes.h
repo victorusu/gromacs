@@ -64,9 +64,7 @@ class HarmonicBondType
 public:
     HarmonicBondType() = default;
 
-    HarmonicBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    HarmonicBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -79,7 +77,6 @@ public:
     bool operator<(const HarmonicBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
@@ -95,9 +92,7 @@ class G96BondType
 public:
     G96BondType() = default;
 
-    G96BondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    G96BondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -110,7 +105,6 @@ public:
     bool operator<(const G96BondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
@@ -127,12 +121,9 @@ class CubicBondType
 public:
     CubicBondType() = default;
 
-    CubicBondType(Name          name,
-                  ForceConstant quadraticForceConstant,
+    CubicBondType(ForceConstant quadraticForceConstant,
                   ForceConstant cubicForceConstant,
                   EquilDistance equilDistance);
-
-    Name name() const { return name_; }
 
     ForceConstant quadraticForceConstant() const { return quadraticForceConstant_; }
 
@@ -147,7 +138,6 @@ public:
     bool operator<(const CubicBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant quadraticForceConstant_;
     ForceConstant cubicForceConstant_;
     EquilDistance equilDistance_;
@@ -164,9 +154,7 @@ class FENEBondType
 public:
     FENEBondType() = default;
 
-    FENEBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    FENEBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -179,7 +167,6 @@ public:
     bool operator<(const FENEBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
@@ -195,9 +182,7 @@ class MorseBondType
 public:
     MorseBondType() = default;
 
-    MorseBondType(Name name, ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    MorseBondType(ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -212,7 +197,6 @@ public:
     bool operator<(const MorseBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     Exponent      exponent_;
     EquilDistance equilDistance_;
@@ -229,9 +213,7 @@ class HalfAttractiveQuarticBondType
 public:
     HalfAttractiveQuarticBondType() = default;
 
-    HalfAttractiveQuarticBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    HalfAttractiveQuarticBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -244,7 +226,6 @@ public:
     bool operator<(const HalfAttractiveQuarticBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
