@@ -125,12 +125,12 @@ int ParticleSequencer::operator()(const std::string&  moleculeName,
         // TODO: use string format function once we have it
         if (moleculeName != residueName)
         {
-            printf("No particle %s in residue %s in molecule %s found", particleName.c_str(),
+            printf("No particle %s in residue %s in molecule %s found\n", particleName.c_str(),
                    residueName.c_str(), moleculeName.c_str());
         }
         else
         {
-            printf("No particle %s in molecule %s found", particleName.c_str(), moleculeName.c_str());
+            printf("No particle %s in molecule %s found\n", particleName.c_str(), moleculeName.c_str());
         }
 
         throw gmx::InvalidInputError(outOfRange.what());
