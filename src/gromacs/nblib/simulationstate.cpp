@@ -49,17 +49,9 @@
 
 #include <vector>
 
-#include "gromacs/math/vec.h"
-#include "gromacs/mdlib/dispersioncorrection.h"
-#include "gromacs/mdtypes/forcerec.h"
-#include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/util.h"
-#include "gromacs/nbnxm/nbnxm.h"
-#include "gromacs/pbcutil/ishift.h"
 #include "gromacs/pbcutil/pbc.h"
 #include "gromacs/utility/exceptions.h"
-
-#include "coords.h"
 
 namespace nblib
 {

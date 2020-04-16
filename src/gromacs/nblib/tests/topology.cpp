@@ -51,8 +51,6 @@
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/topology/exclusionblocks.h"
 
-#include "testutils/testasserts.h"
-
 #include "testsystems.h"
 
 namespace nblib

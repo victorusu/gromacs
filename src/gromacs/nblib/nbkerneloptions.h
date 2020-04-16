@@ -47,7 +47,7 @@
 
 #include <memory>
 
-#include "gromacs/math/vectypes.h"
+#include "gromacs/nblib/basicdefinitions.h"
 
 #include "nbkerneldef.h"
 
@@ -87,20 +87,6 @@ struct NBKernelOptions
     //! The time step
     real timestep = 0.001;
 };
-
-/*! \brief
- * Sets up and runs nonbonded kernel calls
- *
- * The simulated system is a box of 12 Argon molecules scaled
- * by the factor \p sizeFactor, which has to be a power of 2.
- * Timings can be printed to stdout.
- *
- * \param[in,out] system The particle system to compute nonbonded forces for
- * \param[in] options How the benchmark will be run.
- * \param[in] printTimings Whether to print cycle counters
- */
-// void nbKernel(NBKernelSystem& system, const NBKernelOptions& options, const bool& printTimings);
-
 
 } // namespace nblib
 

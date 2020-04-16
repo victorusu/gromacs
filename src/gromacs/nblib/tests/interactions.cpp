@@ -46,8 +46,6 @@
 
 #include "gromacs/nblib/interactions.h"
 
-#include <iostream>
-
 #include "gromacs/nblib/particletype.h"
 
 #include "testutils/testasserts.h"

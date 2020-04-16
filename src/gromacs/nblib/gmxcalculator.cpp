@@ -45,7 +45,6 @@
 #include "gmxcalculator.h"
 
 #include "gromacs/ewald/ewald_utils.h"
-#include "gromacs/math/units.h"
 #include "gromacs/mdlib/rf_util.h"
 #include "gromacs/mdtypes/interaction_const.h"
 #include "gromacs/nblib/simulationstate.h"

@@ -47,6 +47,8 @@
 
 #include "interactions.h"
 
+#include <cmath>
+
 #include "gromacs/utility/exceptions.h"
 #include "gromacs/utility/stringutil.h"
 

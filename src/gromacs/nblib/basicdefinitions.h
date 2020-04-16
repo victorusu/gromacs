@@ -32,86 +32,63 @@
  * To help us fund GROMACS development, we humbly ask that you cite
  * the research papers on the package. Check out http://www.gromacs.org.
  */
-/*! \internal \file
+/*! \inpublicapi \file
  * \brief
- * Implements nblib coordinate generation
+ * Implements some definitions that are identical to those of gromacs
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
+ * \author Artem Zhmurov <zhmurov@gmail.com>
  */
-#include "gmxpre.h"
+#ifndef GMX_NBLIB_BASICDEFINITIONS_H
+#define GMX_NBLIB_BASICDEFINITIONS_H
 
-#include "coordinates.h"
+// from utility/real.h
+#if GMX_DOUBLE
+#    ifndef HAVE_REAL
+typedef double real;
+#        define HAVE_REAL
+#    endif
+#else /* GMX_DOUBLE */
+#    ifndef HAVE_REAL
+typedef float real;
+#        define HAVE_REAL
+#    endif
+#endif /* GMX_DOUBLE */
 
-#include "gromacs/utility/fatalerror.h"
-#include "gromacs/utility/logger.h"
+// from math/units.h
+#define KILO (1e3)                     /* Thousand	*/
+#define NANO (1e-9)                    /* A Number	*/
+#define E_CHARGE (1.602176634e-19)     /* Exact definition, Coulomb NIST 2018 CODATA */
+#define BOLTZMANN (1.380649e-23)       /* (J/K, Exact definition, NIST 2018 CODATA */
+#define AVOGADRO (6.02214076e23)       /* 1/mol, Exact definition, NIST 2018 CODATA */
+#define RGAS (BOLTZMANN * AVOGADRO)    /* (J/(mol K))  */
+#define BOLTZ (RGAS / KILO)            /* (kJ/(mol K)) */
+#define EPSILON0_SI (8.8541878128e-12) /* F/m,  NIST 2018 CODATA */
+#define EPSILON0 ((EPSILON0_SI * NANO * KILO) / (E_CHARGE * E_CHARGE * AVOGADRO))
+#define M_PI 3.14159265358979323846 /* pi */
+#define ONE_4PI_EPS0 (1.0 / (4.0 * M_PI * EPSILON0))
 
-namespace nblib
-{
+// from pbc/ishift.h
+#define D_BOX_Z 1
+#define D_BOX_Y 1
+#define D_BOX_X 2
+#define N_BOX_Z (2 * D_BOX_Z + 1)
+#define N_BOX_Y (2 * D_BOX_Y + 1)
+#define N_BOX_X (2 * D_BOX_X + 1)
+#define N_IVEC (N_BOX_Z * N_BOX_Y * N_BOX_X)
+#define CENTRAL (N_IVEC / 2)
+#define SHIFTS N_IVEC
 
-void generateCoordinates(int multiplicationFactor, std::vector<gmx::RVec>* coordinates, matrix box)
-{
-    if (multiplicationFactor < 1 || (multiplicationFactor & (multiplicationFactor - 1)) != 0)
-    {
-        gmx_fatal(FARGS, "The size factor has to be a power of 2");
-    }
+// from math/vectypes.h
+#define XX 0 /* Defines for indexing in vectors */
+#define YY 1
+#define ZZ 2
+#define DIM 3 /* Dimension of vectors    */
+typedef real   rvec[DIM];
+typedef double dvec[DIM];
+typedef real   matrix[DIM][DIM];
 
-    if (multiplicationFactor == 1)
-    {
-        *coordinates = coordinates12;
-        copy_mat(box12, box);
-
-        return;
-    }
-
-    ivec factors = { 1, 1, 1 };
-
-    int dim = 0;
-    while (multiplicationFactor > 1)
-    {
-        factors[dim] *= 2;
-        multiplicationFactor /= 2;
-        dim++;
-        if (dim == DIM)
-        {
-            dim = 0;
-        }
-    }
-    printf("Stacking a box of %zu particles %d x %d x %d times\n", coordinates12.size(),
-           factors[XX], factors[YY], factors[ZZ]);
-
-    coordinates->resize(factors[XX] * factors[YY] * factors[ZZ] * coordinates12.size());
-
-    int       i = 0;
-    gmx::RVec shift;
-    for (int x = 0; x < factors[XX]; x++)
-    {
-        shift[XX] = x * box12[XX][XX];
-        for (int y = 0; y < factors[YY]; y++)
-        {
-            shift[YY] = y * box12[YY][YY];
-            for (int z = 0; z < factors[ZZ]; z++)
-            {
-                shift[ZZ] = z * box12[ZZ][ZZ];
-
-                for (const gmx::RVec& coordOrig : coordinates12)
-                {
-                    (*coordinates)[i] = coordOrig + shift;
-                    i++;
-                }
-            }
-        }
-    }
-
-    for (int d1 = 0; d1 < DIM; d1++)
-    {
-        for (int d2 = 0; d2 < DIM; d2++)
-        {
-            box[d1][d2] = factors[d1] * box12[d1][d2];
-        }
-    }
-}
-
-} // namespace nblib
+#endif // GMX_NBLIB_BASICDEFINITIONS_H
