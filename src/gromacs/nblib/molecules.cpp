@@ -46,6 +46,7 @@
 
 #include "molecules.h"
 
+#include <algorithm>
 #include <tuple>
 
 #include "gromacs/nblib/particletype.h"

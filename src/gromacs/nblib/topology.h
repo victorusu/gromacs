@@ -47,7 +47,6 @@
 
 #include <vector>
 
-#include "gromacs/math/vec.h"
 #include "gromacs/nblib/molecules.h"
 #include "gromacs/utility/listoflists.h"
 

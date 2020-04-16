@@ -49,7 +49,6 @@
 #include <numeric>
 #include <sstream>
 
-#include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/util.h"
 #include "gromacs/topology/exclusionblocks.h"
