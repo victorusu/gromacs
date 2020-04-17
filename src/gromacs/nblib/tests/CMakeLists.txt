@@ -77,6 +77,7 @@ gmx_add_gtest_executable(
     nbkernelsystem.cpp
     nbnxnsetup.cpp
     gmxcalculator.cpp
+    integrationtest.cpp
     # pseudo-library for code for mdrun
     #$<TARGET_OBJECTS:nblib_objlib>
     )
