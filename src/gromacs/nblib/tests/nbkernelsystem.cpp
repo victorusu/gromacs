@@ -56,6 +56,7 @@
 #include "gromacs/nblib/topology.h"
 #include "gromacs/topology/exclusionblocks.h"
 
+#include "testutils/refdata.h"
 #include "testutils/testasserts.h"
 
 #include "testsystems.h"
@@ -90,7 +91,28 @@ void compareLists(const gmx::ListOfLists<T>& list, const std::vector<std::vector
 //       file can just include forcerec.h
 #define SET_CGINFO_HAS_VDW(cgi) (cgi) = ((cgi) | (1 << 23))
 
-TEST(NBlibTest, canComputeForces)
+//! Simple test harness for checking forces against reference data
+class ForcesOutputTest
+{
+public:
+    ForcesOutputTest() : checker_(refData_.rootChecker())
+    {
+        gmx::test::FloatingPointTolerance tolerance(
+                gmx::test::FloatingPointTolerance(1e-8, 1.0e-12, 1e-8, 1.0e-12, 100, 100, true));
+        checker_.setDefaultTolerance(tolerance);
+    }
+
+    void testForces(gmx::ArrayRef<gmx::RVec> forces, const std::string& testString)
+    {
+        checker_.checkSequence(forces.begin(), forces.end(), testString.c_str());
+    }
+
+private:
+    gmx::test::TestReferenceData    refData_;
+    gmx::test::TestReferenceChecker checker_;
+};
+
+TEST(NBlibTest, SpcMethanolForcesAreCorrect)
 {
     auto options        = NBKernelOptions();
     options.nbnxmSimd   = BenchMarkKernels::SimdNo;
@@ -103,24 +125,9 @@ TEST(NBlibTest, canComputeForces)
 
     gmx::ArrayRef<gmx::RVec> forces;
     ASSERT_NO_THROW(forces = forceCalculator.compute());
-    EXPECT_REAL_EQ_TOL(forces[0][0], -0.381826401, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[0][1], 0.879227996, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[0][2], -6.14063454, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[1][0], 8.30332947, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[1][1], -7.33883095, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[1][2], 27.7837372, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[2][0], -9.42212677, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[2][1], 6.2920804, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[2][2], -33.9860725, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[3][0], 27.4943237, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[3][1], 8.39151382, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[3][2], 39.6937485, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[4][0], -19.0098705, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[4][1], -5.39751482, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[4][2], -15.5456524, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[5][0], -6.98382664, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[5][1], -2.8264761, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(forces[5][2], -11.8051271, gmx::test::defaultRealTolerance());
+
+    ForcesOutputTest forcesOutputTest;
+    forcesOutputTest.testForces(forces, "SPC-methanol forces");
 }
 
 TEST(NBlibTest, ExpectedNumberOfForces)
@@ -158,39 +165,12 @@ TEST(NBlibTest, CanIntegrateSystem)
         EXPECT_NO_THROW(integrator.integrate(1.0));
     }
 }
-/*
-TEST(NBlibTest, ForcesAreNotZero)
-{
-    auto options          = NBKernelOptions();
-    options.nbnxmSimd     = BenchMarkKernels::SimdNo;
-    options.numIterations = 1;
 
-    SpcMethanolSimulationStateBuilder spcMethanolSystemBuilder;
-
-    auto simState        = spcMethanolSystemBuilder.setupSimulationState();
-    auto forceCalculator = ForceCalculator(simState, options);
-
-    gmx::PaddedHostVector<gmx::RVec> forces;
-    for (int iter = 0; iter < options.numIterations; iter++)
-    {
-        forces = forceCalculator.compute();
-        integrateCoordinates(forces, options, forceCalculator.box(), simState.coordinates());
-    }
-    for (int particleI = 0; particleI < simState.topology().numParticles(); particleI++)
-    {
-        // At least one of the force components on each particle should be nonzero
-        const bool haveNonzeroForces =
-                (forces[particleI][0] != 0.0 || forces[particleI][1] != 0.0 || forces[particleI][2]
-!= 0.0); EXPECT_TRUE(haveNonzeroForces);
-    }
-}
-*/
 TEST(NBlibTest, ArgonForcesAreCorrect)
 {
-    auto options          = NBKernelOptions();
-    options.nbnxmSimd     = BenchMarkKernels::SimdNo;
-    options.coulombType   = BenchMarkCoulomb::Cutoff;
-    options.numIterations = 1;
+    auto options        = NBKernelOptions();
+    options.nbnxmSimd   = BenchMarkKernels::SimdNo;
+    options.coulombType = BenchMarkCoulomb::Cutoff;
 
     ArgonSimulationStateBuilder argonSystemBuilder;
 
@@ -198,21 +178,10 @@ TEST(NBlibTest, ArgonForcesAreCorrect)
     auto forceCalculator = ForceCalculator(simState, options);
 
     gmx::ArrayRef<gmx::RVec> testForces;
-    for (int iter = 0; iter < options.numIterations; iter++)
-    {
-        testForces = forceCalculator.compute();
-    }
-    std::vector<gmx::RVec> refForces(simState.topology().numParticles(), gmx::RVec(0, 0, 0));
-    // Only 2 particles are within the cutoff, and Newton says their forces differ by a sign
-    refForces[0] = { -0.412993, -1.098256, -0.113191 };
-    refForces[2] = { 0.412993, 1.098256, 0.113191 };
-    for (int particleI = 0; particleI < simState.topology().numParticles(); particleI++)
-    {
-        for (int j = 0; j < DIM; j++)
-        {
-            EXPECT_REAL_EQ(refForces[particleI][j], testForces[particleI][j]);
-        }
-    }
+    testForces = forceCalculator.compute();
+
+    ForcesOutputTest forcesOutputTest;
+    forcesOutputTest.testForces(testForces, "Argon forces");
 }
 
 } // namespace
