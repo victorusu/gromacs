@@ -45,8 +45,6 @@
 
 #include "testhelpers.h"
 
-#include "gromacs/math/matrix.h"
-
 namespace nblib
 {
 namespace test

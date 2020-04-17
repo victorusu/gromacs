@@ -48,12 +48,6 @@
 #ifndef GROMACS_GMXSETUP_H
 #define GROMACS_GMXSETUP_H
 
-#include "gromacs/gpu_utils/hostallocator.h"
-#include "gromacs/mdlib/forcerec.h"
-#include "gromacs/mdtypes/enerdata.h"
-#include "gromacs/mdtypes/forcerec.h"
-#include "gromacs/mdtypes/interaction_const.h"
-#include "gromacs/mdtypes/simulation_workload.h"
 #include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nbnxm/nbnxm.h"
 

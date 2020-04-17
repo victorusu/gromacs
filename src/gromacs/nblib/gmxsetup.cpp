@@ -47,7 +47,6 @@
 #include "gromacs/compat/optional.h"
 #include "gromacs/ewald/ewald_utils.h"
 #include "gromacs/gmxlib/nrnb.h"
-#include "gromacs/math/units.h"
 #include "gromacs/mdlib/gmx_omp_nthreads.h"
 #include "gromacs/mdlib/rf_util.h"
 #include "gromacs/mdtypes/forcerec.h"
@@ -59,7 +58,6 @@
 #include "gromacs/nbnxm/pairlistset.h"
 #include "gromacs/nbnxm/pairlistsets.h"
 #include "gromacs/nbnxm/pairsearch.h"
-#include "gromacs/pbcutil/ishift.h"
 #include "gromacs/pbcutil/pbc.h"
 #include "gromacs/utility/fatalerror.h"
 #include "gromacs/utility/logger.h"
@@ -308,8 +306,7 @@ void NbvSetupUtil::constructPairList(const gmx::ListOfLists<int>& exclusions)
 
 void NbvSetupUtil::setForcesToZero(size_t numParticles)
 {
-    gmxForceCalculator_->verletForces_ =
-            gmx::PaddedHostVector<gmx::RVec>(numParticles, gmx::RVec(0, 0, 0));
+    gmxForceCalculator_->verletForces_ = std::vector<gmx::RVec>(numParticles, gmx::RVec(0, 0, 0));
 }
 
 std::unique_ptr<GmxForceCalculator> GmxSetupDirector::setupGmxForceCalculator(const SimulationState& system,

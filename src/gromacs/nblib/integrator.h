@@ -47,8 +47,7 @@
 
 #include <vector>
 
-#include "gromacs/gpu_utils/hostallocator.h"
-#include "gromacs/math/vectypes.h"
+#include "gromacs/nblib/basicdefinitions.h"
 #include "gromacs/nblib/simulationstate.h"
 
 namespace nblib

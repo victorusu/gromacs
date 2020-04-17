@@ -101,7 +101,7 @@ TEST(NBlibTest, canComputeForces)
     auto simState        = spcMethanolSystemBuilder.setupSimulationState();
     auto forceCalculator = ForceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> forces;
+    gmx::ArrayRef<gmx::RVec> forces;
     ASSERT_NO_THROW(forces = forceCalculator.compute());
     EXPECT_REAL_EQ_TOL(forces[0][0], -0.381826401, gmx::test::defaultRealTolerance());
     EXPECT_REAL_EQ_TOL(forces[0][1], 0.879227996, gmx::test::defaultRealTolerance());
@@ -133,7 +133,7 @@ TEST(NBlibTest, ExpectedNumberOfForces)
     auto simState        = spcMethanolSystemBuilder.setupSimulationState();
     auto forceCalculator = ForceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> forces = forceCalculator.compute();
+    gmx::ArrayRef<gmx::RVec> forces = forceCalculator.compute();
     EXPECT_EQ(simState.topology().numParticles(), forces.size());
 }
 
@@ -152,7 +152,9 @@ TEST(NBlibTest, CanIntegrateSystem)
 
     for (int iter = 0; iter < options.numIterations; iter++)
     {
-        gmx::PaddedHostVector<gmx::RVec> forces = forceCalculator.compute();
+        gmx::ArrayRef<gmx::RVec> forces = forceCalculator.compute();
+        // Todo: this makes it apparent that the SimState design is broken
+        std::copy(forces.begin(), forces.end(), begin(simState.forces()));
         EXPECT_NO_THROW(integrator.integrate(1.0));
     }
 }
@@ -195,12 +197,12 @@ TEST(NBlibTest, ArgonForcesAreCorrect)
     auto simState        = argonSystemBuilder.setupSimulationState();
     auto forceCalculator = ForceCalculator(simState, options);
 
-    gmx::PaddedHostVector<gmx::RVec> testForces;
+    gmx::ArrayRef<gmx::RVec> testForces;
     for (int iter = 0; iter < options.numIterations; iter++)
     {
         testForces = forceCalculator.compute();
     }
-    gmx::PaddedHostVector<gmx::RVec> refForces(simState.topology().numParticles(), gmx::RVec(0, 0, 0));
+    std::vector<gmx::RVec> refForces(simState.topology().numParticles(), gmx::RVec(0, 0, 0));
     // Only 2 particles are within the cutoff, and Newton says their forces differ by a sign
     refForces[0] = { -0.412993, -1.098256, -0.113191 };
     refForces[2] = { 0.412993, 1.098256, 0.113191 };

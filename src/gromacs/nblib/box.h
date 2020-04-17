@@ -47,7 +47,7 @@
 #include <array>
 
 #include "gromacs/math/matrix.h"
-#include "gromacs/math/vectypes.h"
+#include "gromacs/nblib/basicdefinitions.h"
 
 namespace nblib
 {
