@@ -70,7 +70,7 @@ public:
      * \todo Refactor this function to return a handle to dispatchNonbondedKernel
      *       that callers can manipulate directly.
      */
-    gmx::PaddedHostVector<gmx::RVec> compute();
+    gmx::ArrayRef<gmx::RVec> compute();
 
 private:
     //! GROMACS force calculator to compute forces

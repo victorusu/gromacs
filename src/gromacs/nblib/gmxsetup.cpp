@@ -306,8 +306,7 @@ void NbvSetupUtil::constructPairList(const gmx::ListOfLists<int>& exclusions)
 
 void NbvSetupUtil::setForcesToZero(size_t numParticles)
 {
-    gmxForceCalculator_->verletForces_ =
-            gmx::PaddedHostVector<gmx::RVec>(numParticles, gmx::RVec(0, 0, 0));
+    gmxForceCalculator_->verletForces_ = std::vector<gmx::RVec>(numParticles, gmx::RVec(0, 0, 0));
 }
 
 std::unique_ptr<GmxForceCalculator> GmxSetupDirector::setupGmxForceCalculator(const SimulationState& system,
