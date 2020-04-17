@@ -96,7 +96,7 @@ void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName, C6
             std::string message = formatString(
                     "Attempting to add nonbonded interaction parameters for particle "
                     "type {} twice",
-                    particleTypeName.c_str());
+                    particleTypeName);
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
@@ -122,7 +122,7 @@ void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName1,
             std::string message = formatString(
                     "Attempting to add nonbonded interaction parameters between the particle types "
                     "{} {} twice",
-                    particleTypeName1.c_str(), particleTypeName2.c_str());
+                    particleTypeName1, particleTypeName2);
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
@@ -175,7 +175,7 @@ NonBondedInteractionMap ParticleTypesInteractions::generateTable()
             if (nonbondedParameters_.count(interactionKey) == 0)
             {
                 std::string message = formatString("Missing interaction between {} {}",
-                                                   particleTypeName1.c_str(), particleTypeName2.c_str());
+                                                   particleTypeName1, particleTypeName2);
                 GMX_THROW(gmx::InvalidInputError(message));
             }
         }

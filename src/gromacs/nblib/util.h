@@ -242,9 +242,9 @@ std::string formatString(std::string fmt, Args... args)
     std::ostringstream os;
     std::string        delimiter = "{}";
 
-    __attribute__((unused)) std::initializer_list<int> unused{
-        0, (os << detail::next_token(fmt, delimiter) << args, 0)...
-    };
+    std::initializer_list<int> unused{ 0, (os << detail::next_token(fmt, delimiter) << args, 0)... };
+    static_cast<void>(unused); // unused is not actually used
+
     os << detail::next_token(fmt, delimiter);
 
     return os.str();

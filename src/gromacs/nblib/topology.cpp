@@ -248,7 +248,7 @@ Topology TopologyBuilder::buildTopology()
             {
                 std::string message =
                         formatString("Missing nonbonded interaction parameters for pair {} {}",
-                                     particleType1.first.c_str(), particleType2.first.c_str());
+                                     particleType1.first, particleType2.first);
                 GMX_THROW(gmx::InvalidInputError(message));
             }
         }
