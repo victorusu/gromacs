@@ -54,7 +54,7 @@
 namespace nblib
 {
 
-gmx::PaddedHostVector<gmx::RVec> GmxForceCalculator::compute()
+gmx::ArrayRef<gmx::RVec> GmxForceCalculator::compute()
 {
 
     nbv_->dispatchNonbondedKernel(gmx::InteractionLocality::Local, interactionConst_, stepWork_,
