@@ -42,6 +42,9 @@
 #define GROMACS_UTIL_H
 
 #include <functional>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -115,6 +118,8 @@ struct MatchingField<N, T, Tuple, true>
 {
     static decltype(auto) get(Tuple& tp) { return std::get<N>(tp); }
 };
+
+std::string next_token(std::string& s, const std::string& delimiter);
 
 } // namespace detail
 
@@ -229,6 +234,20 @@ template<class Op, class First, class... Ts>
 auto binary_fold(Op&& op, First&& first, Ts&&... args)
 {
     return op(first, binary_fold(op, args...));
+}
+
+template<class... Args>
+std::string formatString(std::string fmt, Args... args)
+{
+    std::ostringstream os;
+    std::string        delimiter = "{}";
+
+    __attribute__((unused)) std::initializer_list<int> unused{
+        0, (os << detail::next_token(fmt, delimiter) << args, 0)...
+    };
+    os << detail::next_token(fmt, delimiter);
+
+    return os.str();
 }
 
 } // namespace nblib

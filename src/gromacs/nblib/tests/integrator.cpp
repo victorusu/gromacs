@@ -48,7 +48,7 @@
 
 #include "gromacs/nblib/molecules.h"
 #include "gromacs/nblib/particletype.h"
-#include "gromacs/utility/stringutil.h"
+#include "gromacs/nblib/util.h"
 
 #include "testutils/testasserts.h"
 
@@ -113,17 +113,17 @@ TEST(NBlibTest, IntegratorWorks)
                         x0[i][d] + v0[i][d] * totalTime + 0.5 * f[i][d] * totalTime * totalTime * im;
                 vAnalytical[d] = v0[i][d] + f[i][d] * totalTime * im;
 
-                EXPECT_REAL_EQ_TOL(xAnalytical[d], simulationState.coordinates()[i][d], tolerance)
-                        << gmx::formatString(
-                                   "Coordinate %d of atom %d is different from analytical solution "
-                                   "at step %d.",
-                                   d, i, step);
+                EXPECT_REAL_EQ_TOL(xAnalytical[d], simulationState.coordinates()[i][d], tolerance),
+                        formatString(
+                                "Coordinate {} of atom {} is different from analytical solution "
+                                "at step {}.",
+                                d, i, step);
 
-                EXPECT_REAL_EQ_TOL(vAnalytical[d], simulationState.velocities()[i][d], tolerance)
-                        << gmx::formatString(
-                                   "Velocity component %d of atom %d is different from analytical "
-                                   "solution at step %d.",
-                                   d, i, step);
+                EXPECT_REAL_EQ_TOL(vAnalytical[d], simulationState.velocities()[i][d], tolerance),
+                        formatString(
+                                "Velocity component {} of atom {} is different from analytical "
+                                "solution at step {}.",
+                                d, i, step);
             }
             integrator.integrate(dt);
         }

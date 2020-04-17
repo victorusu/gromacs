@@ -53,7 +53,6 @@
 #include "gromacs/topology/exclusionblocks.h"
 #include "gromacs/utility/exceptions.h"
 #include "gromacs/utility/smalloc.h"
-#include "gromacs/utility/stringutil.h"
 
 namespace nblib
 {
@@ -248,8 +247,8 @@ Topology TopologyBuilder::buildTopology()
             if (topology_.nonBondedInteractionMap_.count(interactionKey) == 0)
             {
                 std::string message =
-                        gmx::formatString("Missing nonbonded interaction parameters for pair %s %s",
-                                          particleType1.first.c_str(), particleType2.first.c_str());
+                        formatString("Missing nonbonded interaction parameters for pair {} {}",
+                                     particleType1.first.c_str(), particleType2.first.c_str());
                 GMX_THROW(gmx::InvalidInputError(message));
             }
         }

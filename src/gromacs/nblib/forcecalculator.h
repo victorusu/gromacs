@@ -44,7 +44,6 @@
 #ifndef GMX_NBLIB_FORCECALCULATOR_H
 #define GMX_NBLIB_FORCECALCULATOR_H
 
-#include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/nblib/simulationstate.h"
 
 #include "interactions.h"
