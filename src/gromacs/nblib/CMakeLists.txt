@@ -38,13 +38,47 @@
 # \author Sebastian Keller <keller@cscs.ch>
 #
 
-file(GLOB NBLIB_SOURCES *.cpp)
+add_library(nblib "")
 
-install(FILES
+target_sources(nblib
+        INTERFACE
+        bondtypes.h
+        box.h
+        forcecalculator.h
+        integrator.h
+        interactions.h
+        molecules.h
+        nbkerneldef.h
         nbkerneloptions.h
-        DESTINATION include/nblib)
+        particletype.h
+        simulationstate.h
+        topology.h
+        util.h
+        )
 
-set(LIBGROMACS_SOURCES ${LIBGROMACS_SOURCES} ${NBLIB_SOURCES} PARENT_SCOPE)
+target_sources(nblib
+        PRIVATE
+        bondtypes.cpp
+        box.cpp
+        forcecalculator.cpp
+        gmxcalculator.h
+        gmxcalculator.cpp
+        gmxsetup.h
+        gmxsetup.cpp
+        integrator.cpp
+        interactions.cpp
+        molecules.cpp
+        particletype.cpp
+        simulationstate.cpp
+        topology.cpp
+        util.cpp
+        )
+
+set_target_properties(nblib
+        PROPERTIES
+        LINKER_LANGUAGE CXX
+        OUTPUT_NAME "nblib"
+        )
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
