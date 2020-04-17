@@ -181,9 +181,15 @@ auto CubicBondType::properties()
 
 bool operator==(const CubicBondType& a, const CubicBondType& b)
 {
+#if GMX_DOUBLE
     static_assert(sizeof(CubicBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
+                          == sizeof(std::string) + 2 * sizeof(ForceConstant) + sizeof(EquilDistance),
                   "CubicBondType operator == incorrect");
+#else
+    static_assert(sizeof(CubicBondType)
+                  == sizeof(std::string) + 2 * sizeof(ForceConstant) + sizeof(EquilDistance) + 4,
+                  "CubicBondType operator == incorrect");
+#endif
 
     return detail::commonCompare(a, b, CubicBondType::properties());
 }
@@ -240,9 +246,15 @@ auto MorseBondType::properties()
 
 bool operator==(const MorseBondType& a, const MorseBondType& b)
 {
+#if GMX_DOUBLE
     static_assert(sizeof(MorseBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
+                          == sizeof(std::string) + sizeof(ForceConstant) + sizeof(Exponent) + sizeof(EquilDistance),
                   "CubicBondType operator == incorrect");
+#else
+    static_assert(sizeof(MorseBondType)
+                  == sizeof(std::string) + sizeof(ForceConstant) + sizeof(Exponent) + sizeof(EquilDistance) + 4,
+                  "CubicBondType operator == incorrect");
+#endif
 
     return detail::commonCompare(a, b, MorseBondType::properties());
 }

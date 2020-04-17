@@ -44,10 +44,13 @@
 #include "gmxpre.h"
 
 #include "gromacs/nblib/util.h"
-
-#include <vector>
+#include "gromacs/utility/arrayref.h"
 
 #include "testutils/testasserts.h"
+
+#include "testhelpers.h"
+
+#include <vector>
 
 namespace nblib
 {
@@ -91,27 +94,15 @@ TEST(NBlibTest, checkNumericValuesHasInf)
 }
 
 
-TEST(NBlibTest, generateVelocity)
+TEST(NBlibTest, GeneratedVelocitiesAreCorrect)
 {
     constexpr size_t  N = 10;
     std::vector<real> masses(N, 1.0);
-    auto              out = generateVelocity(300.0, 1, masses);
+    gmx::ArrayRef<gmx::RVec> velocities;
+    velocities = generateVelocity(300.0, 1, masses);
 
-    std::vector<gmx::RVec> expected = {
-        { 2.698104, 0.553971, -0.669996 },  { 1.208262, -0.947503, -0.393945 },
-        { -0.256397, 0.150944, -1.902301 }, { -2.665339, 1.028487, 1.863356 },
-        { -0.519059, -1.580847, 0.596605 }, { -1.535892, -4.004550, 2.329542 },
-        { 2.046137, -0.657188, -0.847896 }, { 0.524716, 2.047179, 1.075778 },
-        { -0.530676, 1.008563, 1.509182 },  { 0.710458, -1.426227, 2.217572 }
-    };
-
-    for (size_t i = 0; i < N; i++)
-    {
-        for (int m = 0; (m < DIM); m++)
-        {
-            EXPECT_REAL_EQ_TOL(out[XX][XX], expected[XX][XX], gmx::test::defaultRealTolerance());
-        }
-    }
+    Vector3DTest velocitiesTest;
+    velocitiesTest.testForces(velocities, "generated-velocities");
 }
 TEST(NBlibTest, generateVelocitySize)
 {

@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="referencedata.xsl"?>
+<ReferenceData>
+    <Sequence Name="generated-velocities">
+        <Int Name="Length">10</Int>
+        <Vector>
+            <Real Name="X">2.698104</Real>
+            <Real Name="Y">0.553971</Real>
+            <Real Name="Z">-0.669996</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">1.208262</Real>
+            <Real Name="Y">-0.947503</Real>
+            <Real Name="Z">-0.393945</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">-0.256397</Real>
+            <Real Name="Y">0.150944</Real>
+            <Real Name="Z">-1.902301</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">-2.665339</Real>
+            <Real Name="Y">1.028487</Real>
+            <Real Name="Z">1.863356</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">-0.519059</Real>
+            <Real Name="Y">-1.580847</Real>
+            <Real Name="Z">0.596605</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">-1.535892</Real>
+            <Real Name="Y">-4.004550</Real>
+            <Real Name="Z">2.329542</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">2.046137</Real>
+            <Real Name="Y">-0.657188</Real>
+            <Real Name="Z">-0.847896</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">0.524716</Real>
+            <Real Name="Y">2.047179</Real>
+            <Real Name="Z">1.075778</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">-0.530676</Real>
+            <Real Name="Y">1.008563</Real>
+            <Real Name="Z">1.509182</Real>
+        </Vector>
+        <Vector>
+            <Real Name="X">0.710458</Real>
+            <Real Name="Y">-1.426227</Real>
+            <Real Name="Z">2.217572</Real>
+        </Vector>
+    </Sequence>
+</ReferenceData>

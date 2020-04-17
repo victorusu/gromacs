@@ -47,18 +47,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/nblib/forcecalculator.h"
 #include "gromacs/nblib/gmxsetup.h"
 #include "gromacs/nblib/integrator.h"
-#include "gromacs/nblib/particletype.h"
-#include "gromacs/nblib/simulationstate.h"
 #include "gromacs/nblib/topology.h"
 #include "gromacs/topology/exclusionblocks.h"
 
-#include "testutils/refdata.h"
-#include "testutils/testasserts.h"
-
+#include "testhelpers.h"
 #include "testsystems.h"
 
 namespace nblib
@@ -91,27 +86,6 @@ void compareLists(const gmx::ListOfLists<T>& list, const std::vector<std::vector
 //       file can just include forcerec.h
 #define SET_CGINFO_HAS_VDW(cgi) (cgi) = ((cgi) | (1 << 23))
 
-//! Simple test harness for checking forces against reference data
-class ForcesOutputTest
-{
-public:
-    ForcesOutputTest() : checker_(refData_.rootChecker())
-    {
-        gmx::test::FloatingPointTolerance tolerance(
-                gmx::test::FloatingPointTolerance(1e-8, 1.0e-12, 1e-8, 1.0e-12, 100, 100, true));
-        checker_.setDefaultTolerance(tolerance);
-    }
-
-    void testForces(gmx::ArrayRef<gmx::RVec> forces, const std::string& testString)
-    {
-        checker_.checkSequence(forces.begin(), forces.end(), testString.c_str());
-    }
-
-private:
-    gmx::test::TestReferenceData    refData_;
-    gmx::test::TestReferenceChecker checker_;
-};
-
 TEST(NBlibTest, SpcMethanolForcesAreCorrect)
 {
     auto options        = NBKernelOptions();
@@ -126,7 +100,7 @@ TEST(NBlibTest, SpcMethanolForcesAreCorrect)
     gmx::ArrayRef<gmx::RVec> forces;
     ASSERT_NO_THROW(forces = forceCalculator.compute());
 
-    ForcesOutputTest forcesOutputTest;
+    Vector3DTest forcesOutputTest;
     forcesOutputTest.testForces(forces, "SPC-methanol forces");
 }
 
@@ -180,7 +154,7 @@ TEST(NBlibTest, ArgonForcesAreCorrect)
     gmx::ArrayRef<gmx::RVec> testForces;
     testForces = forceCalculator.compute();
 
-    ForcesOutputTest forcesOutputTest;
+    Vector3DTest forcesOutputTest;
     forcesOutputTest.testForces(testForces, "Argon forces");
 }
 
