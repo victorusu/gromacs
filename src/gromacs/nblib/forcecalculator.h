@@ -44,7 +44,6 @@
 #ifndef GMX_NBLIB_FORCECALCULATOR_H
 #define GMX_NBLIB_FORCECALCULATOR_H
 
-#include "gromacs/gpu_utils/hostallocator.h"
 #include "gromacs/nblib/simulationstate.h"
 
 #include "interactions.h"
@@ -70,7 +69,7 @@ public:
      * \todo Refactor this function to return a handle to dispatchNonbondedKernel
      *       that callers can manipulate directly.
      */
-    gmx::PaddedHostVector<gmx::RVec> compute();
+    gmx::ArrayRef<gmx::RVec> compute();
 
 private:
     //! GROMACS force calculator to compute forces

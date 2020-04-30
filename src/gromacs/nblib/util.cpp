@@ -53,6 +53,24 @@
 namespace nblib
 {
 
+namespace detail
+{
+
+std::string next_token(std::string& s, const std::string& delimiter)
+{
+    std::string token = s.substr(0, s.find(delimiter));
+
+    std::size_t next = s.find(delimiter);
+    if (next == std::string::npos)
+        s.clear();
+    else
+        s.erase(0, next + delimiter.length());
+
+    return token;
+}
+
+} // namespace detail
+
 static std::vector<gmx::RVec> low_mspeed(real tempi, std::vector<real> const& masses, gmx::ThreeFry2x64<>* rng)
 {
     int                                    nrdf;

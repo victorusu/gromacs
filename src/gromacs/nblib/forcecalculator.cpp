@@ -56,7 +56,7 @@ ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOp
     gmxForceCalculator_ = nblib::GmxSetupDirector::setupGmxForceCalculator(system, options);
 }
 
-gmx::PaddedHostVector<gmx::RVec> ForceCalculator::compute()
+gmx::ArrayRef<gmx::RVec> ForceCalculator::compute()
 {
     return gmxForceCalculator_->compute();
 }

@@ -254,9 +254,9 @@ std::vector<std::tuple<int, int>> Molecule::getExclusions() const
         //! make sure we have the (particleName,residueName) combo
         if (it1 == std::end(indexKey) or std::get<0>(*it1) != particleName1 or std::get<1>(*it1) != residueName1)
         {
-            throw std::runtime_error((std::string("Particle ") += particleName1 + std::string(" in residue ") +=
-                                      residueName1 + std::string(" not found in list of particles\n"))
-                                             .c_str());
+            throw std::runtime_error(
+                    (std::string("Particle ") += particleName1 + std::string(" in residue ") +=
+                     residueName1 + std::string(" not found in list of particles\n")));
         }
 
         int firstIndex = std::get<2>(*it1);
@@ -268,9 +268,9 @@ std::vector<std::tuple<int, int>> Molecule::getExclusions() const
         //! make sure we have the (particleName,residueName) combo
         if (it2 == std::end(indexKey) or std::get<0>(*it2) != particleName2 or std::get<1>(*it2) != residueName2)
         {
-            throw std::runtime_error((std::string("Particle ") += particleName2 + std::string(" in residue ") +=
-                                      residueName2 + std::string(" not found in list of particles\n"))
-                                             .c_str());
+            throw std::runtime_error(
+                    (std::string("Particle ") += particleName2 + std::string(" in residue ") +=
+                     residueName2 + std::string(" not found in list of particles\n")));
         }
 
         int secondIndex = std::get<2>(*it2);
