@@ -49,8 +49,8 @@
 
 #include <cmath>
 
+#include "gromacs/nblib/util.h"
 #include "gromacs/utility/exceptions.h"
-#include "gromacs/utility/stringutil.h"
 
 namespace nblib
 {
@@ -93,10 +93,10 @@ void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName, C6
         if (std::get<0>(insertLocation.first->second) != c6
             || std::get<1>(insertLocation.first->second) != c12)
         {
-            std::string message = gmx::formatString(
+            std::string message = formatString(
                     "Attempting to add nonbonded interaction parameters for particle "
-                    "type %s twice",
-                    particleTypeName.c_str());
+                    "type {} twice",
+                    particleTypeName);
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
@@ -119,10 +119,10 @@ void ParticleTypesInteractions::add(const ParticleTypeName& particleTypeName1,
         if (std::get<0>(insertLocation.first->second) != c6
             || std::get<1>(insertLocation.first->second) != c12)
         {
-            std::string message = gmx::formatString(
+            std::string message = formatString(
                     "Attempting to add nonbonded interaction parameters between the particle types "
-                    "%s %s twice",
-                    particleTypeName1.c_str(), particleTypeName2.c_str());
+                    "{} {} twice",
+                    particleTypeName1, particleTypeName2);
             GMX_THROW(gmx::InvalidInputError(message));
         }
     }
@@ -174,9 +174,8 @@ NonBondedInteractionMap ParticleTypesInteractions::generateTable()
             auto interactionKey = std::make_tuple(particleTypeName1, particleTypeName2);
             if (nonbondedParameters_.count(interactionKey) == 0)
             {
-                std::string message =
-                        gmx::formatString("Missing interaction between %s %s",
-                                          particleTypeName1.c_str(), particleTypeName2.c_str());
+                std::string message = formatString("Missing interaction between {} {}",
+                                                   particleTypeName1, particleTypeName2);
                 GMX_THROW(gmx::InvalidInputError(message));
             }
         }
