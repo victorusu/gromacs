@@ -60,11 +60,9 @@ gmx_add_gtest_executable(
     util.cpp
     topology.cpp
     interactions.cpp
-    # pseudo-library for code for mdrun
-    #$<TARGET_OBJECTS:nblib_objlib>
     )
-target_link_libraries(${exename} PRIVATE nblib_test_infrastructure)
-gmx_register_gtest_test(${testname} ${exename} OPENMP_THREADS 1 INTEGRATION_TEST)
+target_link_libraries(${exename} PRIVATE nblib_test_infrastructure nblib)
+gmx_register_gtest_test(${testname} ${exename})
 
 
 set(testname "NbLibTests")
@@ -77,8 +75,6 @@ gmx_add_gtest_executable(
     nbkernelsystem.cpp
     nbnxnsetup.cpp
     gmxcalculator.cpp
-    # pseudo-library for code for mdrun
-    #$<TARGET_OBJECTS:nblib_objlib>
     )
-target_link_libraries(${exename} PRIVATE nblib_test_infrastructure)
-gmx_register_gtest_test(${testname} ${exename} OPENMP_THREADS 1 INTEGRATION_TEST)
+target_link_libraries(${exename} PRIVATE nblib_test_infrastructure nblib)
+gmx_register_gtest_test(${testname} ${exename})
