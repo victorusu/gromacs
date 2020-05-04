@@ -34,10 +34,8 @@
 # To help us fund GROMACS development, we humbly ask that you cite
 # the research papers on the package. Check out http://www.gromacs.org.
 
-cmake_minimum_required(VERSION 3.9.6)
-if(POLICY CMP0074) #3.12
-    cmake_policy(SET CMP0074 NEW)
-endif()
+cmake_minimum_required(VERSION 3.13)
+cmake_policy(SET CMP0074 NEW) # From CMake 3.12
 cmake_policy(SET CMP0068 NEW) # From CMake-3.9
 
 # CMake modules/macros are in a subdirectory to keep this file cleaner
@@ -45,9 +43,9 @@ cmake_policy(SET CMP0068 NEW) # From CMake-3.9
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    # Providing a default value >=10.9 helps to find modern C++ compatibility,
+    # Providing a default value >=10.14 helps to find modern C++ compatibility,
     # such as by defaulting to the Clang libc++ instead of libstdc++.
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14 CACHE STRING
         "OS X deployment target affects default SDK version and compiler flags."
         FORCE)
     # By default, limit the binary architecture to a single 64-bit build.
@@ -58,7 +56,7 @@ endif()
 
 project(Gromacs)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -70,6 +68,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 find_package(LibStdCpp)
 
+# Python is first referenced in gmxVersionInfo, so we perform the search early
+# to find a suitable installation for all components.
+include(gmxPythonDiscovery)
 # Set up common version variables, as well as general information about
 # the build tree (whether the build is from a source package or from a git
 # repository).  Also declares a few functions that will be used for generating
@@ -258,12 +259,6 @@ gmx_dependent_option(
     "GMX_FFT_LIBRARY STREQUAL FFTW3")
 mark_as_advanced(GMX_BUILD_OWN_FFTW)
 mark_as_advanced(GMX_DISABLE_FFTW_MEASURE)
-
-gmx_option_multichoice(
-    GMX_QMMM_PROGRAM
-    "QM package for QM/MM"
-    None
-    none gaussian mopac gamess orca)
 
 gmx_dependent_cache_variable(GMX_SIMD_REF_FLOAT_WIDTH  "Reference SIMD single precision width" STRING "4" "GMX_SIMD STREQUAL REFERENCE")
 gmx_dependent_cache_variable(GMX_SIMD_REF_DOUBLE_WIDTH "Reference SIMD double precision width" STRING "2" "GMX_SIMD STREQUAL REFERENCE")
@@ -692,22 +687,6 @@ endif()
 include(gmxManageSimd)
 gmx_manage_simd()
 
-# Process QM/MM Settings
-if(${GMX_QMMM_PROGRAM} STREQUAL "GAUSSIAN")
-    set(GMX_QMMM_GAUSSIAN 1)
-elseif(${GMX_QMMM_PROGRAM} STREQUAL "MOPAC")
-    set(GMX_QMMM_MOPAC 1)
-elseif(${GMX_QMMM_PROGRAM} STREQUAL "GAMESS")
-    set(GMX_QMMM_GAMESS 1)
-elseif(${GMX_QMMM_PROGRAM} STREQUAL "ORCA")
-    set(GMX_QMMM_ORCA 1)
-elseif(${GMX_QMMM_PROGRAM} STREQUAL "NONE")
-    # nothing to do
-else()
-    gmx_invalid_option_value(GMX_QMMM_PROGRAM)
-endif()
-
-
 ##################################################
 # Process FFT library settings
 ##################################################
@@ -784,6 +763,8 @@ else()
     message("CMAKE_EXE_LINKER_FLAGS: ${FFT_LINKER_FLAGS} ${MPI_LINKER_FLAGS}")
     message("CMAKE_SHARED_LINKER_FLAGS: ${FFT_LINKER_FLAGS} ${MPI_LINKER_FLAGS}")
 endif()
+# Allow `admin` directory to be easily conveyed to nested CMake commands.
+set(GMX_ADMIN_DIR ${CMAKE_SOURCE_DIR}/admin)
 
 ########################################################################
 # Specify install locations
@@ -857,30 +838,11 @@ if (BUILD_TESTING)
 endif()
 
 # TODO: Determine control flow and defaults for package installation and testing use cases.
-# Ref: http://redmine.gromacs.org/issues/2896
+# Ref: https://gitlab.com/gromacs/gromacs/-/issues/2896
 option(GMX_PYTHON_PACKAGE "Configure gmxapi Python package" OFF)
 mark_as_advanced(GMX_PYTHON_PACKAGE)
 
 if (NOT GMX_BUILD_MDRUN_ONLY)
-    # Note: Though only documented as an output variable, PYTHON_EXECUTABLE is
-    # also effective as a CMake input variable to effectively hint the location
-    # of the Python interpreter. This may be helpful in environments with both
-    # Python 2 and Python 3 on the default PATH.
-    # Ref: https://cmake.org/cmake/help/latest/module/FindPythonInterp.html
-    if(FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp)
-        # Keep quiet on subsequent runs of cmake
-        set(PythonInterp_FIND_QUIETLY ON)
-    endif()
-    # Older CMake versions might not search for Python newer than 3.7.
-    set(Python_ADDITIONAL_VERSIONS 3.8)
-    if(GMX_PYTHON_PACKAGE)
-        find_package(PythonInterp 3.5 REQUIRED)
-        # Note: PythonLibs will be found later by pybind11.
-        # TODO: (issue #2998) When CMake >= 3.12 is required, update detection.
-        # I.e.  find_package(Python3 3.5 COMPONENTS Interpreter Development REQUIRED)
-    else()
-        find_package(PythonInterp 3.5)
-    endif()
     find_package(ImageMagick QUIET COMPONENTS convert)
     include(gmxTestImageMagick)
     GMX_TEST_IMAGEMAGICK(IMAGE_CONVERT_POSSIBLE)

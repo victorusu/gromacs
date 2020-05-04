@@ -61,10 +61,18 @@ function (gmx_add_libgromacs_sources)
 endfunction ()
 
 # TODO Reconsider this, as the CUDA driver API is probably a simpler
-# approach, at least for the build system. See Redmine #2530
+# approach, at least for the build system. See Issue #2530
 function (gmx_compile_cpp_as_cuda)
     _gmx_add_files_to_property(GMX_LIBGROMACS_GPU_IMPL_SOURCES ${ARGN})
 endfunction ()
+
+# Permit the configuration to disable compiling the many nbnxm kernels
+# and others involved in force calculations. Currently only
+# short-ranged and bonded kernels are disabled this way, but in future
+# others may be appropriate. Thus the cmake option is not specific to
+# nbnxm module.
+option(GMX_USE_SIMD_KERNELS "Whether to compile NBNXM and other SIMD kernels" ON)
+mark_as_advanced(GMX_USE_SIMD_KERNELS)
 
 # Add these contents first because linking their tests can take a lot
 # of time, so we want lots of parallel work still available after
@@ -305,10 +313,8 @@ set_target_properties(libgromacs PROPERTIES
 gmx_manage_lmfit()
 target_link_libraries(libgromacs PRIVATE lmfit)
 
-# Fix everything found by the latest version of clang that we use in
-# Jenkins testing. This should be updated when we update the latest
-# tested version of clang.
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION MATCHES "^7\.0")
+# Make sure we fix "everything" found by more recent versions of clang.
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "7")
    target_compile_options(libgromacs PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Weverything ${IGNORED_CLANG_ALL_WARNINGS}>)
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -349,12 +355,14 @@ endif()
 # for the binary
 if (NOT GMX_BUILD_MDRUN_ONLY OR BUILD_SHARED_LIBS)
     install(TARGETS libgromacs
+            COMPONENT libraries
             EXPORT libgromacs
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            INCLUDES DESTINATION include
-            COMPONENT libraries)
+            INCLUDES DESTINATION include)
+    target_compile_definitions(libgromacs PUBLIC $<INSTALL_INTERFACE:GMX_DOUBLE=${GMX_DOUBLE_VALUE}>)
+    add_library(Gromacs::libgromacs ALIAS libgromacs)
 endif()
 
 if (NOT GMX_BUILD_MDRUN_ONLY)

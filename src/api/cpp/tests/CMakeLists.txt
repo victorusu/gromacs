@@ -1,7 +1,7 @@
 #
 # This file is part of the GROMACS molecular simulation package.
 #
-# Copyright (c) 2018,2019, by the GROMACS development team, led by
+# Copyright (c) 2018,2019,2020, by the GROMACS development team, led by
 # Mark Abraham, David van der Spoel, Berk Hess, and Erik Lindahl,
 # and including many others, as listed in the AUTHORS file in the
 # top-level source directory and at http://www.gromacs.org.
@@ -48,20 +48,20 @@
 # Test public interface.
 #
 
-gmx_add_gtest_executable(
-    gmxapi-test
-    restraint.cpp
-    status.cpp
-    system.cpp
-    version.cpp
-    # pseudo-library for code for mdrun
-    $<TARGET_OBJECTS:mdrun_objlib>
-    )
+gmx_add_gtest_executable(gmxapi-test
+    CPP_SOURCE_FILES
+        restraint.cpp
+        status.cpp
+        system.cpp
+        version.cpp
+        # pseudo-library for code for mdrun
+        $<TARGET_OBJECTS:mdrun_objlib>
+        )
 if(NOT GMX_USE_OPENCL)
     # GPU resources may not be properly reinitialized between simulations in
     # the same process.
     # TODO: include this with the other test sources once the issue is resolved
-    # Ref https://redmine.gromacs.org/issues/2689
+    # Ref https://gitlab.com/gromacs/gromacs/-/issues/2689
     target_sources(gmxapi-test PRIVATE runner.cpp stopsignaler.cpp)
 endif()
 
@@ -71,7 +71,7 @@ target_include_directories(gmxapi-test PRIVATE
 # Link against the gmxapi libraries and get access to its public (installed) headers.
 target_link_libraries(gmxapi-test PRIVATE Gromacs::gmxapi mdrun_test_infrastructure)
 
-gmx_register_gtest_test(GmxapiExternalInterfaceTests gmxapi-test OPENMP_THREADS 2 INTEGRATION_TEST)
+gmx_register_gtest_test(GmxapiExternalInterfaceTests gmxapi-test OPENMP_THREADS 2 INTEGRATION_TEST IGNORE_LEAKS)
 
 set_tests_properties(GmxapiExternalInterfaceTests PROPERTIES
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -80,20 +80,20 @@ set_tests_properties(GmxapiExternalInterfaceTests PROPERTIES
 # Test public interface with MPI.
 #
 
-gmx_add_gtest_executable(
-    gmxapi-mpi-test MPI
-    restraint.cpp
-    status.cpp
-    system.cpp
-    version.cpp
-    # pseudo-library for code for mdrun
-    $<TARGET_OBJECTS:mdrun_objlib>
-    )
+gmx_add_gtest_executable(gmxapi-mpi-test MPI
+    CPP_SOURCE_FILES
+        restraint.cpp
+        status.cpp
+        system.cpp
+        version.cpp
+        # pseudo-library for code for mdrun
+        $<TARGET_OBJECTS:mdrun_objlib>
+        )
 if(NOT GMX_USE_OPENCL)
     # GPU resources may not be properly reinitialized between simulations in
     # the same process.
     # TODO: include this with the other test sources once the issue is resolved
-    # Ref https://redmine.gromacs.org/issues/2689
+    # Ref https://gitlab.com/gromacs/gromacs/-/issues/2689
     target_sources(gmxapi-mpi-test PRIVATE runner.cpp stopsignaler.cpp)
 endif()
 
@@ -101,4 +101,4 @@ target_include_directories(gmxapi-mpi-test PRIVATE
                            ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gmxapi-mpi-test PRIVATE Gromacs::gmxapi mdrun_test_infrastructure)
 
-gmx_register_gtest_test(GmxapiMpiTests gmxapi-mpi-test MPI_RANKS 2 OPENMP_THREADS 2 INTEGRATION_TEST)
+gmx_register_gtest_test(GmxapiMpiTests gmxapi-mpi-test MPI_RANKS 2 OPENMP_THREADS 2 INTEGRATION_TEST IGNORE_LEAKS)
