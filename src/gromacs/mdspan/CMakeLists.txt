@@ -32,6 +32,15 @@
 # To help us fund GROMACS development, we humbly ask that you cite
 # the research papers on the package. Check out http://www.gromacs.org.
 
+if(GMX_INSTALL_NBLIB_API)
+install(FILES
+        accessor_policy.h
+        extents.h
+        layouts.h
+        mdspan.h
+        DESTINATION include/nblib/gromacs/mdspan)
+endif()
+
 if (BUILD_TESTING)
     add_subdirectory(tests)
 endif()

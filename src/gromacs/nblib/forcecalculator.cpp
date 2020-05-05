@@ -51,6 +51,8 @@
 namespace nblib
 {
 
+ForceCalculator::~ForceCalculator() = default;
+
 ForceCalculator::ForceCalculator(const SimulationState& system, const NBKernelOptions& options)
 {
     gmxForceCalculator_ = nblib::GmxSetupDirector::setupGmxForceCalculator(system, options);
