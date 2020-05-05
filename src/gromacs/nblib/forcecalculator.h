@@ -64,6 +64,8 @@ public:
      */
     ForceCalculator(const SimulationState& system, const NBKernelOptions& options);
 
+    ~ForceCalculator();
+
     /*! \brief Sets up and runs the kernel calls
      *
      * \todo Refactor this function to return a handle to dispatchNonbondedKernel

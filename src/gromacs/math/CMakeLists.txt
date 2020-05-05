@@ -41,6 +41,16 @@ install(FILES
         vectypes.h
         DESTINATION include/gromacs/math)
 
+if(GMX_INSTALL_NBLIB_API)
+    install(FILES
+            functions.h
+            matrix.h
+            multidimarray.h
+            vec.h
+            vectypes.h
+            DESTINATION include/nblib/gromacs/math)
+endif()
+
 if (BUILD_TESTING)
     add_subdirectory(tests)
 endif()

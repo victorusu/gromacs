@@ -217,6 +217,11 @@ gmx_target_compile_options(libgromacs)
 target_compile_definitions(libgromacs PRIVATE HAVE_CONFIG_H)
 target_include_directories(libgromacs SYSTEM BEFORE PRIVATE ${PROJECT_SOURCE_DIR}/src/external/thread_mpi/include)
 
+if(GMX_INSTALL_NBLIB_API)
+    install(FILES
+            DESTINATION include/nblib)
+endif()
+
 if (GMX_USE_OPENCL)
     option(GMX_EXTERNAL_CLFFT "True if an external clFFT is required to be used" FALSE)
     mark_as_advanced(GMX_EXTERNAL_CLFFT)

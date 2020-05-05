@@ -1,8 +1,7 @@
 #
 # This file is part of the GROMACS molecular simulation package.
 #
-# Copyright (c) 2010,2011,2012,2013,2014 by the GROMACS development team.
-# Copyright (c) 2015,2017,2018,2019,2020, by the GROMACS development team, led by
+# Copyright (c) 2020, by the GROMACS development team, led by
 # Mark Abraham, David van der Spoel, Berk Hess, and Erik Lindahl,
 # and including many others, as listed in the AUTHORS file in the
 # top-level source directory and at http://www.gromacs.org.
@@ -32,52 +31,28 @@
 #
 # To help us fund GROMACS development, we humbly ask that you cite
 # the research papers on the package. Check out http://www.gromacs.org.
-
-file(GLOB UTILITY_SOURCES *.cpp)
-if (GMX_GPU AND NOT GMX_USE_OPENCL)
-    gmx_add_libgromacs_sources(cuda_version_information.cu)
-endif()
-set(LIBGROMACS_SOURCES ${LIBGROMACS_SOURCES} ${UTILITY_SOURCES} PARENT_SCOPE)
-
-# TODO: (https://redmine.gromacs.org/issues/988) Find a new convention for defining public API.
-install(FILES
-        basedefinitions.h
-        current_function.h
-        gmxassert.h
-        range.h
-        real.h
-        smalloc.h
-        real.h
-        DESTINATION include/gromacs/utility)
-
-if(GMX_INSTALL_LEGACY_API)
-  install(FILES
-          arrayref.h
-          baseversion.h
-          classhelpers.h
-          enumerationhelpers.h
-          exceptions.h
-          listoflists.h
-          programcontext.h
-          range.h
-          smalloc.h
-          unique_cptr.h
-          DESTINATION include/gromacs/utility)
-endif()
+#
+# \author Victor Holanda <victor.holanda@cscs.ch>
+# \author Joe Jordan <ejjordan@kth.se>
+# \author Prashanth Kanduri <kanduri@cscs.ch>
+# \author Sebastian Keller <keller@cscs.ch>
+#
 
 if(GMX_INSTALL_NBLIB_API)
-    install(FILES
-            arrayref.h
-            basedefinitions.h
-            classhelpers.h
-            current_function.h
-            exceptions.h
-            gmxassert.h
-            listoflists.h
-            real.h
-            DESTINATION include/nblib/gromacs/utility)
+    add_executable(argon-forces-integration "")
+
+    target_sources(argon-forces-integration
+            PRIVATE
+            argon-forces-integration.cpp
+            )
+
+    target_link_libraries(argon-forces-integration PRIVATE nblib)
+    message("where ${CMAKE_INSTALL_BINDIR}")
+    install(
+            TARGETS
+            argon-forces-integration
+            DESTINATION
+            ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
 
-if (BUILD_TESTING)
-    add_subdirectory(tests)
-endif()

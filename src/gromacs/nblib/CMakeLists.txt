@@ -38,32 +38,14 @@
 # \author Sebastian Keller <keller@cscs.ch>
 #
 
-add_library(nblib "")
-
-target_sources(nblib
-        INTERFACE
-        bondtypes.h
-        box.h
-        forcecalculator.h
-        integrator.h
-        interactions.h
-        molecules.h
-        nbkerneldef.h
-        nbkerneloptions.h
-        particletype.h
-        simulationstate.h
-        topology.h
-        util.h
-        )
+add_library(nblib SHARED "")
 
 target_sources(nblib
         PRIVATE
         bondtypes.cpp
         box.cpp
         forcecalculator.cpp
-        gmxcalculator.h
         gmxcalculator.cpp
-        gmxsetup.h
         gmxsetup.cpp
         integrator.cpp
         interactions.cpp
@@ -79,6 +61,38 @@ set_target_properties(nblib
         LINKER_LANGUAGE CXX
         OUTPUT_NAME "nblib"
         )
+
+target_link_libraries(nblib PRIVATE libgromacs)
+
+install(TARGETS nblib
+        EXPORT nblib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        INCLUDES DESTINATION include
+        )
+
+if(GMX_INSTALL_NBLIB_API)
+    install(FILES
+            basicdefinitions.h
+            bondtypes.h
+            box.h
+            forcecalculator.h
+            gmxcalculator.h
+            gmxsetup.h
+            integrator.h
+            interactions.h
+            molecules.h
+            nbkerneldef.h
+            nbkerneloptions.h
+            particletype.h
+            simulationstate.h
+            topology.h
+            util.h
+            DESTINATION include/nblib/gromacs/nblib)
+endif()
+
+add_subdirectory(samples)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
