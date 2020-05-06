@@ -1,7 +1,7 @@
 /*
  * This file is part of the GROMACS molecular simulation package.
  *
- * Copyright (c) 2018,2019, by the GROMACS development team, led by
+ * Copyright (c) 2018,2019,2020, by the GROMACS development team, led by
  * Mark Abraham, David van der Spoel, Berk Hess, and Erik Lindahl,
  * and including many others, as listed in the AUTHORS file in the
  * top-level source directory and at http://www.gromacs.org.
@@ -260,7 +260,7 @@ void runTest(TestFileManager*            fileManager,
         caller.addOption("-maxwarn", maxWarningsTolerated);
         runner->useTopGroAndNdxFromDatabase(simulationName);
         auto firstPartMdpFieldValues      = mdpFieldValues;
-        firstPartMdpFieldValues["nsteps"] = "8";
+        firstPartMdpFieldValues["nsteps"] = std::to_string(std::stoi(mdpFieldValues.at("nsteps")) / 2);
         runner->useStringAsMdpFile(prepareMdpFileContents(firstPartMdpFieldValues));
         runner->tprFileName_ = firstPartRunTprFileName;
         EXPECT_EQ(0, runner->callGrompp(caller));
@@ -354,6 +354,25 @@ TEST_P(MdrunNoAppendContinuationIsExact, WithinTolerances)
     auto integrator          = std::get<1>(params);
     auto temperatureCoupling = std::get<2>(params);
     auto pressureCoupling    = std::get<3>(params);
+
+    // Check for unimplemented functionality
+    // TODO: Update this as modular simulator gains functionality
+    const bool isModularSimulatorExplicitlyDisabled = (getenv("GMX_DISABLE_MODULAR_SIMULATOR") != nullptr);
+    const bool isTCouplingCompatibleWithModularSimulator =
+            (temperatureCoupling == "no" || temperatureCoupling == "v-rescale");
+    if (integrator == "md-vv" && pressureCoupling == "parrinello-rahman"
+        && (isModularSimulatorExplicitlyDisabled || !isTCouplingCompatibleWithModularSimulator))
+    {
+        // Under md-vv, Parrinello-Rahman is only implemented for the modular simulator
+        return;
+    }
+    if (integrator == "md-vv" && temperatureCoupling == "nose-hoover"
+        && pressureCoupling == "berendsen")
+    {
+        // This combination is not implemented in either legacy or modular simulator
+        return;
+    }
+
     SCOPED_TRACE(
             formatString("Comparing normal and two-part run of simulation '%s' "
                          "with integrator '%s'",
@@ -364,6 +383,7 @@ TEST_P(MdrunNoAppendContinuationIsExact, WithinTolerances)
     // The exact lambda state choice is unimportant, so long as there
     // is one when using an FEP input.
     mdpFieldValues["other"] += formatString("\ninit-lambda-state = %d", 3);
+    mdpFieldValues["nsteps"] = "16";
 
     // Forces on GPUs are generally not reproducible enough for a tight
     // tolerance. Similarly, the propagation of sd and bd are not as
@@ -380,10 +400,32 @@ TEST_P(MdrunNoAppendContinuationIsExact, WithinTolerances)
         // as the others, either in continuations or reruns.
         ulpToleranceInMixed = 128;
     }
-    EnergyTermsToCompare energyTermsToCompare{ {
-            { interaction_function[F_EPOT].longname,
-              relativeToleranceAsPrecisionDependentUlp(10.0, ulpToleranceInMixed, ulpToleranceInDouble) },
-    } };
+    EnergyTermsToCompare energyTermsToCompare{
+        { { interaction_function[F_EPOT].longname,
+            relativeToleranceAsPrecisionDependentUlp(10.0, ulpToleranceInMixed, ulpToleranceInDouble) },
+          { interaction_function[F_EKIN].longname,
+            relativeToleranceAsPrecisionDependentUlp(10.0, ulpToleranceInMixed, ulpToleranceInDouble) } }
+    };
+
+    if (temperatureCoupling != "no" || pressureCoupling != "no")
+    {
+        energyTermsToCompare.insert({ interaction_function[F_ECONSERVED].longname,
+                                      relativeToleranceAsPrecisionDependentUlp(
+                                              10.0, ulpToleranceInMixed, ulpToleranceInDouble) });
+    }
+
+    if (pressureCoupling == "parrinello-rahman")
+    {
+        energyTermsToCompare.insert(
+                { "Box-Vel-XX", relativeToleranceAsPrecisionDependentUlp(1e-12, ulpToleranceInMixed,
+                                                                         ulpToleranceInDouble) });
+        energyTermsToCompare.insert(
+                { "Box-Vel-YY", relativeToleranceAsPrecisionDependentUlp(1e-12, ulpToleranceInMixed,
+                                                                         ulpToleranceInDouble) });
+        energyTermsToCompare.insert(
+                { "Box-Vel-ZZ", relativeToleranceAsPrecisionDependentUlp(1e-12, ulpToleranceInMixed,
+                                                                         ulpToleranceInDouble) });
+    }
 
     int numWarningsToTolerate = 1;
     runTest(&fileManager_, &runner_, simulationName, numWarningsToTolerate, mdpFieldValues,
@@ -411,41 +453,27 @@ INSTANTIATE_TEST_CASE_P(NormalIntegratorsWithFEP,
                                            ::testing::Values("no")));
 
 INSTANTIATE_TEST_CASE_P(
-        NormalNVT,
+        NVT,
         MdrunNoAppendContinuationIsExact,
         ::testing::Combine(::testing::Values("argon12"),
                            ::testing::Values("md", "md-vv"),
                            ::testing::Values("berendsen", "v-rescale", "nose-hoover"),
                            ::testing::Values("no")));
 
-INSTANTIATE_TEST_CASE_P(LeapfrogNPH,
+INSTANTIATE_TEST_CASE_P(NPH,
                         MdrunNoAppendContinuationIsExact,
                         ::testing::Combine(::testing::Values("argon12"),
-                                           ::testing::Values("md"),
+                                           ::testing::Values("md", "md-vv"),
                                            ::testing::Values("no"),
                                            ::testing::Values("berendsen", "parrinello-rahman")));
 
 INSTANTIATE_TEST_CASE_P(
-        LeapfrogNPT,
+        NPT,
         MdrunNoAppendContinuationIsExact,
         ::testing::Combine(::testing::Values("argon12"),
-                           ::testing::Values("md"),
+                           ::testing::Values("md", "md-vv"),
                            ::testing::Values("berendsen", "v-rescale", "nose-hoover"),
                            ::testing::Values("berendsen", "parrinello-rahman")));
-
-INSTANTIATE_TEST_CASE_P(VelocityVerletNPH,
-                        MdrunNoAppendContinuationIsExact,
-                        ::testing::Combine(::testing::Values("argon12"),
-                                           ::testing::Values("md-vv"),
-                                           ::testing::Values("no"),
-                                           ::testing::Values("berendsen")));
-
-INSTANTIATE_TEST_CASE_P(VelocityVerletNPT,
-                        MdrunNoAppendContinuationIsExact,
-                        ::testing::Combine(::testing::Values("argon12"),
-                                           ::testing::Values("md-vv"),
-                                           ::testing::Values("v-rescale"),
-                                           ::testing::Values("berendsen")));
 
 INSTANTIATE_TEST_CASE_P(MTTK,
                         MdrunNoAppendContinuationIsExact,

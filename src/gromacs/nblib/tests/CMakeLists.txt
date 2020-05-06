@@ -51,6 +51,7 @@ set(exename "nblib-setup-test")
 
 gmx_add_gtest_executable(
     ${exename}
+    CPP_SOURCE_FILES
     # files with code for tests
     integrator.cpp
     particletype.cpp
@@ -70,6 +71,7 @@ set(exename "nblib-test")
 
 gmx_add_gtest_executable(
     ${exename}
+    CPP_SOURCE_FILES
     # files with code for tests
     simstate.cpp
     nbkernelsystem.cpp

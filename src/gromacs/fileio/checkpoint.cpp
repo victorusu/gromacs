@@ -1272,16 +1272,11 @@ static int do_cpt_state(XDR* xd, int fflags, t_state* state, FILE* list)
                     break;
                 /* The RNG entries are no longer written,
                  * the next 4 lines are only for reading old files.
+                 * It's OK that three case statements fall through.
                  */
                 case estLD_RNG_NOTSUPPORTED:
-                    ret = do_cpte_ints(xd, part, i, sflags, 0, nullptr, list);
-                    break;
                 case estLD_RNGI_NOTSUPPORTED:
-                    ret = do_cpte_ints(xd, part, i, sflags, 0, nullptr, list);
-                    break;
                 case estMC_RNG_NOTSUPPORTED:
-                    ret = do_cpte_ints(xd, part, i, sflags, 0, nullptr, list);
-                    break;
                 case estMC_RNGI_NOTSUPPORTED:
                     ret = do_cpte_ints(xd, part, i, sflags, 0, nullptr, list);
                     break;
@@ -2177,6 +2172,18 @@ static int do_cpt_files(XDR* xd, gmx_bool bRead, std::vector<gmx_file_position_t
     return 0;
 }
 
+static void mpiBarrierBeforeRename(const bool applyMpiBarrierBeforeRename, MPI_Comm mpiBarrierCommunicator)
+{
+    if (applyMpiBarrierBeforeRename)
+    {
+#if GMX_MPI
+        MPI_Barrier(mpiBarrierCommunicator);
+#else
+        GMX_RELEASE_ASSERT(false, "Should not request a barrier without MPI");
+        GMX_UNUSED_VALUE(mpiBarrierCommunicator);
+#endif
+    }
+}
 
 void write_checkpoint(const char*                   fn,
                       gmx_bool                      bNumberAndKeep,
@@ -2192,7 +2199,9 @@ void write_checkpoint(const char*                   fn,
                       double                        t,
                       t_state*                      state,
                       ObservablesHistory*           observablesHistory,
-                      const gmx::MdModulesNotifier& mdModulesNotifier)
+                      const gmx::MdModulesNotifier& mdModulesNotifier,
+                      bool                          applyMpiBarrierBeforeRename,
+                      MPI_Comm                      mpiBarrierCommunicator)
 {
     t_fileio* fp;
     char*     fntemp; /* the temporary checkpoint file name */
@@ -2419,6 +2428,8 @@ void write_checkpoint(const char*                   fn,
         if (gmx_fexist(fn))
         {
             /* Rename the previous checkpoint file */
+            mpiBarrierBeforeRename(applyMpiBarrierBeforeRename, mpiBarrierCommunicator);
+
             std::strcpy(buf, fn);
             buf[std::strlen(fn) - std::strlen(ftp2ext(fn2ftp(fn))) - 1] = '\0';
             std::strcat(buf, "_prev");
@@ -2440,6 +2451,10 @@ void write_checkpoint(const char*                   fn,
                 gmx_file_rename(fn, buf);
             }
         }
+
+        /* Rename the checkpoint file from the temporary to the final name */
+        mpiBarrierBeforeRename(applyMpiBarrierBeforeRename, mpiBarrierCommunicator);
+
         if (gmx_file_rename(fntemp, fn) != 0)
         {
             gmx_file("Cannot rename checkpoint file; maybe you are out of disk space?");
@@ -2817,31 +2832,38 @@ void load_checkpoint(const char*                   fn,
     }
     if (PAR(cr))
     {
-        gmx_bcast(sizeof(headerContents.step), &headerContents.step, cr);
-        gmx::MdModulesCheckpointReadingBroadcast broadcastCheckPointData = { *cr, headerContents.file_version };
+        gmx_bcast(sizeof(headerContents.step), &headerContents.step, cr->mpi_comm_mygroup);
+        gmx::MdModulesCheckpointReadingBroadcast broadcastCheckPointData = {
+            cr->mpi_comm_mygroup, PAR(cr), headerContents.file_version
+        };
         mdModulesNotifier.checkpointingNotifications_.notify(broadcastCheckPointData);
     }
     ir->bContinuation = TRUE;
-    // TODO Should the following condition be <=? Currently if you
-    // pass a checkpoint written by an normal completion to a restart,
-    // mdrun will read all input, does some work but no steps, and
-    // write successful output. But perhaps that is not desirable.
-    if ((ir->nsteps >= 0) && (ir->nsteps < headerContents.step))
-    {
-        // Note that we do not intend to support the use of mdrun
-        // -nsteps to circumvent this condition.
-        char nstepsString[STEPSTRSIZE], stepString[STEPSTRSIZE];
-        gmx_step_str(ir->nsteps, nstepsString);
-        gmx_step_str(headerContents.step, stepString);
-        gmx_fatal(FARGS,
-                  "The input requested %s steps, however the checkpoint "
-                  "file has already reached step %s. The simulation will not "
-                  "proceed, because either your simulation is already complete, "
-                  "or your combination of input files don't match.",
-                  nstepsString, stepString);
-    }
     if (ir->nsteps >= 0)
     {
+        // TODO Should the following condition be <=? Currently if you
+        // pass a checkpoint written by an normal completion to a restart,
+        // mdrun will read all input, does some work but no steps, and
+        // write successful output. But perhaps that is not desirable.
+        // Note that we do not intend to support the use of mdrun
+        // -nsteps to circumvent this condition.
+        if (ir->nsteps + ir->init_step < headerContents.step)
+        {
+            char        buf[STEPSTRSIZE];
+            std::string message =
+                    gmx::formatString("The input requested %s steps, ", gmx_step_str(ir->nsteps, buf));
+            if (ir->init_step > 0)
+            {
+                message += gmx::formatString("starting from step %s, ", gmx_step_str(ir->init_step, buf));
+            }
+            message += gmx::formatString(
+                    "however the checkpoint "
+                    "file has already reached step %s. The simulation will not "
+                    "proceed, because either your simulation is already complete, "
+                    "or your combination of input files don't match.",
+                    gmx_step_str(headerContents.step, buf));
+            gmx_fatal(FARGS, "%s", message.c_str());
+        }
         ir->nsteps += ir->init_step - headerContents.step;
     }
     ir->init_step       = headerContents.step;

@@ -80,6 +80,8 @@ set_target_properties(nblib
         OUTPUT_NAME "nblib"
         )
 
+target_link_libraries(nblib Gromacs::libgromacs)
+
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()

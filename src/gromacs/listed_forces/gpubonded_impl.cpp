@@ -160,7 +160,11 @@ class GpuBonded::Impl
 {
 };
 
-GpuBonded::GpuBonded(const gmx_ffparams_t& /* ffparams */, void* /*streamPtr */, gmx_wallcycle* /* wcycle */) :
+GpuBonded::GpuBonded(const gmx_ffparams_t& /* ffparams */,
+                     const float /* electrostaticsScaleFactor */,
+                     const DeviceContext& /* deviceContext */,
+                     const DeviceStream& /* deviceStream */,
+                     gmx_wallcycle* /* wcycle */) :
     impl_(nullptr)
 {
 }
@@ -168,21 +172,28 @@ GpuBonded::GpuBonded(const gmx_ffparams_t& /* ffparams */, void* /*streamPtr */,
 GpuBonded::~GpuBonded() = default;
 
 void GpuBonded::updateInteractionListsAndDeviceBuffers(ArrayRef<const int> /* nbnxnAtomOrder */,
-                                                       const t_idef& /* idef */,
+                                                       const InteractionDefinitions& /* idef */,
                                                        void* /* xqDevice */,
                                                        DeviceBuffer<RVec> /* forceDevice */,
                                                        DeviceBuffer<RVec> /* fshiftDevice */)
 {
 }
 
-bool GpuBonded::haveInteractions() const
+void GpuBonded::setPbc(PbcType /* pbcType */, const matrix /* box */, bool /* canMoleculeSpanPbc */)
 {
-    return false;
 }
 
-void GpuBonded::launchKernel(const t_forcerec* /* fr */,
-                             const gmx::StepWorkload& /* stepWork */,
-                             const matrix /* box */)
+bool GpuBonded::haveInteractions() const
+{
+    return !impl_;
+}
+
+void GpuBonded::launchKernel(const gmx::StepWorkload& /* stepWork */) {}
+
+void GpuBonded::setPbcAndlaunchKernel(PbcType /* pbcType */,
+                                      const matrix /* box */,
+                                      bool /* canMoleculeSpanPbc */,
+                                      const gmx::StepWorkload& /* stepWork */)
 {
 }
 
