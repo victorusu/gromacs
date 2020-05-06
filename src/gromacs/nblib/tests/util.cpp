@@ -44,13 +44,13 @@
 #include "gmxpre.h"
 
 #include "gromacs/nblib/util.h"
-#include "gromacs/utility/arrayref.h"
 
 #include "testutils/testasserts.h"
 
 #include "testhelpers.h"
 
 #include <vector>
+#include <iostream>
 
 namespace nblib
 {
@@ -94,15 +94,15 @@ TEST(NBlibTest, checkNumericValuesHasInf)
 }
 
 
-TEST(NBlibTest, GeneratedVelocitiesAreCorrect)
+TEST(NBlibTest, generatedVelocitiesAreCorrect)
 {
     constexpr size_t  N = 10;
     std::vector<real> masses(N, 1.0);
-    gmx::ArrayRef<gmx::RVec> velocities;
+    std::vector<gmx::RVec> velocities;
     velocities = generateVelocity(300.0, 1, masses);
 
     Vector3DTest velocitiesTest;
-    velocitiesTest.testForces(velocities, "generated-velocities");
+    velocitiesTest.testVectors(velocities, "generated-velocities");
 }
 TEST(NBlibTest, generateVelocitySize)
 {

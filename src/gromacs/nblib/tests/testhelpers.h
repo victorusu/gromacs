@@ -73,7 +73,7 @@ public:
         checker_.setDefaultTolerance(tolerance);
     }
 
-    void testForces(gmx::ArrayRef<gmx::RVec> forces, const std::string& testString)
+    void testVectors(gmx::ArrayRef<gmx::RVec> forces, const std::string& testString)
     {
         checker_.checkSequence(forces.begin(), forces.end(), testString.c_str());
     }

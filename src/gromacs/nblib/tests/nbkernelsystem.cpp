@@ -101,7 +101,7 @@ TEST(NBlibTest, SpcMethanolForcesAreCorrect)
     ASSERT_NO_THROW(forces = forceCalculator.compute());
 
     Vector3DTest forcesOutputTest;
-    forcesOutputTest.testForces(forces, "SPC-methanol forces");
+    forcesOutputTest.testVectors(forces, "SPC-methanol forces");
 }
 
 TEST(NBlibTest, ExpectedNumberOfForces)
@@ -155,7 +155,7 @@ TEST(NBlibTest, ArgonForcesAreCorrect)
     testForces = forceCalculator.compute();
 
     Vector3DTest forcesOutputTest;
-    forcesOutputTest.testForces(testForces, "Argon forces");
+    forcesOutputTest.testVectors(testForces, "Argon forces");
 }
 
 } // namespace
