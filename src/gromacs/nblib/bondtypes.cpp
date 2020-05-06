@@ -119,10 +119,6 @@ auto HarmonicBondType::properties()
 
 bool operator==(const HarmonicBondType& a, const HarmonicBondType& b)
 {
-    static_assert(sizeof(HarmonicBondType)
-                          == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "HarmonicBondType operator == incorrect");
-
     return detail::commonCompare(a, b, HarmonicBondType::properties());
 }
 
@@ -148,9 +144,6 @@ auto G96BondType::properties()
 
 bool operator==(const G96BondType& a, const G96BondType& b)
 {
-    static_assert(sizeof(G96BondType) == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
     return detail::commonCompare(a, b, G96BondType::properties());
 }
 
@@ -181,10 +174,6 @@ auto CubicBondType::properties()
 
 bool operator==(const CubicBondType& a, const CubicBondType& b)
 {
-    static_assert(sizeof(CubicBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "CubicBondType operator == incorrect");
-
     return detail::commonCompare(a, b, CubicBondType::properties());
 }
 
@@ -210,9 +199,6 @@ auto FENEBondType::properties()
 
 bool operator==(const FENEBondType& a, const FENEBondType& b)
 {
-    static_assert(sizeof(FENEBondType) == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
     return detail::commonCompare(a, b, FENEBondType::properties());
 }
 
@@ -240,10 +226,6 @@ auto MorseBondType::properties()
 
 bool operator==(const MorseBondType& a, const MorseBondType& b)
 {
-    static_assert(sizeof(MorseBondType)
-                          == sizeof(std::string) + 3 * sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "CubicBondType operator == incorrect");
-
     return detail::commonCompare(a, b, MorseBondType::properties());
 }
 
@@ -271,10 +253,6 @@ auto HalfAttractiveQuarticBondType::properties()
 
 bool operator==(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b)
 {
-    static_assert(sizeof(HalfAttractiveQuarticBondType)
-                          == sizeof(std::string) + sizeof(ForceConstant) + sizeof(EquilDistance),
-                  "G96BondType operator == incorrect");
-
     return detail::commonCompare(a, b, HalfAttractiveQuarticBondType::properties());
 }
 

@@ -46,9 +46,10 @@
 
 #include "gmxpre.h"
 
-#include <cmath>
-
 #include "gromacs/nblib/box.h"
+
+#include "testutils/refdata.h"
+#include "testutils/testasserts.h"
 
 namespace nblib
 {
@@ -57,6 +58,27 @@ namespace test
 {
 
 bool operator==(const Box& a, const Box& b);
+
+// Simple test harness for checking 3D vectors like coordinates, velocities, forces against reference data
+class Vector3DTest
+{
+public:
+    Vector3DTest() : checker_(refData_.rootChecker())
+    {
+        gmx::test::FloatingPointTolerance tolerance(
+                gmx::test::FloatingPointTolerance(1e-8, 1.0e-12, 1e-8, 1.0e-12, 200, 100, true));
+        checker_.setDefaultTolerance(tolerance);
+    }
+
+    void testVectors(gmx::ArrayRef<gmx::RVec> forces, const std::string& testString)
+    {
+        checker_.checkSequence(forces.begin(), forces.end(), testString.c_str());
+    }
+
+private:
+    gmx::test::TestReferenceData    refData_;
+    gmx::test::TestReferenceChecker checker_;
+};
 
 } // namespace test
 } // namespace nblib
