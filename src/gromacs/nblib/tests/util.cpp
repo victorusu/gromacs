@@ -45,12 +45,11 @@
 
 #include "gromacs/nblib/util.h"
 
+#include <vector>
+
 #include "testutils/testasserts.h"
 
 #include "testhelpers.h"
-
-#include <vector>
-#include <iostream>
 
 namespace nblib
 {
@@ -94,10 +93,10 @@ TEST(NBlibTest, checkNumericValuesHasInf)
 }
 
 
-TEST(NBlibTest, generatedVelocitiesAreCorrect)
+TEST(NBlibTest, GeneratedVelocitiesAreCorrect)
 {
-    constexpr size_t  N = 10;
-    std::vector<real> masses(N, 1.0);
+    constexpr size_t       N = 10;
+    std::vector<real>      masses(N, 1.0);
     std::vector<gmx::RVec> velocities;
     velocities = generateVelocity(300.0, 1, masses);
 

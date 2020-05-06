@@ -46,8 +46,6 @@
 
 #include "gmxpre.h"
 
-#include <cmath>
-
 #include "gromacs/nblib/box.h"
 
 #include "testutils/refdata.h"
@@ -61,15 +59,14 @@ namespace test
 
 bool operator==(const Box& a, const Box& b);
 
-//! Simple test harness for checking 3D vectors like coordinates, velocities, forces against reference data
+// Simple test harness for checking 3D vectors like coordinates, velocities, forces against reference data
 class Vector3DTest
 {
 public:
     Vector3DTest() : checker_(refData_.rootChecker())
     {
         gmx::test::FloatingPointTolerance tolerance(
-                gmx::test::FloatingPointTolerance(1e-8, 1.0e-12,
-                        1e-8, 1.0e-12, 100, 100, true));
+                gmx::test::FloatingPointTolerance(1e-8, 1.0e-12, 1e-8, 1.0e-12, 200, 100, true));
         checker_.setDefaultTolerance(tolerance);
     }
 

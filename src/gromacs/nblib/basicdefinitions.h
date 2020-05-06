@@ -45,6 +45,8 @@
 #ifndef GMX_NBLIB_BASICDEFINITIONS_H
 #define GMX_NBLIB_BASICDEFINITIONS_H
 
+#include <math.h>
+
 // from utility/real.h
 #if GMX_DOUBLE
 #    ifndef HAVE_REAL
@@ -68,12 +70,6 @@ typedef float real;
 #define BOLTZ (RGAS / KILO)            /* (kJ/(mol K)) */
 #define EPSILON0_SI (8.8541878128e-12) /* F/m,  NIST 2018 CODATA */
 #define EPSILON0 ((EPSILON0_SI * NANO * KILO) / (E_CHARGE * E_CHARGE * AVOGADRO))
-
-#ifdef  M_PI
-#undef  M_PI
-#define M_PI 3.14159265358979323846 /* pi */
-#endif
-
 #define ONE_4PI_EPS0 (1.0 / (4.0 * M_PI * EPSILON0))
 
 // from pbc/ishift.h
