@@ -56,7 +56,7 @@ namespace test_detail
 {
 
 template<class B>
-void testThreeParameterBondEquality(const B& deduceType)
+void testTwoParameterBondEquality(const B& deduceType)
 {
     ignore_unused(deduceType);
     B a(1, 2);
@@ -68,7 +68,7 @@ void testThreeParameterBondEquality(const B& deduceType)
 }
 
 template<class B>
-void testFourParameterBondEquality(const B& deduceType)
+void testThreeParameterBondEquality(const B& deduceType)
 {
     ignore_unused(deduceType);
     B a(1, 2, 3);
@@ -80,7 +80,7 @@ void testFourParameterBondEquality(const B& deduceType)
 }
 
 template<class B>
-void testThreeParameterBondLessThan(const B& deduceType)
+void testTwoParameterBondLessThan(const B& deduceType)
 {
     ignore_unused(deduceType);
     B a(1, 2);
@@ -99,7 +99,7 @@ void testThreeParameterBondLessThan(const B& deduceType)
 }
 
 template<class B>
-void testFourParameterBondLessThan(const B& deduceType)
+void testThreeParameterBondLessThan(const B& deduceType)
 {
     ignore_unused(deduceType);
     B a(1, 2, 1);
@@ -123,20 +123,20 @@ TEST(NBlibTest, BondTypesOperatorEqualWorks)
 {
     auto bondList3 = std::make_tuple(HarmonicBondType(), G96BondType(), FENEBondType(),
                                      HalfAttractiveQuarticBondType());
-    for_each_tuple([](const auto& b) { test_detail::testThreeParameterBondEquality(b); }, bondList3);
+    for_each_tuple([](const auto& b) { test_detail::testTwoParameterBondEquality(b); }, bondList3);
 
     auto bondList4 = std::make_tuple(CubicBondType(), MorseBondType());
-    for_each_tuple([](const auto& b) { test_detail::testFourParameterBondEquality(b); }, bondList4);
+    for_each_tuple([](const auto& b) { test_detail::testThreeParameterBondEquality(b); }, bondList4);
 }
 
 TEST(NBlibTest, BondTypesLessThanWorks)
 {
     auto bondList3 = std::make_tuple(HarmonicBondType(), G96BondType(), FENEBondType(),
                                      HalfAttractiveQuarticBondType());
-    for_each_tuple([](const auto& b) { test_detail::testThreeParameterBondLessThan(b); }, bondList3);
+    for_each_tuple([](const auto& b) { test_detail::testTwoParameterBondLessThan(b); }, bondList3);
 
     auto bondList4 = std::make_tuple(CubicBondType(), MorseBondType());
-    for_each_tuple([](const auto& b) { test_detail::testFourParameterBondLessThan(b); }, bondList4);
+    for_each_tuple([](const auto& b) { test_detail::testThreeParameterBondLessThan(b); }, bondList4);
 }
 
 

@@ -65,7 +65,8 @@ using ParticleName = std::string;
 using Charge       = real;
 using ResidueName  = std::string;
 
-using SupportedBondTypes = TypeList<HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType>;
+using SupportedBondTypes =
+        TypeList<HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType>;
 
 class Molecule
 {
