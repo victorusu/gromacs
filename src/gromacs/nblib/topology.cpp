@@ -184,6 +184,11 @@ std::tuple<std::vector<size_t>, std::vector<B>> collectBonds(const std::vector<s
     return std::make_tuple(expansionArray, collectedBonds);
 }
 
+#define COLLECT_BONDS_INSTANTIATE_TEMPLATE(x)                              \
+    template std::tuple<std::vector<size_t>, std::vector<x>> collectBonds( \
+            const std::vector<std::tuple<Molecule, int>>&);
+MAP(COLLECT_BONDS_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+
 //! for each interaction, translate the (moleculeName, nr, residueName, particleName)-pair
 //! to particle sequence ID pairs
 template<class B>
@@ -218,6 +223,12 @@ std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<M
     }
     return interactionPairIDs;
 }
+
+#define SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE(x)                   \
+    template std::vector<std::tuple<int, int>> sequencePairIDs<x>( \
+            const std::vector<std::tuple<Molecule, int>>&, const detail::ParticleSequencer&);
+MAP(SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE
 
 template<class B>
 std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& aggregatedBonds)
@@ -272,6 +283,12 @@ std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const st
 
     return make_tuple(uniqueIndices, uniqueBondInstances);
 }
+
+#define ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE(x)                             \
+    template std::tuple<std::vector<size_t>, std::vector<x>> eliminateDuplicateBonds( \
+            const std::vector<x>& aggregatedBonds);
+MAP(ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE
 
 } // namespace detail
 

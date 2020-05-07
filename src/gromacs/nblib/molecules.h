@@ -65,8 +65,10 @@ using ParticleName = std::string;
 using Charge       = real;
 using ResidueName  = std::string;
 
-using SupportedBondTypes =
-        TypeList<HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType>;
+#define SUPPORTED_BOND_TYPES \
+    HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType
+
+using SupportedBondTypes = TypeList<SUPPORTED_BOND_TYPES>;
 
 class Molecule
 {
@@ -130,7 +132,7 @@ public:
     void addExclusion(const std::string& particleName, const std::string& particleNameToExclude);
 
     //! add various types of interactions to the molecule
-    //! Note: adding an interaction type not listed in InteractionTuple in this class results in a compilation error
+    //! Note: adding an interaction type not listed in SUPPORTED_BOND_TYPES results in a compilation error
     template<class Interaction>
     void addInteraction(const ParticleName& particleNameI,
                         const ResidueName&  residueNameI,
@@ -195,12 +197,20 @@ private:
 
     //! collection of data for all types of interactions
     InteractionTuple interactionData_;
-
-    // force code generation for all BondTypes listed in the Interaction tuple
-    // compared to explict template declaration + definition, we don't have to repeat the list of
-    // templates this never gets called
-    void instantiateInteractions();
 };
+
+#define ADD_INTERACTION_EXTERN_TEMPLATE(x)                                      \
+    extern template void Molecule::addInteraction(                              \
+            const ParticleName& particleNameI, const ResidueName& residueNameI, \
+            const ParticleName& particleNameJ, const ResidueName& residueNameJ, const x& interaction);
+MAP(ADD_INTERACTION_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_EXTERN_TEMPLATE
+
+#define ADD_INTERACTION_EXTERN_TEMPLATE(x)         \
+    extern template void Molecule::addInteraction( \
+            const ParticleName& particleNameI, const ParticleName& particleNameJ, const x& interaction);
+MAP(ADD_INTERACTION_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_EXTERN_TEMPLATE
 
 } // namespace nblib
 #endif // GMX_NBLIB_MOLECULES_H

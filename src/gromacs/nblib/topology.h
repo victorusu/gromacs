@@ -76,11 +76,23 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
 template<class B>
 std::tuple<std::vector<size_t>, std::vector<B>> collectBonds(const std::vector<std::tuple<Molecule, int>>&);
 
+#define COLLECT_BONDS_EXTERN_TEMPLATE(x)                                          \
+    extern template std::tuple<std::vector<size_t>, std::vector<x>> collectBonds( \
+            const std::vector<std::tuple<Molecule, int>>&);
+MAP(COLLECT_BONDS_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef COLLECT_BONDS_EXTERN_TEMPLATE
+
 // Return a list of unique BondType instances U and an index list S of size aggregatedBonds.size()
 // such that the BondType instance at aggregatedBonds[i] is equal to U[S[i]]
 // returns std::tuple(S, U)
 template<class B>
 std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& collectedBonds);
+
+#define ELIMINATE_DUPLICATE_EXTERN_TEMPLATE(x)                                               \
+    extern template std::tuple<std::vector<size_t>, std::vector<x>> eliminateDuplicateBonds( \
+            const std::vector<x>& collectedBonds);
+MAP(ELIMINATE_DUPLICATE_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ELIMINATE_DUPLICATE_EXTERN_TEMPLATE
 
 //! Helper class for Topology to keep track of particle IDs
 class ParticleSequencer
@@ -103,6 +115,12 @@ private:
 template<class B>
 std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>&,
                                                   const detail::ParticleSequencer&);
+
+#define SEQUENCE_PAIR_ID_EXTERN_TEMPLATE(x)                               \
+    extern template std::vector<std::tuple<int, int>> sequencePairIDs<x>( \
+            const std::vector<std::tuple<Molecule, int>>&, const detail::ParticleSequencer&);
+MAP(SEQUENCE_PAIR_ID_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef SEQUENCE_PAIR_ID_EXTERN_TEMPLATE
 
 } // namespace detail
 

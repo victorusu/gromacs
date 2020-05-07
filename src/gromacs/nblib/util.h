@@ -51,6 +51,7 @@
 
 #include "gromacs/math/vectypes.h"
 #include "gromacs/nblib/basicdefinitions.h"
+#include "gromacs/nblib/ppmap.h"
 
 namespace nblib
 {
