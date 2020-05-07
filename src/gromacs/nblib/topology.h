@@ -69,6 +69,31 @@ std::vector<gmx::ExclusionBlock> toGmxExclusionBlock(const std::vector<std::tupl
 // Add offset to all indices in inBlock
 std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock> inBlock, int offset);
 
+// extract all bonds of type B from a vector of molecules. The second argument tuple element
+// specifies multiples of the molecule given as first tuple element. Let (S, I) denote the return
+// value tuple. Then J[i] = I[S[i]] for all i in 0...S.size() is the full sequence of BondType
+// instances as they occur in the input tuple
+template<class B>
+std::tuple<std::vector<size_t>, std::vector<B>> collectBonds(const std::vector<std::tuple<Molecule, int>>&);
+
+#define COLLECT_BONDS_EXTERN_TEMPLATE(x)                                          \
+    extern template std::tuple<std::vector<size_t>, std::vector<x>> collectBonds( \
+            const std::vector<std::tuple<Molecule, int>>&);
+MAP(COLLECT_BONDS_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef COLLECT_BONDS_EXTERN_TEMPLATE
+
+// Return a list of unique BondType instances U and an index list S of size aggregatedBonds.size()
+// such that the BondType instance at aggregatedBonds[i] is equal to U[S[i]]
+// returns std::tuple(S, U)
+template<class B>
+std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& collectedBonds);
+
+#define ELIMINATE_DUPLICATE_EXTERN_TEMPLATE(x)                                               \
+    extern template std::tuple<std::vector<size_t>, std::vector<x>> eliminateDuplicateBonds( \
+            const std::vector<x>& collectedBonds);
+MAP(ELIMINATE_DUPLICATE_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ELIMINATE_DUPLICATE_EXTERN_TEMPLATE
+
 //! Helper class for Topology to keep track of particle IDs
 class ParticleSequencer
 {
@@ -81,11 +106,21 @@ public:
     void build(const std::vector<std::tuple<Molecule, int>>& moleculesList);
 
     //! access ID by (molecule name, molecule nr, residue name, particle name)
-    int operator()(const std::string&, int, const ResidueName&, const ParticleName&);
+    int operator()(const std::string&, int, const ResidueName&, const ParticleName&) const;
 
 private:
     DataType data_;
 };
+
+template<class B>
+std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>&,
+                                                  const detail::ParticleSequencer&);
+
+#define SEQUENCE_PAIR_ID_EXTERN_TEMPLATE(x)                               \
+    extern template std::vector<std::tuple<int, int>> sequencePairIDs<x>( \
+            const std::vector<std::tuple<Molecule, int>>&, const detail::ParticleSequencer&);
+MAP(SEQUENCE_PAIR_ID_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef SEQUENCE_PAIR_ID_EXTERN_TEMPLATE
 
 } // namespace detail
 
@@ -100,6 +135,20 @@ private:
  */
 class Topology
 {
+    template<class B>
+    struct BondData
+    {
+        typedef B type;
+
+        // tuple format: <particleID i, particleID j, BondInstanceIndex>
+        std::vector<std::tuple<int, int, int>> indices;
+        // vector of unique BondType instances of type B
+        std::vector<B> bondInstances;
+    };
+
+    // std::tuple<BondData<BondType1>, ...>
+    using InteractionData = Reduce<std::tuple, Map<BondData, SupportedBondTypes>>;
+
 public:
     //! Returns the total number of particles in the system
     const int& numParticles() const;
@@ -120,6 +169,9 @@ public:
 
     //! Returns a map of non-bonded force parameters indexed by ParticleType names
     const NonBondedInteractionMap& getNonBondedInteractionMap() const;
+
+    //! Returns the interaction data
+    const InteractionData& getInteractionData() const;
 
     //! Returns the combination rule used to generate the NonBondedInteractionMap
     CombinationRule getCombinationRule() const;
@@ -143,6 +195,8 @@ private:
     detail::ParticleSequencer particleSequencer_;
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
+    //! data about bonds for all supported types
+    InteractionData interactionData_;
     //! Combination Rule used to generate the nonbonded interactions
     CombinationRule combinationRule_;
 };
@@ -190,9 +244,12 @@ private:
     // Builds a GROMACS-compliant performant exclusions list aggregating exclusions from all molecules
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
+    // Gather interaction data from molecules
+    Topology::InteractionData createInteractionData(const detail::ParticleSequencer&);
+
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>
-    std::vector<T> extractParticleTypeQuantity(Extractor extractor);
+    std::vector<T> extractParticleTypeQuantity(Extractor&& extractor);
 
     //! distinct collection of ParticleTypes
     std::unordered_map<std::string, ParticleType> particleTypes_;
@@ -204,7 +261,7 @@ private:
 //! utility function to extract Particle quantities and expand them to the full
 //! array of length numParticles()
 template<class F>
-inline auto expandQuantity(const Topology& topology, F particleTypeExtractor)
+inline auto expandQuantity(const Topology& topology, F&& particleTypeExtractor)
 {
     using ValueType = decltype((std::declval<ParticleType>().*std::declval<F>())());
 

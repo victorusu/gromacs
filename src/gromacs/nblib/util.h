@@ -51,6 +51,7 @@
 
 #include "gromacs/math/vectypes.h"
 #include "gromacs/nblib/basicdefinitions.h"
+#include "gromacs/nblib/ppmap.h"
 
 namespace nblib
 {
@@ -209,10 +210,15 @@ namespace nblib
 
 // calls func with each element in tuple_
 template<class F, class... Ts>
-decltype(auto) for_each_tuple(F&& func, std::tuple<Ts...>& tuple_)
+void for_each_tuple(F&& func, std::tuple<Ts...>& tuple_)
 {
     // TODO: change return type to void and add C++17 [[ maybe_unused ]] attribute
-    std17::apply([f = func](auto&... args) { return std::initializer_list<int>{ (f(args), 0)... }; }, tuple_);
+    std17::apply(
+            [f = func](auto&... args) {
+                auto list = std::initializer_list<int>{ (f(args), 0)... };
+                ignore_unused(list);
+            },
+            tuple_);
 }
 
 // applies func to each element in tuple_ and returns result

@@ -64,24 +64,22 @@ class HarmonicBondType
 public:
     HarmonicBondType() = default;
 
-    HarmonicBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    HarmonicBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const HarmonicBondType& other) const;
+    bool operator<(const HarmonicBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
-
-bool operator==(const HarmonicBondType& a, const HarmonicBondType& b);
-bool operator<(const HarmonicBondType& a, const HarmonicBondType& b);
 
 
 /*! \brief GROMOS bond type
@@ -94,24 +92,23 @@ class G96BondType
 public:
     G96BondType() = default;
 
-    G96BondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    G96BondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const G96BondType& other) const;
+    bool operator<(const G96BondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
 
-bool operator==(const G96BondType& a, const G96BondType& b);
-bool operator<(const G96BondType& a, const G96BondType& b);
 
 /*! \brief Cubic bond type
  *
@@ -124,12 +121,9 @@ class CubicBondType
 public:
     CubicBondType() = default;
 
-    CubicBondType(Name          name,
-                  ForceConstant quadraticForceConstant,
+    CubicBondType(ForceConstant quadraticForceConstant,
                   ForceConstant cubicForceConstant,
                   EquilDistance equilDistance);
-
-    Name name() const { return name_; }
 
     ForceConstant quadraticForceConstant() const { return quadraticForceConstant_; }
 
@@ -137,17 +131,18 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const CubicBondType& other) const;
+    bool operator<(const CubicBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant quadraticForceConstant_;
     ForceConstant cubicForceConstant_;
     EquilDistance equilDistance_;
 };
 
-bool operator==(const CubicBondType& a, const CubicBondType& b);
-bool operator<(const CubicBondType& a, const CubicBondType& b);
 
 /*! \brief FENE bond type
  *
@@ -159,24 +154,23 @@ class FENEBondType
 public:
     FENEBondType() = default;
 
-    FENEBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    FENEBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const FENEBondType& other) const;
+    bool operator<(const FENEBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
 
-bool operator==(const FENEBondType& a, const FENEBondType& b);
-bool operator<(const FENEBondType& a, const FENEBondType& b);
 
 /*! \brief Morse bond type
  *
@@ -188,9 +182,7 @@ class MorseBondType
 public:
     MorseBondType() = default;
 
-    MorseBondType(Name name, ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    MorseBondType(ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
@@ -198,17 +190,18 @@ public:
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const MorseBondType& other) const;
+    bool operator<(const MorseBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     Exponent      exponent_;
     EquilDistance equilDistance_;
 };
 
-bool operator==(const MorseBondType& a, const MorseBondType& b);
-bool operator<(const MorseBondType& a, const MorseBondType& b);
 
 /*! \brief Half-attractive quartic bond type
  *
@@ -220,24 +213,22 @@ class HalfAttractiveQuarticBondType
 public:
     HalfAttractiveQuarticBondType() = default;
 
-    HalfAttractiveQuarticBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance);
-
-    Name name() const { return name_; }
+    HalfAttractiveQuarticBondType(ForceConstant forceConstant, EquilDistance equilDistance);
 
     ForceConstant forceConstant() const { return forceConstant_; }
 
     EquilDistance equilDistance() const { return equilDistance_; }
 
-    static auto properties();
+    //! returns a tuple containing const references to the data members
+    decltype(auto) properties() const;
+
+    bool operator==(const HalfAttractiveQuarticBondType& other) const;
+    bool operator<(const HalfAttractiveQuarticBondType& other) const;
 
 private:
-    Name          name_;
     ForceConstant forceConstant_;
     EquilDistance equilDistance_;
 };
-
-bool operator==(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b);
-bool operator<(const HalfAttractiveQuarticBondType& a, const HalfAttractiveQuarticBondType& b);
 
 } // namespace nblib
 #endif // GMX_NBLIB_BONDTYPES_H

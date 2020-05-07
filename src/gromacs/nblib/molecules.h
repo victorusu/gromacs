@@ -65,6 +65,11 @@ using ParticleName = std::string;
 using Charge       = real;
 using ResidueName  = std::string;
 
+#define SUPPORTED_BOND_TYPES \
+    HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType
+
+using SupportedBondTypes = TypeList<SUPPORTED_BOND_TYPES>;
+
 class Molecule
 {
     template<class Bond>
@@ -72,12 +77,14 @@ class Molecule
     {
         using type = Bond;
 
-        std::unordered_map<Name, Bond> interactionTypes_;
-        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName, Name>> interactions_;
+        std::vector<Bond> interactionTypes_;
+        std::vector<std::tuple<ParticleName, ResidueName, ParticleName, ResidueName>> interactions_;
     };
 
-    using InteractionTuple =
-            std::tuple<BondData<HarmonicBondType>, BondData<G96BondType>, BondData<CubicBondType>, BondData<FENEBondType>, BondData<HalfAttractiveQuarticBondType>>;
+    // BondContainerTypes is TypeList<BondData<HarmonicBondType>, ...>
+    using BondContainerTypes = Map<BondData, SupportedBondTypes>;
+    // InteractionTuple is std::tuple<BondData<HarmonicBondType>, ...>
+    using InteractionTuple = Reduce<std::tuple, BondContainerTypes>;
 
 public:
     Molecule(std::string moleculeName);
@@ -125,19 +132,19 @@ public:
     void addExclusion(const std::string& particleName, const std::string& particleNameToExclude);
 
     //! add various types of interactions to the molecule
-    //! Note: adding an interaction type not listed in InteractionTuple in this class results in a compilation error
+    //! Note: adding an interaction type not listed in SUPPORTED_BOND_TYPES results in a compilation error
     template<class Interaction>
     void addInteraction(const ParticleName& particleNameI,
                         const ResidueName&  residueNameI,
                         const ParticleName& particleNameJ,
                         const ResidueName&  residueNameJ,
-                        Interaction         interaction);
+                        const Interaction&  interaction);
 
     // add interactions with default residue name
     template<class Interaction>
     void addInteraction(const ParticleName& particleNameI,
                         const ParticleName& particleNameJ,
-                        Interaction         interaction);
+                        const Interaction&  interaction);
 
     // The number of molecules
     int numParticlesInMolecule() const;
@@ -190,12 +197,20 @@ private:
 
     //! collection of data for all types of interactions
     InteractionTuple interactionData_;
-
-    // force code generation for all BondTypes listed in the Interaction tuple
-    // compared to explict template declaration + definition, we don't have to repeat the list of
-    // templates this never gets called
-    void instantiateInteractions();
 };
+
+#define ADD_INTERACTION_EXTERN_TEMPLATE(x)                                      \
+    extern template void Molecule::addInteraction(                              \
+            const ParticleName& particleNameI, const ResidueName& residueNameI, \
+            const ParticleName& particleNameJ, const ResidueName& residueNameJ, const x& interaction);
+MAP(ADD_INTERACTION_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_EXTERN_TEMPLATE
+
+#define ADD_INTERACTION_EXTERN_TEMPLATE(x)         \
+    extern template void Molecule::addInteraction( \
+            const ParticleName& particleNameI, const ParticleName& particleNameJ, const x& interaction);
+MAP(ADD_INTERACTION_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_EXTERN_TEMPLATE
 
 } // namespace nblib
 #endif // GMX_NBLIB_MOLECULES_H

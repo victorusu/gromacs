@@ -192,6 +192,227 @@ TEST(NBlibTest, TopologyHasSequencing)
     EXPECT_EQ(5, watersTopology.sequenceID("SOL", 1, "SOL", "H2"));
 }
 
+TEST(NBlibTest, TopologyCanAggregateBonds)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
+    std::vector<HarmonicBondType>          bonds;
+    std::vector<size_t>                    bondsExpansion;
+    std::tie(bondsExpansion, bonds) = detail::collectBonds<HarmonicBondType>(molecules);
+
+    std::vector<HarmonicBondType> bondsTest;
+    // use the expansionArray (bondsExpansion) to expand to the full list if bonds
+    std::transform(begin(bondsExpansion), end(bondsExpansion), std::back_inserter(bondsTest),
+                   [&bonds](size_t i) { return bonds[i]; });
+
+    std::vector<HarmonicBondType> waterBonds =
+            pickType<HarmonicBondType>(water.interactionData()).interactionTypes_;
+    std::vector<HarmonicBondType> methanolBonds =
+            pickType<HarmonicBondType>(methanol.interactionData()).interactionTypes_;
+
+    std::vector<HarmonicBondType> bondsReference;
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bondsReference));
+    std::copy(begin(waterBonds), end(waterBonds), std::back_inserter(bondsReference));
+    std::copy(begin(methanolBonds), end(methanolBonds), std::back_inserter(bondsReference));
+
+    EXPECT_EQ(bondsTest, bondsReference);
+}
+
+TEST(NBlibTest, TopologyCanSequencePairIDs)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
+    detail::ParticleSequencer              particleSequencer;
+    particleSequencer.build(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, particleSequencer);
+
+    int Ow1 = particleSequencer("SOL", 0, "SOL", "Oxygen");
+    int H11 = particleSequencer("SOL", 0, "SOL", "H1");
+    int H12 = particleSequencer("SOL", 0, "SOL", "H2");
+    int Ow2 = particleSequencer("SOL", 1, "SOL", "Oxygen");
+    int H21 = particleSequencer("SOL", 1, "SOL", "H1");
+    int H22 = particleSequencer("SOL", 1, "SOL", "H2");
+
+    int Me  = particleSequencer("MeOH", 0, "MeOH", "Me1");
+    int MeO = particleSequencer("MeOH", 0, "MeOH", "O2");
+    int MeH = particleSequencer("MeOH", 0, "MeOH", "H3");
+
+#define SORT(i, j) (i < j) ? i : j, (i < j) ? j : i
+
+    std::vector<std::tuple<int, int>> pairs_reference{ { SORT(Ow1, H11) }, { SORT(Ow1, H12) },
+                                                       { SORT(Ow2, H21) }, { SORT(Ow2, H22) },
+                                                       { SORT(MeO, MeH) }, { SORT(MeO, Me) } };
+#undef SORT
+
+    EXPECT_EQ(pairs, pairs_reference);
+}
+
+TEST(NBlibTest, TopologySequenceIdThrows)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    std::vector<std::tuple<Molecule, int>> molecules{ std::make_tuple(water, 2),
+                                                      std::make_tuple(methanol, 1) };
+    detail::ParticleSequencer              particleSequencer;
+    particleSequencer.build(molecules);
+    auto pairs = detail::sequencePairIDs<HarmonicBondType>(molecules, particleSequencer);
+
+    // Input error: no particle called O-Atom in molecule "water"
+    EXPECT_THROW(particleSequencer("SOL", 0, "SOL", "O-Atom"), gmx::InvalidInputError);
+}
+
+TEST(NBlibTest, TopologyCanEliminateDuplicateBonds)
+{
+    HarmonicBondType b1(1.0, 2.0);
+    HarmonicBondType b2(1.1, 2.1);
+    HarmonicBondType b3(1.2, 2.2);
+
+    // can be compressed to {b1,b2,b3} + {1,1,2,0,1,0,2,2}
+    std::vector<HarmonicBondType> bonds{ b2, b2, b3, b1, b2, b1, b3, b3 };
+
+    // expected output
+    std::vector<HarmonicBondType> uniqueBondsReference{ b1, b2, b3 };
+    std::vector<size_t>           indicesReference{ 1, 1, 2, 0, 1, 0, 2, 2 };
+
+    std::tuple<std::vector<size_t>, std::vector<HarmonicBondType>> bondData =
+            detail::eliminateDuplicateBonds(bonds);
+
+    auto indices     = std::get<0>(bondData);
+    auto uniqueBonds = std::get<1>(bondData);
+
+    EXPECT_EQ(uniqueBondsReference, uniqueBonds);
+    EXPECT_EQ(indicesReference, indices);
+}
+
+TEST(NBlibTest, TopologyListedInteractions)
+{
+    Topology spcTopology = SpcMethanolTopologyBuilder{}.buildTopology(1, 2);
+
+    auto  interactionData = spcTopology.getInteractionData();
+    auto& harmonicBonds   = pickType<HarmonicBondType>(interactionData);
+
+    auto& indices = harmonicBonds.indices;
+    auto& bonds   = harmonicBonds.bondInstances;
+
+    std::map<std::tuple<int, int>, HarmonicBondType> interactions_test;
+    for (auto& ituple : indices)
+    {
+        interactions_test[std::make_tuple(std::get<0>(ituple), std::get<1>(ituple))] =
+                bonds[std::get<2>(ituple)];
+    }
+
+    // there should be 3 unique HarmonicBondType instances
+    EXPECT_EQ(bonds.size(), 3);
+    // and 6 interaction pairs (bonds)
+    EXPECT_EQ(indices.size(), 6);
+
+    HarmonicBondType ohBond(1., 1.);
+    HarmonicBondType ohBondMethanol(1.01, 1.02);
+    HarmonicBondType ometBond(1.1, 1.2);
+
+    std::map<std::tuple<int, int>, HarmonicBondType> interactions_reference;
+
+    int Ow = spcTopology.sequenceID("SOL", 0, "SOL", "Oxygen");
+    int H1 = spcTopology.sequenceID("SOL", 0, "SOL", "H1");
+    int H2 = spcTopology.sequenceID("SOL", 0, "SOL", "H2");
+
+    int Me1  = spcTopology.sequenceID("MeOH", 0, "MeOH", "Me1");
+    int MeO1 = spcTopology.sequenceID("MeOH", 0, "MeOH", "O2");
+    int MeH1 = spcTopology.sequenceID("MeOH", 0, "MeOH", "H3");
+
+    int Me2  = spcTopology.sequenceID("MeOH", 1, "MeOH", "Me1");
+    int MeO2 = spcTopology.sequenceID("MeOH", 1, "MeOH", "O2");
+    int MeH2 = spcTopology.sequenceID("MeOH", 1, "MeOH", "H3");
+
+#define SORT(i, j) (i < j) ? i : j, (i < j) ? j : i
+    interactions_reference[std::make_tuple(SORT(Ow, H1))]     = ohBond;
+    interactions_reference[std::make_tuple(SORT(Ow, H2))]     = ohBond;
+    interactions_reference[std::make_tuple(SORT(MeO1, MeH1))] = ohBondMethanol;
+    interactions_reference[std::make_tuple(SORT(MeO1, Me1))]  = ometBond;
+    interactions_reference[std::make_tuple(SORT(MeO2, MeH2))] = ohBondMethanol;
+    interactions_reference[std::make_tuple(SORT(MeO2, Me2))]  = ometBond;
+#undef SORT
+
+    EXPECT_TRUE(std::equal(begin(interactions_reference), end(interactions_reference),
+                           begin(interactions_test)));
+}
+
+TEST(NBlibTest, TopologyListedInteractionsMultipleTypes)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    CubicBondType testBond(1., 1., 1.);
+
+    water.addInteraction("H1", "H2", testBond);
+
+    ParticleTypesInteractions nbInteractions;
+    std::vector<std::string>  particleTypeNames = { "Ow", "H", "OMet", "CMet" };
+    for (const auto& name : particleTypeNames)
+    {
+        nbInteractions.add(name, 0, 0);
+    }
+
+    TopologyBuilder topologyBuilder;
+    topologyBuilder.addMolecule(water, 1);
+    topologyBuilder.addMolecule(methanol, 1);
+    topologyBuilder.addParticleTypesInteractions(nbInteractions);
+
+    Topology topology = topologyBuilder.buildTopology();
+
+    auto  interactionData = topology.getInteractionData();
+    auto& harmonicBonds   = pickType<HarmonicBondType>(interactionData);
+    auto& cubicBonds      = pickType<CubicBondType>(interactionData);
+
+    HarmonicBondType              ohBond(1., 1.);
+    HarmonicBondType              ohBondMethanol(1.01, 1.02);
+    HarmonicBondType              ometBond(1.1, 1.2);
+    std::vector<HarmonicBondType> harmonicBondsReference{ ohBond, ohBondMethanol, ometBond };
+
+    EXPECT_EQ(harmonicBonds.bondInstances, harmonicBondsReference);
+
+    int H1 = topology.sequenceID("SOL", 0, "SOL", "H1");
+    int H2 = topology.sequenceID("SOL", 0, "SOL", "H2");
+
+    std::vector<CubicBondType>             cubicBondsReference{ testBond };
+    std::vector<std::tuple<int, int, int>> cubicIndicesReference{ std::make_tuple(
+            std::min(H1, H2), std::max(H1, H2), 0) };
+    EXPECT_EQ(cubicBondsReference, cubicBonds.bondInstances);
+    EXPECT_EQ(cubicIndicesReference, cubicBonds.indices);
+}
+
+TEST(NBlibTest, TopologyInvalidParticleInInteractionThrows)
+{
+    Molecule water    = WaterMoleculeBuilder{}.waterMolecule();
+    Molecule methanol = MethanolMoleculeBuilder{}.methanolMolecule();
+
+    HarmonicBondType testBond(1., 1.);
+
+    // Invalid input: no particle named "Iron" in molecule water
+    water.addInteraction("H1", "Iron", testBond);
+
+    ParticleTypesInteractions nbInteractions;
+    std::vector<std::string>  particleTypeNames = { "Ow", "H", "OMet", "CMet" };
+    for (const auto& name : particleTypeNames)
+    {
+        nbInteractions.add(name, 0, 0);
+    }
+
+    TopologyBuilder topologyBuilder;
+    topologyBuilder.addMolecule(water, 1);
+    topologyBuilder.addMolecule(methanol, 1);
+    topologyBuilder.addParticleTypesInteractions(nbInteractions);
+
+    EXPECT_THROW(topologyBuilder.buildTopology(), gmx::InvalidInputError);
+}
+
 TEST(NBlibTest, TopologyHasNonbondedParameters)
 {
     WaterTopology waters;

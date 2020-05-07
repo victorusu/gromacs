@@ -47,6 +47,7 @@
 #include "topology.h"
 
 #include <numeric>
+#include <sstream>
 
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/util.h"
@@ -112,9 +113,27 @@ std::vector<gmx::ExclusionBlock> offsetGmxBlock(std::vector<gmx::ExclusionBlock>
 int ParticleSequencer::operator()(const std::string&  moleculeName,
                                   int                 moleculeNr,
                                   const ResidueName&  residueName,
-                                  const ParticleName& particleName)
+                                  const ParticleName& particleName) const
 {
-    return data_[moleculeName][moleculeNr][residueName][particleName];
+    try
+    {
+        return data_.at(moleculeName).at(moleculeNr).at(residueName).at(particleName);
+    }
+    catch (const std::out_of_range& outOfRange)
+    {
+        // TODO: use string format function once we have it
+        if (moleculeName != residueName)
+        {
+            printf("No particle %s in residue %s in molecule %s found\n", particleName.c_str(),
+                   residueName.c_str(), moleculeName.c_str());
+        }
+        else
+        {
+            printf("No particle %s in molecule %s found\n", particleName.c_str(), moleculeName.c_str());
+        }
+
+        throw gmx::InvalidInputError(outOfRange.what());
+    };
 }
 
 void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& moleculesList)
@@ -137,6 +156,139 @@ void ParticleSequencer::build(const std::vector<std::tuple<Molecule, int>>& mole
         }
     }
 }
+
+template<class B>
+std::tuple<std::vector<size_t>, std::vector<B>> collectBonds(const std::vector<std::tuple<Molecule, int>>& molecules)
+{
+    std::vector<B>      collectedBonds;
+    std::vector<size_t> expansionArray;
+    for (auto& molNumberTuple : molecules)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
+
+        auto& interactions = pickType<B>(molecule.interactionData()).interactionTypes_;
+
+        std::vector<size_t> moleculeExpansion(interactions.size());
+        // assign indices to the bonds in the current molecule, continue counting from
+        // the number of bonds seen so far (=collectedBonds.size())
+        std::iota(begin(moleculeExpansion), end(moleculeExpansion), collectedBonds.size());
+
+        std::copy(begin(interactions), end(interactions), std::back_inserter(collectedBonds));
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            std::copy(begin(moleculeExpansion), end(moleculeExpansion), std::back_inserter(expansionArray));
+        }
+    }
+    return std::make_tuple(expansionArray, collectedBonds);
+}
+
+#define COLLECT_BONDS_INSTANTIATE_TEMPLATE(x)                              \
+    template std::tuple<std::vector<size_t>, std::vector<x>> collectBonds( \
+            const std::vector<std::tuple<Molecule, int>>&);
+MAP(COLLECT_BONDS_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+
+//! for each interaction, translate the (moleculeName, nr, residueName, particleName)-pair
+//! to particle sequence ID pairs
+template<class B>
+std::vector<std::tuple<int, int>> sequencePairIDs(const std::vector<std::tuple<Molecule, int>>& molecules,
+                                                  const detail::ParticleSequencer& particleSequencer)
+{
+    std::vector<std::tuple<int, int>> interactionPairIDs;
+
+    // loop over all molecules
+    for (auto& molNumberTuple : molecules)
+    {
+        const Molecule& molecule = std::get<0>(molNumberTuple);
+        size_t          numMols  = std::get<1>(molNumberTuple);
+
+        for (size_t i = 0; i < numMols; ++i)
+        {
+            auto& interactions = pickType<B>(molecule.interactionData()).interactions_;
+            for (const auto& interactionPair : interactions)
+            {
+                // the particle sequence ID of the first particle
+                int id1 = particleSequencer(molecule.name(), i, std::get<1>(interactionPair),
+                                            std::get<0>(interactionPair));
+                // the particle sequence ID of the second particle
+                int id2 = particleSequencer(molecule.name(), i, std::get<3>(interactionPair),
+                                            std::get<2>(interactionPair));
+
+                // we choose to store the lower sequence ID first. this allows for better unit tests
+                // that are agnostic to how the input was set up
+                interactionPairIDs.emplace_back(std::min(id1, id2), std::max(id1, id2));
+            }
+        }
+    }
+    return interactionPairIDs;
+}
+
+#define SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE(x)                   \
+    template std::vector<std::tuple<int, int>> sequencePairIDs<x>( \
+            const std::vector<std::tuple<Molecule, int>>&, const detail::ParticleSequencer&);
+MAP(SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef SEQUENCE_PAIR_ID_INSTANTIATE_TEMPLATE
+
+template<class B>
+std::tuple<std::vector<size_t>, std::vector<B>> eliminateDuplicateBonds(const std::vector<B>& aggregatedBonds)
+{
+    std::vector<size_t> uniqueIndices(aggregatedBonds.size());
+    std::vector<B>      uniqueBondInstances;
+    // if there are no interactions of type B we're done now
+    if (aggregatedBonds.empty())
+    {
+        return std::make_tuple(uniqueIndices, uniqueBondInstances);
+    }
+
+    // create 0,1,2,... sequence
+    std::iota(begin(uniqueIndices), end(uniqueIndices), 0);
+
+    std::vector<std::tuple<B, size_t>> enumeratedBonds(aggregatedBonds.size());
+    // append each interaction with its index
+    std::transform(begin(aggregatedBonds), end(aggregatedBonds), begin(uniqueIndices),
+                   begin(enumeratedBonds), [](B b, size_t i) { return std::make_tuple(b, i); });
+
+    auto sortKey = [](const auto& t1, const auto& t2) { return std::get<0>(t1) < std::get<0>(t2); };
+    // sort w.r.t bonds. the result will contain contiguous segments of identical bond instances
+    // the associated int indicates the original index of each BondType instance in the input vector
+    std::sort(begin(enumeratedBonds), end(enumeratedBonds), sortKey);
+
+    // initialize it1 and it2 to delimit first range of equal BondType instances
+    auto range = std::equal_range(begin(enumeratedBonds), end(enumeratedBonds), enumeratedBonds[0], sortKey);
+    auto it1 = range.first;
+    auto it2 = range.second;
+
+    // number of unique instances of BondType B = number of contiguous segments in enumeratedBonds =
+    //         number of iterations in the outer while loop below
+    while (it1 != end(enumeratedBonds))
+    {
+        uniqueBondInstances.push_back(std::get<0>(*it1));
+
+        // loop over all identical BondType instances;
+        for (; it1 != it2; ++it1)
+        {
+            // we note down that the BondType instance at index <interactionIndex>
+            // can be found in the uniqueBondInstances container at index <uniqueBondInstances.size()>
+            int interactionIndex            = std::get<1>(*it1);
+            uniqueIndices[interactionIndex] = uniqueBondInstances.size() - 1;
+        }
+
+        // Note it1 has been incremented and is now equal to it2
+        if (it1 != end(enumeratedBonds))
+        {
+            it2 = std::upper_bound(it1, end(enumeratedBonds), *it1, sortKey);
+        }
+    }
+
+    return make_tuple(uniqueIndices, uniqueBondInstances);
+}
+
+#define ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE(x)                             \
+    template std::tuple<std::vector<size_t>, std::vector<x>> eliminateDuplicateBonds( \
+            const std::vector<x>& aggregatedBonds);
+MAP(ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ELIMINATE_DUPLICATE_BONDS_INSTANTIATE_TEMPLATE
 
 } // namespace detail
 
@@ -180,8 +332,53 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
+Topology::InteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
+{
+    Topology::InteractionData interactionData;
+
+    // this code is doing the compile time equivalent of
+    // for (int i = 0; i < interactionData.size(); ++i)
+    //     create(get<i>(interactionData));
+
+    auto create = [this, &particleSequencer](auto& interactionDataElement) {
+        using BondType = typename std::decay_t<decltype(interactionDataElement)>::type;
+
+        // first compression stage: each bond per molecule listed once,
+        // eliminates duplicates from multiple identical molecules
+        auto  compressedDataStage1 = detail::collectBonds<BondType>(this->molecules_);
+        auto& expansionArrayStage1 = std::get<0>(compressedDataStage1);
+        auto& moleculeBonds        = std::get<1>(compressedDataStage1);
+
+        // second compression stage: recognize bond duplicates among bonds from all molecules put together
+        auto  compressedDataStage2 = detail::eliminateDuplicateBonds(moleculeBonds);
+        auto& expansionArrayStage2 = std::get<0>(compressedDataStage2);
+        auto& uniqueBondInstances  = std::get<1>(compressedDataStage2);
+
+        // combine stage 1 + 2 expansion arrays
+        std::vector<size_t> expansionArray(expansionArrayStage1.size());
+        std::transform(begin(expansionArrayStage1), end(expansionArrayStage1), begin(expansionArray),
+                       [& S2 = expansionArrayStage2](size_t S1Element) { return S2[S1Element]; });
+
+        // add data about BondType instances
+        interactionDataElement.bondInstances = std::move(uniqueBondInstances);
+
+        interactionDataElement.indices.resize(expansionArray.size());
+        // pairIndices contains the particle sequence IDs (i,j) of all interaction pairs of type <BondType>
+        auto pairIndices = detail::sequencePairIDs<BondType>(this->molecules_, particleSequencer);
+        // zip pairIndices(i,j) + expansionArray(k) -> interactionDataElement.indices(i,j,k)
+        std::transform(begin(pairIndices), end(pairIndices), begin(expansionArray),
+                       begin(interactionDataElement.indices), [](auto pairIndex, auto bondIndex) {
+                           return std::make_tuple(std::get<0>(pairIndex), std::get<1>(pairIndex), bondIndex);
+                       });
+    };
+
+    for_each_tuple(create, interactionData);
+
+    return interactionData;
+}
+
 template<typename T, class Extractor>
-std::vector<T> TopologyBuilder::extractParticleTypeQuantity(Extractor extractor)
+std::vector<T> TopologyBuilder::extractParticleTypeQuantity(Extractor&& extractor)
 {
     auto& moleculesList = molecules_;
 
@@ -236,6 +433,8 @@ Topology TopologyBuilder::buildTopology()
 
     topology_.combinationRule_         = particleTypesInteractions_.getCombinationRule();
     topology_.nonBondedInteractionMap_ = particleTypesInteractions_.generateTable();
+
+    topology_.interactionData_ = createInteractionData(topology_.particleSequencer_);
 
     // Check whether there is any missing term in the particleTypesInteractions compared to the
     // list of particletypes
@@ -321,6 +520,11 @@ int Topology::sequenceID(std::string moleculeName, int moleculeNr, ResidueName r
 const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
 {
     return nonBondedInteractionMap_;
+}
+
+const Topology::InteractionData& Topology::getInteractionData() const
+{
+    return interactionData_;
 }
 
 CombinationRule Topology::getCombinationRule() const

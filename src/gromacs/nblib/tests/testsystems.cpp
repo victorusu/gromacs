@@ -109,7 +109,7 @@ WaterMoleculeBuilder::WaterMoleculeBuilder() : water_("SOL")
     water_.addParticle(ParticleName("H1"), Charges.at("Hw"), plib.type("H"));
     water_.addParticle(ParticleName("H2"), Charges.at("Hw"), plib.type("H"));
 
-    HarmonicBondType ohBond("oh", 1., 1.);
+    HarmonicBondType ohBond(1., 1.);
     water_.addInteraction("Oxygen", "H1", ohBond);
     water_.addInteraction("Oxygen", "H2", ohBond);
 }
@@ -145,6 +145,12 @@ MethanolMoleculeBuilder::MethanolMoleculeBuilder() : methanol_("MeOH")
     methanol_.addExclusion("Me1", "O2");
     methanol_.addExclusion("Me1", "H3");
     methanol_.addExclusion("H3", "O2");
+
+    HarmonicBondType ohBond(1.01, 1.02);
+    methanol_.addInteraction("O2", "H3", ohBond);
+
+    HarmonicBondType ometBond(1.1, 1.2);
+    methanol_.addInteraction("O2", "Me1", ometBond);
 }
 
 Molecule MethanolMoleculeBuilder::methanolMolecule()

@@ -124,40 +124,40 @@ void Molecule::addInteraction(const ParticleName& particleNameI,
                               const ResidueName&  residueNameI,
                               const ParticleName& particleNameJ,
                               const ResidueName&  residueNameJ,
-                              Interaction         interaction)
+                              const Interaction&  interaction)
 {
+    if (particleNameI == particleNameJ and residueNameI == residueNameJ)
+    {
+        throw gmx::InvalidInputError(std::string("Cannot add interaction of particle ")
+                                     + particleNameI + " with itself in molecule " + name_);
+    }
+
     auto& interactionContainer = pickType<Interaction>(interactionData_);
-    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ,
-                                                    residueNameJ, interaction.name());
-    interactionContainer.interactionTypes_.insert(
-            std::make_pair(interaction.name(), std::move(interaction)));
+    interactionContainer.interactions_.emplace_back(particleNameI, residueNameI, particleNameJ, residueNameJ);
+    interactionContainer.interactionTypes_.push_back(interaction);
 }
+
+#define ADD_INTERACTION_INSTANTIATE_TEMPLATE(x)                                 \
+    template void Molecule::addInteraction(                                     \
+            const ParticleName& particleNameI, const ResidueName& residueNameI, \
+            const ParticleName& particleNameJ, const ResidueName& residueNameJ, const x& interaction);
+MAP(ADD_INTERACTION_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_INSTANTIATE_TEMPLATE
 
 // add interactions with default residue name
 template<class Interaction>
 void Molecule::addInteraction(const ParticleName& particleNameI,
                               const ParticleName& particleNameJ,
-                              Interaction         interaction)
+                              const Interaction&  interaction)
 {
     addInteraction(particleNameI, name_, particleNameJ, name_, interaction);
 }
 
-void Molecule::instantiateInteractions()
-{
-    // Note: this never gets called, but forces template instantiations of this->addInteraction for
-    // all types defined in the header
-
-    // if executed, this lambda creates an instance of the "type" defined in the type of its
-    // argument and calls this->addInteraction with this instance
-    auto addEmptyInteraction = [this](auto interactionContainer) {
-        this->addInteraction("", "", typename decltype(interactionContainer)::type{});
-    };
-
-    // execute addEmptyInteraction for each element in interactionData_
-    std17::apply([f = addEmptyInteraction](
-                         auto&... args) { std::initializer_list<int>{ (f(args), 0)... }; },
-                 interactionData_);
-}
+#define ADD_INTERACTION_INSTANTIATE_TEMPLATE(x)                               \
+    template void Molecule::addInteraction(const ParticleName& particleNameI, \
+                                           const ParticleName& particleNameJ, const x& interaction);
+MAP(ADD_INTERACTION_INSTANTIATE_TEMPLATE, SUPPORTED_BOND_TYPES)
+#undef ADD_INTERACTION_INSTANTIATE_TEMPLATE
 
 int Molecule::numParticlesInMolecule() const
 {
