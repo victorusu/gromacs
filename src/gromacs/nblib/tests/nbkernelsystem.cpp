@@ -66,20 +66,6 @@ namespace
 using ::testing::Eq;
 using ::testing::Pointwise;
 
-//! Compares all element between two lists of lists
-//! Todo: unify this with the identical function in nbkernelsystem test make this a method
-//!       of ListOfLists<>
-template<typename T>
-void compareLists(const gmx::ListOfLists<T>& list, const std::vector<std::vector<T>>& v)
-{
-    ASSERT_EQ(list.size(), v.size());
-    for (std::size_t i = 0; i < list.size(); i++)
-    {
-        ASSERT_EQ(list[i].size(), v[i].size());
-        EXPECT_THAT(list[i], Pointwise(Eq(), v[i]));
-    }
-}
-
 // This is defined in src/gromacs/mdtypes/forcerec.h but there is also a
 // legacy C6 macro defined there that conflicts with the nblib C6 type.
 // Todo: Once that C6 has been refactored into a regular function, this

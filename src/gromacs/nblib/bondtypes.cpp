@@ -104,9 +104,7 @@ bool commonRelational(const B& a, const B& b, Op&& op, const std::tuple<Ps...>& 
 } // namespace detail
 
 HarmonicBondType::HarmonicBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
-    forceConstant_(forceConstant),
-    equilDistance_(equilDistance)
+    name_(std::move(name)), forceConstant_(forceConstant), equilDistance_(equilDistance)
 {
 }
 
@@ -129,9 +127,7 @@ bool operator<(const HarmonicBondType& a, const HarmonicBondType& b)
 }
 
 G96BondType::G96BondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
-    forceConstant_(forceConstant),
-    equilDistance_(equilDistance)
+    name_(std::move(name)), forceConstant_(forceConstant), equilDistance_(equilDistance)
 {
 }
 
@@ -184,9 +180,7 @@ bool operator<(const CubicBondType& a, const CubicBondType& b)
 }
 
 FENEBondType::FENEBondType(Name name, ForceConstant forceConstant, EquilDistance equilDistance) :
-    name_(std::move(name)),
-    forceConstant_(forceConstant),
-    equilDistance_(equilDistance)
+    name_(std::move(name)), forceConstant_(forceConstant), equilDistance_(equilDistance)
 {
 }
 
@@ -209,10 +203,7 @@ bool operator<(const FENEBondType& a, const FENEBondType& b)
 }
 
 MorseBondType::MorseBondType(Name name, ForceConstant forceConstant, Exponent exponent, EquilDistance equilDistance) :
-    name_(std::move(name)),
-    forceConstant_(forceConstant),
-    exponent_(exponent),
-    equilDistance_(equilDistance)
+    name_(std::move(name)), forceConstant_(forceConstant), exponent_(exponent), equilDistance_(equilDistance)
 {
 }
 
@@ -238,9 +229,7 @@ bool operator<(const MorseBondType& a, const MorseBondType& b)
 HalfAttractiveQuarticBondType::HalfAttractiveQuarticBondType(Name          name,
                                                              ForceConstant forceConstant,
                                                              EquilDistance equilDistance) :
-    name_(std::move(name)),
-    forceConstant_(forceConstant),
-    equilDistance_(equilDistance)
+    name_(std::move(name)), forceConstant_(forceConstant), equilDistance_(equilDistance)
 {
 }
 
