@@ -62,6 +62,7 @@ gmx_add_gtest_executable(
     topology.cpp
     interactions.cpp
     listedcalculator.cpp
+    listedkernels.cpp
     )
 target_link_libraries(${exename} PRIVATE nblib_test_infrastructure nblib)
 gmx_register_gtest_test(${testname} ${exename})
