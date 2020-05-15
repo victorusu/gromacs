@@ -119,6 +119,7 @@ auto bondKernel(T dr, const HarmonicBondType& bond)
 template <class T>
 auto bondKernel(T dr, const G96BondType& bond)
 {
+    ignore_unused(dr, bond);
     // Todo: implement me
     return std::make_tuple(real(0.0), real(0.0));
 }
@@ -126,6 +127,7 @@ auto bondKernel(T dr, const G96BondType& bond)
 template <class T>
 auto bondKernel(T dr, const MorseBondType& bond)
 {
+    ignore_unused(dr, bond);
     // Todo: implement me
     return std::make_tuple(real(0.0), real(0.0));
 }
@@ -133,6 +135,7 @@ auto bondKernel(T dr, const MorseBondType& bond)
 template <class T>
 auto bondKernel(T dr, const FENEBondType& bond)
 {
+    ignore_unused(dr, bond);
     // Todo: implement me
     return std::make_tuple(real(0.0), real(0.0));
 }
@@ -140,10 +143,18 @@ auto bondKernel(T dr, const FENEBondType& bond)
 template <class T>
 auto bondKernel(T dr, const CubicBondType& bond)
 {
+    ignore_unused(dr, bond);
     // Todo: implement me
     return std::make_tuple(real(0.0), real(0.0));
 }
-// ... more bond types
+
+template <class T>
+auto bondKernel(T dr, const HalfAttractiveQuarticBondType& bond)
+{
+    ignore_unused(dr, bond);
+    // Todo: implement me
+    return std::make_tuple(real(0.0), real(0.0));
+}
 
 } // namespace nblib
 #endif // GMX_NBLIB_LISTEDINTERACTIONS_H

@@ -140,13 +140,20 @@ real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
  */
 auto reduceListedForces(ListedInteractionData& interactions, const std::vector<gmx::RVec>& x, std::vector<gmx::RVec>* forces)
 {
+    // Todo: this can be done with the Reduce<> & Map<> type traits instead of the preprocessor
     #define RID(x) real
     using ReturnType = std::tuple<MAP_LIST(RID, SUPPORTED_BOND_TYPES)>;
     #undef RID
 
-    real e = calcForces(pickType<HarmonicBondType>(interactions).indices, pickType<HarmonicBondType>(interactions).bondInstances,
-                        x, forces);
+    ReturnType energies;
 
+    // call all bond types. could also use a std17::apply based solution instead of the preprocessor
+    #define CALC_BOND_TYPE(type) std::get<FindIndex<type, ListedInteractionData>{}>(energies) = \
+       calcForces(pickType<type>(interactions).indices, pickType<type>(interactions).bondInstances, x, forces);
+    MAP(CALC_BOND_TYPE, SUPPORTED_BOND_TYPES)
+    #undef CALC_BOND_TYPE
+
+    return energies;
 }
 
 } // namespace nblib

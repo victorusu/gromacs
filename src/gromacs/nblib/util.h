@@ -107,29 +107,32 @@ struct CompareField :
 template<int N, class T, class Tuple, bool Match = false>
 struct MatchingField
 {
-    static decltype(auto) get(Tuple& tp)
-    {
-        // check next element
-        return MatchingField<N + 1, T, Tuple, CompareField<N + 1, T, Tuple>::value>::get(tp);
-    }
+    static constexpr size_t value = MatchingField<N+1, T, Tuple, CompareField<N+1, T, Tuple>::value>::value;
 };
 
 template<int N, class T, class Tuple>
 struct MatchingField<N, T, Tuple, true>
 {
-    static decltype(auto) get(Tuple& tp) { return std::get<N>(tp); }
+    static constexpr size_t value = N;
 };
 
 std::string next_token(std::string& s, const std::string& delimiter);
 
 } // namespace detail
 
+//! Function to return the index in Tuple whose type matches T
+//! Note: if there are more than one, the first occurrence will be returned
+template <typename T, typename Tuple>
+struct FindIndex : std::integral_constant<size_t, detail::MatchingField<0, T, Tuple, detail::CompareField<0, T, Tuple>::value>::value>
+{
+};
+
 //! Function to return the element in Tuple whose type matches T
 //! Note: if there are more than one, the first occurrence will be returned
 template<typename T, typename Tuple>
 decltype(auto) pickType(Tuple& tup)
 {
-    return detail::MatchingField<0, T, Tuple, detail::CompareField<0, T, Tuple>::value>::get(tup);
+    return std::get<FindIndex<T, Tuple>{}>(tup);
 }
 
 template<class... Ts>
@@ -142,9 +145,14 @@ struct Map_
 {
 };
 
+//! this is a specialization of the Map_ base template
+//! for the case that the L template parameter itself has template parameters
+//! in this case, the template parameters of L are caught in Ts...
 template<template<class...> class P, template<class...> class L, class... Ts>
 struct Map_<P, L<Ts...>>
 {
+    //! resulting type is a TypeList of the P-template instantiated
+    //! with all template parameters of L
     typedef TypeList<P<Ts>...> type;
 };
 
@@ -160,6 +168,8 @@ struct Reduce_
 template<template<class...> class P, template<class...> class L, class... Ts>
 struct Reduce_<P, L<Ts...>>
 {
+    //! resulting type is P instantiated
+    //! with all template parameters of L
     typedef P<Ts...> type;
 };
 

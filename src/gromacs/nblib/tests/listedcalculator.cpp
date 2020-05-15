@@ -93,7 +93,7 @@ TEST(NBlibTest, CalcForces)
     std::vector<gmx::RVec> refForces{ {-22.8980637, 128.801575, 363.505951}, {-43.2698593, -88.0130997, -410.639252},
                                       {66.167923, -40.788475, 47.1333084}};
 
-    for (int i = 0; i < refForces.size(); ++i)
+    for (size_t i = 0; i < refForces.size(); ++i)
     {
         for (int j = 0; j < DIM; ++j)
         {
