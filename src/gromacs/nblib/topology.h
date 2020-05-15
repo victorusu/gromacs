@@ -51,6 +51,7 @@
 #include "gromacs/utility/listoflists.h"
 
 #include "interactions.h"
+#include "listedinteractions.h"
 
 namespace gmx
 {
@@ -135,19 +136,6 @@ MAP(SEQUENCE_PAIR_ID_EXTERN_TEMPLATE, SUPPORTED_BOND_TYPES)
  */
 class Topology
 {
-    template<class B>
-    struct BondData
-    {
-        typedef B type;
-
-        // tuple format: <particleID i, particleID j, BondInstanceIndex>
-        std::vector<std::tuple<int, int, int>> indices;
-        // vector of unique BondType instances of type B
-        std::vector<B> bondInstances;
-    };
-
-    // std::tuple<BondData<BondType1>, ...>
-    using InteractionData = Reduce<std::tuple, Map<BondData, SupportedBondTypes>>;
 
 public:
     //! Returns the total number of particles in the system
@@ -171,7 +159,7 @@ public:
     const NonBondedInteractionMap& getNonBondedInteractionMap() const;
 
     //! Returns the interaction data
-    const InteractionData& getInteractionData() const;
+    const ListedInteractionData& getInteractionData() const;
 
     //! Returns the combination rule used to generate the NonBondedInteractionMap
     CombinationRule getCombinationRule() const;
@@ -196,7 +184,7 @@ private:
     //! Map that should hold all nonbonded interactions for all particle types
     NonBondedInteractionMap nonBondedInteractionMap_;
     //! data about bonds for all supported types
-    InteractionData interactionData_;
+    ListedInteractionData interactionData_;
     //! Combination Rule used to generate the nonbonded interactions
     CombinationRule combinationRule_;
 };
@@ -245,7 +233,7 @@ private:
     gmx::ListOfLists<int> createExclusionsListOfLists() const;
 
     // Gather interaction data from molecules
-    Topology::InteractionData createInteractionData(const detail::ParticleSequencer&);
+    ListedInteractionData createInteractionData(const detail::ParticleSequencer&);
 
     // Helper function to extract quantities like mass, charge, etc from the system
     template<typename T, class Extractor>

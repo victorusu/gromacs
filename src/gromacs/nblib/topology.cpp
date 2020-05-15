@@ -332,9 +332,9 @@ gmx::ListOfLists<int> TopologyBuilder::createExclusionsListOfLists() const
     return exclusionsListOfListsGlobal;
 }
 
-Topology::InteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
+ListedInteractionData TopologyBuilder::createInteractionData(const detail::ParticleSequencer& particleSequencer)
 {
-    Topology::InteractionData interactionData;
+    ListedInteractionData interactionData;
 
     // this code is doing the compile time equivalent of
     // for (int i = 0; i < interactionData.size(); ++i)
@@ -522,7 +522,7 @@ const NonBondedInteractionMap& Topology::getNonBondedInteractionMap() const
     return nonBondedInteractionMap_;
 }
 
-const Topology::InteractionData& Topology::getInteractionData() const
+const ListedInteractionData& Topology::getInteractionData() const
 {
     return interactionData_;
 }

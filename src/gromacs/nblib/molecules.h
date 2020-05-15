@@ -54,6 +54,7 @@
 #include <vector>
 
 #include "gromacs/nblib/bondtypes.h"
+#include "gromacs/nblib/listedinteractions.h"
 #include "gromacs/nblib/particletype.h"
 #include "gromacs/nblib/util.h"
 
@@ -65,13 +66,10 @@ using ParticleName = std::string;
 using Charge       = real;
 using ResidueName  = std::string;
 
-#define SUPPORTED_BOND_TYPES \
-    HarmonicBondType, G96BondType, CubicBondType, FENEBondType, HalfAttractiveQuarticBondType
-
-using SupportedBondTypes = TypeList<SUPPORTED_BOND_TYPES>;
 
 class Molecule
 {
+    //! \brief string based listed interaction data type used during construction
     template<class Bond>
     struct BondData
     {
