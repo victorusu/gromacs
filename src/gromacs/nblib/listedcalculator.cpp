@@ -52,7 +52,16 @@
 namespace nblib
 {
 
-ListedForceCalculator::ListedForceCalculator(ListedInteractionData interactions) : interactions_(std::move(interactions)) {}
+ListedForceCalculator::ListedForceCalculator(ListedInteractionData interactions, size_t bufferSize)
+    : interactions_(std::move(interactions)),
+      forceBuffer_(bufferSize, gmx::RVec{0,0,0})
+{
+}
+
+ListedForceCalculator::EnergyType ListedForceCalculator::compute(const std::vector<gmx::RVec> &x)
+{
+    return reduceListedForces(interactions_, x, &forceBuffer_);
+}
 
 } // namespace nblib
 

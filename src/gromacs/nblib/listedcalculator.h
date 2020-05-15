@@ -58,9 +58,18 @@ namespace nblib
 class ListedForceCalculator
 {
 public:
-    explicit ListedForceCalculator(ListedInteractionData interactions);
+    // Todo: this can be done with the Reduce<> & Map<> type traits instead of the preprocessor
+    #define RID(x) real
+    using EnergyType = std::tuple<MAP_LIST(RID, SUPPORTED_BOND_TYPES)>;
+    #undef RID
+
+    explicit ListedForceCalculator(ListedInteractionData interactions, size_t bufferSize);
+
+    EnergyType compute(const std::vector<gmx::RVec>& x);
 
 private:
+
+    std::vector<gmx::RVec> forceBuffer_;
 
     // for now, the calculator owns the interaction data
     ListedInteractionData interactions_;

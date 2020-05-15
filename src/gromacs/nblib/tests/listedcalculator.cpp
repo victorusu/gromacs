@@ -61,7 +61,7 @@ namespace
 TEST(NBlibTest, ListedForceCalculatorCanConstruct)
 {
     ListedInteractionData interactions;
-    EXPECT_NO_THROW(ListedForceCalculator listedForceCalculator(interactions));
+    EXPECT_NO_THROW(ListedForceCalculator listedForceCalculator(interactions, 2));
 }
 
 TEST(NBlibTest, HarmonicScalarKernelCanCompute)
@@ -79,6 +79,7 @@ TEST(NBlibTest, HarmonicScalarKernelCanCompute)
 
 TEST(NBlibTest, CalcForces)
 {
+    // methanol-spc data
     HarmonicBondType bond1{376560, 0.136};
     HarmonicBondType bond2{313800, 0.1};
     std::vector<HarmonicBondType> bonds{bond1, bond2};
@@ -90,8 +91,9 @@ TEST(NBlibTest, CalcForces)
     real energy = calcForces(indices, bonds, x, &forces);
 
     EXPECT_REAL_EQ_TOL(energy, 0.2113433, gmx::test::defaultRealTolerance());
-    std::vector<gmx::RVec> refForces{ {-22.8980637, 128.801575, 363.505951}, {-43.2698593, -88.0130997, -410.639252},
-                                      {66.167923, -40.788475, 47.1333084}};
+    std::vector<gmx::RVec> refForces{ {-22.8980637, 128.801575, 363.505951},
+                                      {-43.2698593, -88.0130997, -410.639252},
+                                      {66.167923, -40.788475, 47.1333084} };
 
     for (size_t i = 0; i < refForces.size(); ++i)
     {
@@ -100,6 +102,23 @@ TEST(NBlibTest, CalcForces)
             EXPECT_REAL_EQ_TOL(refForces[i][j], forces[i][j], gmx::test::defaultRealTolerance());
         }
     }
+}
+
+TEST(NBlibTest, CanComputeBondedForces)
+{
+     auto simState = SpcMethanolSimulationStateBuilder{}.setupSimulationState();
+
+     auto topology = simState.topology();
+     auto coords   = simState.coordinates();
+
+     ListedInteractionData interactions = topology.getInteractionData();
+     ListedForceCalculator lfCalculator(interactions, coords.size());
+
+     ListedForceCalculator::EnergyType energies;
+     EXPECT_NO_THROW(energies = lfCalculator.compute(coords));
+
+     //real harmonicEnergy = std::get<FindIndex<HarmonicBondType, ListedInteractionData>{}>(energies);
+     //EXPECT_REAL_EQ_TOL(harmonicEnergy, 0.2113433, gmx::test::defaultRealTolerance());
 }
 
 } // namespace

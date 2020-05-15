@@ -138,7 +138,7 @@ real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
  * \param x coordinate input
  * \param forces output force buffer
  */
-auto reduceListedForces(ListedInteractionData& interactions, const std::vector<gmx::RVec>& x, std::vector<gmx::RVec>* forces)
+auto reduceListedForces(const ListedInteractionData& interactions, const std::vector<gmx::RVec>& x, std::vector<gmx::RVec>* forces)
 {
     // Todo: this can be done with the Reduce<> & Map<> type traits instead of the preprocessor
     #define RID(x) real
@@ -147,11 +147,20 @@ auto reduceListedForces(ListedInteractionData& interactions, const std::vector<g
 
     ReturnType energies;
 
-    // call all bond types. could also use a std17::apply based solution instead of the preprocessor
-    #define CALC_BOND_TYPE(type) std::get<FindIndex<type, ListedInteractionData>{}>(energies) = \
-       calcForces(pickType<type>(interactions).indices, pickType<type>(interactions).bondInstances, x, forces);
-    MAP(CALC_BOND_TYPE, SUPPORTED_BOND_TYPES)
-    #undef CALC_BOND_TYPE
+    // preprocessor version
+    //#define CALC_BOND_TYPE(type) std::get<FindIndex<type, ListedInteractionData>{}>(energies) = \
+    //   calcForces(pickType<type>(interactions).indices, pickType<type>(interactions).bondInstances, x, forces);
+    //MAP(CALC_BOND_TYPE, SUPPORTED_BOND_TYPES)
+    //#undef CALC_BOND_TYPE
+
+    // calculate one bond type
+    auto calcForceType = [forces, &x](const auto& interactionElement) {
+        //using ElementType = decltype(interactionElement);
+        return calcForces(interactionElement.indices, interactionElement.bondInstances, x, forces);
+    };
+
+    // calculate all bond types, returns a tuple with the energies for each type
+    energies = transform_tuple(calcForceType, interactions);
 
     return energies;
 }
