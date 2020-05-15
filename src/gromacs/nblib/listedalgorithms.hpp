@@ -1,7 +1,7 @@
 /*
  * This file is part of the GROMACS molecular simulation package.
  *
- * Copyright (c) 2020, by the GROMACS development team, led by
+ * Copyright (c) 2019, by the GROMACS development team, led by
  * Mark Abraham, David van der Spoel, Berk Hess, and Erik Lindahl,
  * and including many others, as listed in the AUTHORS file in the
  * top-level source directory and at http://www.gromacs.org.
@@ -34,43 +34,70 @@
  */
 /*! \internal \file
  * \brief
- * This implements basic nblib utility tests
+ * Implements a force calculator based on GROMACS data structures.
+ *
+ * Intended for internal use inside the ForceCalculator.
  *
  * \author Victor Holanda <victor.holanda@cscs.ch>
  * \author Joe Jordan <ejjordan@kth.se>
  * \author Prashanth Kanduri <kanduri@cscs.ch>
  * \author Sebastian Keller <keller@cscs.ch>
+ * \author Artem Zhmurov <zhmurov@gmail.com>
  */
-#include "gmxpre.h"
 
-#include <gtest/gtest.h>
+#ifndef GROMACS_LISTED_ALGORITHMS_HPP
+#define GROMACS_LISTED_ALGORITHMS_HPP
 
-#include "gromacs/nblib/gmxsetup.h"
-#include "gromacs/nblib/listedkernels.h"
+#include <tuple>
+#include <vector>
 
-#include "testhelpers.h"
-#include "testsystems.h"
+#include "gromacs/nblib/listedinteractions.h"
+#include "gromacs/nblib/listedkernels.hpp"
 
 namespace nblib
 {
-namespace test
-{
-namespace
-{
 
-TEST(NBlibTest, HarmonicScalarKernelCanCompute)
+
+/*! implement a loop over bonds for a given BondType and Kernel
+ *  corresponds to e.g. the "bonds" function at Gromacs:bonded.cpp@450
+ *
+ * \tparam BondType
+ * \tparam Kernel
+ * \param indices
+ * \param bondInstances
+ * \param x
+ * \param kernel
+ * \return
+ */
+template <class BondType, class Kernel>
+real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
+                const std::vector<BondType>& bondInstances,
+                const std::vector<gmx::RVec>& x,
+                std::vector<gmx::RVec>& force,
+                Kernel&& kernel)
 {
-    real k = 1.1;
-    real x0 = 1.0;
-    real x = 1.2;
+    real Epot = 0.0;
 
-    real force, epot;
-    std::tie(force, epot) = harmonicScalarForce(k, x0, x);
+    for (const auto& index : indices)
+    {
+        int i = std::get<0>(index);
+        int j = std::get<1>(index);
+        const gmx::RVec& x1 = x[i];
+        const gmx::RVec& x2 = x[j];
+        const BondType& bond = bondInstances[std::get<2>(index)];
 
-    EXPECT_REAL_EQ_TOL(-k* (x-x0), force, gmx::test::defaultRealTolerance());
-    EXPECT_REAL_EQ_TOL(0.5 * k* (x-x0)*(x-x0), epot, gmx::test::defaultFloatTolerance());
+        real dr2 = dot(x1, x2);
+        real dr  = std::sqrt(dr2);
+
+        real v;
+        std::tie(force[i], v) = kernel(x1, x2, bond);
+        Epot += v;
+        //force[j] = -1 * force[i];
+    }
+
+   return Epot;
 }
 
-} // namespace
-} // namespace test
 } // namespace nblib
+
+#endif // GROMACS_GMXCALCULATOR_H

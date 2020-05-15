@@ -42,12 +42,25 @@
  * \author Sebastian Keller <keller@cscs.ch>
  * \author Artem Zhmurov <zhmurov@gmail.com>
  */
+#ifndef GMX_NBLIB_LISTEDKERNELS_HPP
+#define GMX_NBLIB_LISTEDKERNELS_HPP
 
-#include "gromacs/nblib/listedkernels.h"
+#include <tuple>
+
+#include "gromacs/nblib/basicdefinitions.h"
 
 namespace nblib
 {
 
+/*! \brief kernel to calculate the scalar part for simple harmonic bond forces
+ *         for lambda = 0
+ *
+ * \param k spring constant
+ * \param x0 equilibrium distance
+ * \param x  input bond length
+ *
+ * \return tuple<force, potential energy>
+ */
 template <class T>
 std::tuple<T, T> harmonicScalarForce(T k, T x0, T x)
 {
@@ -63,6 +76,18 @@ std::tuple<T, T> harmonicScalarForce(T k, T x0, T x)
 }
 
 
+/*! \brief kernel to calculate the scalar part for simple harmonic bond forces
+ *         for non-zero lambda to interpolate between A and B states
+ *
+ * \param kA spring constant state A
+ * \param kB spring constant state B
+ * \param xA equilibrium distance state A
+ * \param xB equilibrium distance state B
+ * \param x  input bond length
+ * \param lambda interpolation factor between A and B state
+ *
+ * \return tuple<force, potential energy, lambda-interpolated energy>
+ */
 template <class T>
 std::tuple<T, T, T> harmonicScalarForce(T kA, T kB, T xA, T xB, T x, T lambda)
 {
@@ -84,7 +109,5 @@ std::tuple<T, T, T> harmonicScalarForce(T kA, T kB, T xA, T xB, T x, T lambda)
     /* That was 19 flops */
 }
 
-template std::tuple<real, real> harmonicScalarForce(real k, real x0, real x);
-template std::tuple<real, real, real> harmonicScalarForce(real kA, real kB, real xA, real xB, real x, real lambda);
-
 } // namespace nblib
+#endif // GMX_NBLIB_LISTEDINTERACTIONS_H

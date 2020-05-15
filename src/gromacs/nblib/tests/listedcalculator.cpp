@@ -64,6 +64,19 @@ TEST(NBlibTest, ListedForceCalculatorCanConstruct)
     EXPECT_NO_THROW(ListedForceCalculator listedForceCalculator(interactions));
 }
 
+TEST(NBlibTest, HarmonicScalarKernelCanCompute)
+{
+    real k = 1.1;
+    real x0 = 1.0;
+    real x = 1.2;
+
+    real force, epot;
+    std::tie(force, epot) = harmonicScalarForce(k, x0, x);
+
+    EXPECT_REAL_EQ_TOL(-k* (x-x0), force, gmx::test::defaultRealTolerance());
+    EXPECT_REAL_EQ_TOL(0.5 * k* (x-x0)*(x-x0), epot, gmx::test::defaultFloatTolerance());
+}
+
 } // namespace
 } // namespace test
 } // namespace nblib

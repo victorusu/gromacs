@@ -50,6 +50,7 @@
 
 
 #include "gromacs/nblib/listedinteractions.h"
+#include "gromacs/nblib/listedalgorithms.hpp"
 
 namespace nblib
 {

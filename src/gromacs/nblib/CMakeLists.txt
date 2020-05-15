@@ -73,7 +73,6 @@ target_sources(nblib
         topology.cpp
         util.cpp
         listedcalculator.cpp
-        listedkernels.cpp
         )
 
 set_target_properties(nblib
