@@ -86,14 +86,14 @@ inline void spreadBondForces(const real bondForce,
 
 } // namespace detail
 
-/*! implement a loop over bonds for a given BondType and Kernel
+/*! \brief implement a loop over bonds for a given BondType and Kernel
  *  corresponds to e.g. the "bonds" function at Gromacs:bonded.cpp@450
  *
  * \tparam BondType
  * \tparam Kernel unused for now
- * \param indices
- * \param bondInstances
- * \param x
+ * \param indices interaction atom pair indices + bond parameter index
+ * \param bondInstances bond parameters
+ * \param x coordinate input
  * \param kernel unused for now
  * \return
  */
@@ -118,19 +118,35 @@ real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
         real dr2 = dot(dx, dx);
         real dr  = std::sqrt(dr2);
 
-        real force, energy;
+        real force = 0.0, energy = 0.0;
         std::tie(force, energy) = bondKernel(dr, bond);
 
         if (dr2 == 0.0) { continue; }
 
         Epot += energy;
-        //force *= gmx::invsqrt(dr2);
         force /= dr;
 
         detail::spreadBondForces(force, dx, forces->data() + i, forces->data() + j);
     }
 
     return Epot;
+}
+
+/*! \brief implement a loop over bond types and accumulate their force contributions
+ *
+ * \param interactions interaction pairs and bond parameters
+ * \param x coordinate input
+ * \param forces output force buffer
+ */
+auto reduceListedForces(ListedInteractionData& interactions, const std::vector<gmx::RVec>& x, std::vector<gmx::RVec>* forces)
+{
+    #define RID(x) real
+    using ReturnType = std::tuple<MAP_LIST(RID, SUPPORTED_BOND_TYPES)>;
+    #undef RID
+
+    real e = calcForces(pickType<HarmonicBondType>(interactions).indices, pickType<HarmonicBondType>(interactions).bondInstances,
+                        x, forces);
+
 }
 
 } // namespace nblib

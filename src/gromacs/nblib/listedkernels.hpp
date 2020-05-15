@@ -119,9 +119,30 @@ auto bondKernel(T dr, const HarmonicBondType& bond)
 template <class T>
 auto bondKernel(T dr, const G96BondType& bond)
 {
-    //return g96ScalarForce(bond.forceConstant(), bond.equilDistance(), dr);
+    // Todo: implement me
+    return std::make_tuple(real(0.0), real(0.0));
 }
 
+template <class T>
+auto bondKernel(T dr, const MorseBondType& bond)
+{
+    // Todo: implement me
+    return std::make_tuple(real(0.0), real(0.0));
+}
+
+template <class T>
+auto bondKernel(T dr, const FENEBondType& bond)
+{
+    // Todo: implement me
+    return std::make_tuple(real(0.0), real(0.0));
+}
+
+template <class T>
+auto bondKernel(T dr, const CubicBondType& bond)
+{
+    // Todo: implement me
+    return std::make_tuple(real(0.0), real(0.0));
+}
 // ... more bond types
 
 } // namespace nblib
