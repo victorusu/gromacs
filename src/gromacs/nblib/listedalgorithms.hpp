@@ -57,24 +57,51 @@
 namespace nblib
 {
 
+namespace detail
+{
+
+/*! \brief Spreads and accumulates the bonded forces to the two atoms and adds the virial contribution when needed
+ *
+ * \p shiftIndex is used as the periodic shift.
+ */
+inline void spreadBondForces(const real bondForce,
+                             const gmx::RVec& dx,
+                             gmx::RVec* force_i,
+                             gmx::RVec* force_j)
+                             //int        shiftIndex,
+                             //rvec*      fshift)
+{
+    for (int m = 0; m < DIM; m++) /*  15          */
+    {
+        const real fij = bondForce * dx[m];
+        (*force_i)[m] += fij;
+        (*force_j)[m] -= fij;
+        //if (computeVirial(flavor))
+        //{
+        //    fshift[shiftIndex][m] += fij;
+        //    fshift[CENTRAL][m] -= fij;
+        //}
+    }
+}
+
+} // namespace detail
 
 /*! implement a loop over bonds for a given BondType and Kernel
  *  corresponds to e.g. the "bonds" function at Gromacs:bonded.cpp@450
  *
  * \tparam BondType
- * \tparam Kernel
+ * \tparam Kernel unused for now
  * \param indices
  * \param bondInstances
  * \param x
- * \param kernel
+ * \param kernel unused for now
  * \return
  */
-template <class BondType, class Kernel>
+template <class BondType>
 real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
                 const std::vector<BondType>& bondInstances,
                 const std::vector<gmx::RVec>& x,
-                std::vector<gmx::RVec>& force,
-                Kernel&& kernel)
+                std::vector<gmx::RVec>* forces)
 {
     real Epot = 0.0;
 
@@ -86,16 +113,24 @@ real calcForces(const std::vector<std::tuple<int, int, int>>& indices,
         const gmx::RVec& x2 = x[j];
         const BondType& bond = bondInstances[std::get<2>(index)];
 
-        real dr2 = dot(x1, x2);
+        // Todo: PBC
+        gmx::RVec dx = x1 - x2;
+        real dr2 = dot(dx, dx);
         real dr  = std::sqrt(dr2);
 
-        real v;
-        std::tie(force[i], v) = kernel(x1, x2, bond);
-        Epot += v;
-        //force[j] = -1 * force[i];
+        real force, energy;
+        std::tie(force, energy) = bondKernel(dr, bond);
+
+        if (dr2 == 0.0) { continue; }
+
+        Epot += energy;
+        //force *= gmx::invsqrt(dr2);
+        force /= dr;
+
+        detail::spreadBondForces(force, dx, forces->data() + i, forces->data() + j);
     }
 
-   return Epot;
+    return Epot;
 }
 
 } // namespace nblib

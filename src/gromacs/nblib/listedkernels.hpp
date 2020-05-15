@@ -109,5 +109,20 @@ std::tuple<T, T, T> harmonicScalarForce(T kA, T kB, T xA, T xB, T x, T lambda)
     /* That was 19 flops */
 }
 
+//! WIP: abstraction layer for different 2-center bonds
+template <class T>
+auto bondKernel(T dr, const HarmonicBondType& bond)
+{
+    return harmonicScalarForce(bond.forceConstant(), bond.equilDistance(), dr);
+}
+
+template <class T>
+auto bondKernel(T dr, const G96BondType& bond)
+{
+    //return g96ScalarForce(bond.forceConstant(), bond.equilDistance(), dr);
+}
+
+// ... more bond types
+
 } // namespace nblib
 #endif // GMX_NBLIB_LISTEDINTERACTIONS_H
