@@ -72,6 +72,7 @@ target_sources(nblib
         simulationstate.cpp
         topology.cpp
         util.cpp
+        listedcalculator.cpp
         )
 
 set_target_properties(nblib
